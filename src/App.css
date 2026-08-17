@@ -1587,21 +1587,13 @@ button.pop-chip {
   line-height: 1;
 }
 
-.rank-top {
-  display: flex;
-  justify-content: flex-end;
-}
 
-.rank-ends {
-  min-width: 0;
-}
 
 
 .rank-ends {
   font-size: 9px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   color: var(--arc-dim);
-  text-align: right;
   line-height: 1.35;
 }
 
@@ -1755,17 +1747,67 @@ button.pop-chip {
   color: var(--arc-dim);
 }
 
+/* Geçen haftanın ilk üçü: listenin altında, sessiz bir şerit */
+.rank-last {
+  display: grid;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rank-last-lb {
+  font-size: 8.5px;
+  letter-spacing: 0.2em;
+  color: var(--arc-dim);
+}
+
+.rank-last-lb small {
+  margin-left: 8px;
+  letter-spacing: 0.1em;
+  color: var(--arc-gold);
+  opacity: 0.8;
+}
+
+.rank-podium {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 1px;
+}
+
+.rank-podium li {
+  display: grid;
+  grid-template-columns: 30px 1fr 64px;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  font-size: 11.5px;
+  color: var(--arc-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.rank-podium li b { font-weight: 400; color: var(--arc-text); opacity: 0.85; }
+.rank-podium li .rank-score { font-size: 12px; color: var(--arc-dim); }
+.rank-podium li.p1 .rank-pos { color: var(--arc-gold); font-weight: 700; }
+.rank-podium li.p2 .rank-pos { color: #cfd6e0; font-weight: 700; }
+.rank-podium li.p3 .rank-pos { color: #d39a5c; font-weight: 700; }
+
 .rank-ft {
   min-height: 14px;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .rank-note {
   font-size: 9px;
   letter-spacing: 0.06em;
   color: var(--arc-dim);
-  text-align: center;
+  text-align: right;
 }
 
 .rank-note.demo {

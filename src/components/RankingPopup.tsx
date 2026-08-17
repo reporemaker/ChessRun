@@ -92,11 +92,6 @@ export function RankingPopup({ onClose, mode: initialMode, demo = false }: Props
             ))}
           </div>
 
-          {/* Yalnızca haftalık lig — hafta sayacı sekmelerin hemen altında */}
-          <div className="rank-top">
-            <span className="rank-ends">{t('rank.endsIn', { t: endsIn })}</span>
-          </div>
-
           <div className="rank-me">
             <span>
               <b className="gold">{view.rank == null ? '—' : `#${view.rank}`}</b>
@@ -148,7 +143,30 @@ export function RankingPopup({ onClose, mode: initialMode, demo = false }: Props
             </div>
           )}
 
+          {/* Geçen haftanın ilk üçü — sunucu gelince dolacak (Faz 9) */}
+          {view.lastWeek && (
+            <div className="rank-last">
+              <span className="rank-last-lb">
+                {t('rank.lastWeek')} <small>{view.lastWeek.week}</small>
+              </span>
+              <ol className="rank-podium">
+                {view.lastWeek.rows.map((row) => (
+                  <li key={row.place} className={`p${row.place}`}>
+                    <span className="rank-pos">{row.place}</span>
+                    <span className="rank-name">
+                      <i className="rank-badge" aria-hidden="true">{row.badge ?? ''}</i>
+                      <b>{row.name}</b>
+                    </span>
+                    <span className="rank-score">{row.score.toLocaleString(lang)}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
+          {/* En alt satır: hafta sayacı solda, not sağda */}
           <div className="rank-ft">
+            <span className="rank-ends">{t('rank.endsIn', { t: endsIn })}</span>
             {demo ? (
               <span className="rank-note demo">{t('rank.demo')}</span>
             ) : view.pending ? (

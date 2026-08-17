@@ -35,6 +35,11 @@ export interface RankingView {
   /** Sunucu bağlı değil — arayüz "SUNUCU BEKLEMEDE" yazıyor */
   pending: boolean
   rows: RankRow[]
+  /**
+   * Geçen haftanın ilk üçü — Pazartesi 00:00'da kazananlar iz bırakmadan
+   * silinmesin. Sunucu (Faz 9) gelene kadar yok; şimdilik yalnızca demo.
+   */
+  lastWeek?: { week: string; rows: Array<Pick<RankRow, 'place' | 'name' | 'score' | 'badge'>> }
 }
 
 const LIST_LIMIT = 12
@@ -114,5 +119,13 @@ export function demoRanking(mode: GameMode): RankingView {
     }
   })
   const myScore = rows[mePlace - 1]?.score ?? Math.round(top * Math.pow(0.86, 14) * 0.7)
-  return { rank: mePlace, score: myScore, players: 312, pending: false, rows }
+  const lastWeek = {
+    week: '2026-W33',
+    rows: [
+      { place: 1, name: names[(seed * 5) % names.length], score: Math.round(top * 1.08), badge: '♛' },
+      { place: 2, name: names[(seed * 6) % names.length], score: Math.round(top * 0.93), badge: undefined },
+      { place: 3, name: names[(seed * 7) % names.length], score: Math.round(top * 0.81), badge: '⚡' },
+    ],
+  }
+  return { rank: mePlace, score: myScore, players: 312, pending: false, rows, lastWeek }
 }
