@@ -2072,14 +2072,16 @@ a.gv-lk {
   gap: 12px;
 }
 
+/* Beş ayar satırı sıkı: alanlar arası 8, etiket–segment 5. Kazanılan yer
+   sütunun altına, bağlantıların rahat durduğu yere gidiyor. */
 .gv-set {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .gv-field {
   display: grid;
-  gap: 8px;
+  gap: 5px;
 }
 
 .gv-seg {
@@ -2091,7 +2093,7 @@ a.gv-lk {
 }
 
 .gv-seg button {
-  padding: 8px 2px;
+  padding: 7px 2px;
   border: 0;
   background: #0a0d12;
   color: #8296ad;
@@ -2311,6 +2313,37 @@ button.gv-chip {
   display: flex;
   flex-wrap: wrap;
   gap: 10px 22px;
+}
+
+/* Sütunun altındaki iki düğme: Hakkında · Öneri gönder */
+.gv-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.gv-btns button,
+.gv-btns a {
+  display: grid;
+  place-items: center;
+  padding: 10px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: transparent;
+  color: #dbe4f0;
+  font-family: inherit;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+  text-decoration: none;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+.gv-btns button:hover,
+.gv-btns a:hover {
+  border-color: var(--arc-gold);
+  color: var(--arc-gold);
 }
 
 /* Reklam yeri: yalnızca gerçekten bir slot tanımlıysa çiziliyor, ve

@@ -867,16 +867,18 @@ export function Game({ config, onExit, onOpenSettings, onOpenPage, onRestartWith
           </span>
         </button>
 
+        {/* Nasıl oynanır tek başına bağlantı; altında Hakkında + Öneri iki
+            düğme yan yana — sütunun altında rahat bir kapanış */}
         <div className="gv-links">
-          <button type="button" className="gv-lk" onClick={() => onOpenPage('about')}>
-            {t('settings.about')}
-          </button>
           <button type="button" className="gv-lk" onClick={() => onOpenPage('help')}>
             {t('settings.howTo')}
           </button>
-          <a className="gv-lk" href={feedbackHref(settings.lang, config.mode)}>
-            {t('settings.feedback')}
-          </a>
+        </div>
+        <div className="gv-btns">
+          <button type="button" onClick={() => onOpenPage('about')}>
+            {t('settings.about')}
+          </button>
+          <a href={feedbackHref(settings.lang, config.mode)}>{t('settings.feedback')}</a>
         </div>
 
         {AD_SLOT && <div className="gv-ad">REKLAM</div>}
