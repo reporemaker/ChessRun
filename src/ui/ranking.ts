@@ -12,8 +12,6 @@ import { type RunRecord, bestOf, isoWeekKey, readRuns, runsOfMode, runsOfWeek } 
  * Sunucu bağlandığında yalnızca bu dosya değişiyor.
  */
 
-export type RankScope = 'allTime' | 'week'
-
 export interface RankRow {
   place: number
   name: string
@@ -41,10 +39,16 @@ export interface RankingView {
 
 const LIST_LIMIT = 12
 
-export function readRanking(scope: RankScope, mode?: GameMode, now: Date = new Date()): RankingView {
+/**
+ * Yalnızca haftalık lig. "Tüm zamanlar" tablosu bilerek yok: birkaç ay
+ * sonra donar, ilk aylarda skor yapan üstte kalır, yeni oyuncu hiç
+ * göremez. Haftalık her Pazartesi herkese aynı şansı veriyor. Kişisel "en
+ * iyin" oyun ekranında zaten var — ligin işi değil.
+ */
+export function readRanking(mode?: GameMode, now: Date = new Date()): RankingView {
   const stored = readRuns()
   const all = mode ? runsOfMode(stored, mode) : stored
-  const runs = scope === 'week' ? runsOfWeek(all, isoWeekKey(now)) : all
+  const runs = runsOfWeek(all, isoWeekKey(now))
   const best = bestOf(runs)
   const identity = getIdentity()
 
@@ -82,8 +86,8 @@ export function readRanking(scope: RankScope, mode?: GameMode, now: Date = new D
  * çağrılmıyor (App yalnızca DEV + ?dev=rank ile açıyor). Adlar beş dilin
  * rastgele ad kalıbından, rozet glifleri yer tutucu.
  */
-export function demoRanking(scope: RankScope, mode: GameMode): RankingView {
-  const seed = (mode === 'classic' ? 3 : mode === 'kingRun' ? 7 : 11) + (scope === 'week' ? 0 : 20)
+export function demoRanking(mode: GameMode): RankingView {
+  const seed = mode === 'classic' ? 3 : mode === 'kingRun' ? 7 : 11
   const names = [
     'Gölge Vezir 417', 'Shadow Queen 88', 'Schatten-Dame 512', 'Torre Plata 356', 'Roi Glace 516',
     'Fırtına At 831', 'North Bishop 971', 'Sturm-Turm 204', 'Dama Sombra 640', 'Cavalier Fer 150',
@@ -92,9 +96,9 @@ export function demoRanking(scope: RankScope, mode: GameMode): RankingView {
   ]
   const badges = ['♞', '♛', '⚡', '♚', undefined, '○', undefined, '♜', undefined, '◆']
   const identity = getIdentity()
-  // Haftada 4. (listede), tüm zamanlarda 47. (liste dışı → altta yapışık satır)
-  const mePlace = scope === 'week' ? 4 : 47
-  const top = scope === 'week' ? 5400 : 12800
+  // Av'da 4. (listede), Kaçış'ta 47. (liste dışı → altta yapışık satır), Üçlü'de 2.
+  const mePlace = mode === 'classic' ? 4 : mode === 'kingRun' ? 47 : 2
+  const top = 5400
   const rows: RankRow[] = Array.from({ length: 15 }, (_, i) => {
     const place = i + 1
     const score = Math.round(top * Math.pow(0.86, i) + ((seed * (i + 1) * 37) % 90))
@@ -105,10 +109,10 @@ export function demoRanking(scope: RankScope, mode: GameMode): RankingView {
       score,
       distance: Math.round(score / (mode === 'kingRun' ? 60 : 24)),
       me,
-      at: `demo-${scope}-${mode}-${i}`,
+      at: `demo-${mode}-${i}`,
       badge: me ? '♞' : badges[(i * seed) % badges.length],
     }
   })
   const myScore = rows[mePlace - 1]?.score ?? Math.round(top * Math.pow(0.86, 14) * 0.7)
-  return { rank: mePlace, score: myScore, players: scope === 'week' ? 312 : 1847, pending: false, rows }
+  return { rank: mePlace, score: myScore, players: 312, pending: false, rows }
 }

@@ -135,7 +135,7 @@ export function Game({
   const [pendingCols, setPendingCols] = useState<number | null>(null)
   const [identity, setIdentity] = useState(() => getIdentity())
   // Sıralama özeti — koşu bitince (result değişince) tazeleniyor
-  const ranking = useMemo(() => readRanking('week', config.mode), [result, config.mode]) // eslint-disable-line react-hooks/exhaustive-deps
+  const ranking = useMemo(() => readRanking(config.mode), [result, config.mode]) // eslint-disable-line react-hooks/exhaustive-deps
 
   /* Reklam yalnızca gerçek bir slot tanımlıysa çiziliyor — tanımsızken
      yer tutucu kutu göstermiyoruz. */

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { GameMode } from '../engine/types'
 import { MODES } from '../ui/modes'
-import { type RankScope, type RankingView, demoRanking, readRanking } from '../ui/ranking'
+import { type RankingView, demoRanking, readRanking } from '../ui/ranking'
 import { formatRemaining, isoWeekKey, weekEnd } from '../ui/scores'
 import { useSettings } from '../ui/settings'
 import { useT } from '../ui/text'
@@ -19,8 +19,8 @@ interface Props {
  *
  * Ayarlar penceresinin içine gömülü liste dar ve kısa kalıyordu; sıralama
  * oyunun sosyal yüzü, kendi sahnesini hak ediyor. Düzen: mod sekmeleri ·
- * dönem · üç sayı · liste (ilk üç altın/gümüş/bronz, "sen" satırı vurgulu)
- * · listede değilsen altta yapışık kendi satırın · hafta sayacı.
+ * hafta sayacı · üç sayı · liste (ilk üç renkli, "sen" satırı vurgulu) ·
+ * listede değilsen altta yapışık kendi satırın. Yalnızca haftalık lig.
  *
  * Sunucu bağlanana kadar liste kendi koşuların (ranking.ts dürüst davranıyor:
  * sıra ve oyuncu sayısı bilinmiyor). Rozet glifi için ad yanında yer var —
@@ -31,12 +31,8 @@ export function RankingPopup({ onClose, mode: initialMode, demo = false }: Props
   const { lang } = useSettings()
   const closeRef = useRef<HTMLButtonElement>(null)
   const [mode, setMode] = useState<GameMode>(initialMode ?? 'classic')
-  const [scope, setScope] = useState<RankScope>('week')
 
-  const view: RankingView = useMemo(
-    () => (demo ? demoRanking(scope, mode) : readRanking(scope, mode)),
-    [demo, scope, mode],
-  )
+  const view: RankingView = useMemo(() => (demo ? demoRanking(mode) : readRanking(mode)), [demo, mode])
 
   useEffect(() => {
     closeRef.current?.focus()
@@ -96,23 +92,9 @@ export function RankingPopup({ onClose, mode: initialMode, demo = false }: Props
             ))}
           </div>
 
+          {/* Yalnızca haftalık lig — hafta sayacı sekmelerin hemen altında */}
           <div className="rank-top">
-            <div className="rank-scope">
-              {(['week', 'allTime'] as const).map((key) => (
-                <button
-                  key={key}
-                  type="button"
-                  className={scope === key ? 'on' : ''}
-                  aria-pressed={scope === key}
-                  onClick={() => setScope(key)}
-                >
-                  {key === 'week' ? t('settings.listWeek') : t('settings.listAllTime')}
-                </button>
-              ))}
-            </div>
-            <span className="rank-ends">
-              {scope === 'week' ? t('rank.endsIn', { t: endsIn }) : ''}
-            </span>
+            <span className="rank-ends">{t('rank.endsIn', { t: endsIn })}</span>
           </div>
 
           <div className="rank-me">

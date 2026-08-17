@@ -1589,36 +1589,13 @@ button.pop-chip {
 
 .rank-top {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.rank-scope {
-  display: flex;
-  gap: 1px;
-  background: rgba(255, 255, 255, 0.14);
-}
-
-.rank-scope button {
-  padding: 6px 11px;
-  border: 0;
-  background: var(--arc-ink);
-  color: var(--arc-dim);
-  font-family: inherit;
-  font-size: 9.5px;
-  letter-spacing: 0.12em;
-  white-space: nowrap; /* FR "DEPUIS TOUJOURS" iki satıra kırılmasın */
+  justify-content: flex-end;
 }
 
 .rank-ends {
   min-width: 0;
 }
 
-.rank-scope button.on {
-  background: var(--arc-gold);
-  color: var(--arc-ink);
-}
 
 .rank-ends {
   font-size: 9px;

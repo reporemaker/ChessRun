@@ -48,7 +48,7 @@ export function Settings({ onClose, onOpenPage, onExitGame, onOpenRanking, game 
   const t = useT()
   const closeRef = useRef<HTMLButtonElement>(null)
 
-  const ranking = useMemo(() => readRanking('week'), [])
+  const ranking = useMemo(() => readRanking(), [])
 
   const [identity, setIdentity] = useState(() => getIdentity())
 
