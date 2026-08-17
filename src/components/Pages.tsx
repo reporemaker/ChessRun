@@ -120,11 +120,8 @@ export function Page({ page, onClose }: PageProps) {
       </header>
 
       <div className="page-bd">
-        {page === 'help' && (
-          <p className="page-lede">{t('manual.lede')}</p>
-        )}
         {sections.map((section, n) => (
-          <section key={section.titleKey} className="page-sec">
+          <section key={section.titleKey} className={`page-sec ${section.lessons ? 'spread' : ''}`}>
             <h2>
               {page === 'help' && <span className="page-num">{n + 1}</span>}
               {section.glyph && <span className="page-glyph">{section.glyph}</span>}
@@ -132,6 +129,7 @@ export function Page({ page, onClose }: PageProps) {
               {section.soon && <em className="page-soon">{t('common.soon')}</em>}
             </h2>
             {section.lessons && <LessonStage lessons={section.lessons} />}
+            <div className="page-rules">
             {section.lessons && <h3 className="page-sub">{t('manual.rules')}</h3>}
             <ul>
               {section.bodyKeys.map((key) =>
@@ -147,6 +145,7 @@ export function Page({ page, onClose }: PageProps) {
                 ),
               )}
             </ul>
+            </div>
           </section>
         ))}
 

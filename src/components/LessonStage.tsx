@@ -70,19 +70,25 @@ export function LessonStage({ lessons }: Props) {
   return (
     <div ref={rootRef} className="ls">
       {lessons.length > 1 && (
-        <div className="ls-tabs" role="tablist">
-          {lessons.map((id, i) => (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              aria-selected={i === lesson}
-              className={`ls-tab ${i === lesson ? 'on' : ''}`}
-              onClick={() => pick(i)}
-            >
-              <b>{i + 1}</b> {t(`lesson.${id}` as StringKey)}
-            </button>
-          ))}
+        <div className="ls-nav">
+          <div className="ls-tabs" role="tablist">
+            {lessons.map((id, i) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={i === lesson}
+                aria-label={t(`lesson.${id}` as StringKey)}
+                className={`ls-tab ${i === lesson ? 'on' : ''}`}
+                onClick={() => pick(i)}
+              >
+                <b>{i + 1}</b>
+                <span>{t(`lesson.${id}` as StringKey)}</span>
+              </button>
+            ))}
+          </div>
+          {/* Dar ekranda sekmeler yalnızca numara; seçili dersin adı yanında */}
+          <span className="ls-cur">{t(`lesson.${lessons[lesson]}` as StringKey)}</span>
         </div>
       )}
 

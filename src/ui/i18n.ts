@@ -220,7 +220,6 @@ const tr = {
   'demo.squadBack': 'Şah yenince eksik taş geri döner: fil kadroya katıldı. Kadro tamsa dördüncü taş gelir.',
 
   // Kılavuz: ders adları, kaset düğmeleri, puan tablosu
-  'manual.lede': 'Kılavuz. Her bölümde önce ekran: adımlar sırayla oynar, okuduğun cümle o an tahtada olur. Altında kurallar, en sonda puan tablosu.',
   'manual.step': 'ADIM',
   'manual.play': 'OYNAT',
   'manual.pause': 'DURDUR',
@@ -619,7 +618,6 @@ const en: Partial7 = {
   'demo.squadBack': 'Capture the king and a missing piece returns: the bishop rejoined. With a full squad a fourth piece comes.',
 
   // Kılavuz: ders adları, kaset düğmeleri, puan tablosu
-  'manual.lede': 'The manual. Each chapter opens with the screen: the steps play in order and the sentence you read is what happens on the board. Rules below, scoring table at the end.',
   'manual.step': 'STEP',
   'manual.play': 'PLAY',
   'manual.pause': 'PAUSE',
@@ -1016,7 +1014,6 @@ const de: Partial7 = {
   'demo.squadBack': 'Schlägst du den König, kehrt eine fehlende Figur zurück: der Läufer ist wieder da. Bei vollem Trupp kommt eine vierte.',
 
   // Kılavuz: ders adları, kaset düğmeleri, puan tablosu
-  'manual.lede': 'Die Anleitung. Jedes Kapitel beginnt mit dem Bildschirm: die Schritte laufen der Reihe nach, der Satz, den du liest, passiert gerade auf dem Brett. Darunter die Regeln, am Ende die Punktetabelle.',
   'manual.step': 'SCHRITT',
   'manual.play': 'ABSPIELEN',
   'manual.pause': 'PAUSE',
@@ -1395,7 +1392,6 @@ const es: Partial7 = {
   'demo.squadBack': 'Al capturar al rey vuelve una pieza perdida: el alfil se reincorporó. Con la escuadra completa llega una cuarta.',
 
   // Kılavuz: ders adları, kaset düğmeleri, puan tablosu
-  'manual.lede': 'El manual. Cada capítulo empieza con la pantalla: los pasos se reproducen en orden y la frase que lees es lo que ocurre en el tablero. Debajo las reglas, al final la tabla de puntos.',
   'manual.step': 'PASO',
   'manual.play': 'REPRODUCIR',
   'manual.pause': 'PAUSA',
@@ -1774,7 +1770,6 @@ const fr: Partial7 = {
   'demo.squadBack': "Prends le roi et une pièce manquante revient : le fou a rejoint l'escouade. Escouade complète, une quatrième arrive.",
 
   // Kılavuz: ders adları, kaset düğmeleri, puan tablosu
-  'manual.lede': "Le manuel. Chaque chapitre s'ouvre sur l'écran : les étapes défilent dans l'ordre et la phrase que tu lis est ce qui se passe sur l'échiquier. Dessous les règles, à la fin le tableau des points.",
   'manual.step': 'ÉTAPE',
   'manual.play': 'LECTURE',
   'manual.pause': 'PAUSE',
