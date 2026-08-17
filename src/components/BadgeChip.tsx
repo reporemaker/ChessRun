@@ -24,13 +24,13 @@ export function BadgeChip({ version, onOpen, skin }: Props) {
   return (
     <div className={`${skin}-badgebar`}>
       <span className={`bdg-chip${badge ? '' : ' none'}`} title={badge ? t(badge.howKey, { n: badge.thresholds[tierIdx] }) : undefined}>
-        <span className={`bdg-glyph${tier ? ` t-${tier}` : ''}`} aria-hidden="true">
+        <span
+          className={`bdg-glyph${tier ? ` t-${tier}` : ''}`}
+          aria-label={tier && badge && badge.tiers.length > 1 ? t(`tier.${tier}`) : undefined}
+        >
           {badge ? badge.glyph : '·'}
         </span>
         <b>{badge ? t(badge.nameKey) : t('badges.none')}</b>
-        {badge && badge.tiers.length > 1 && tier && (
-          <em className={`bdg-tier t-${tier}`}>{t(`tier.${tier}`)}</em>
-        )}
       </span>
       <button type="button" className={`${skin}-badgebtn`} onClick={onOpen}>
         {t('badges.title')}

@@ -1693,12 +1693,12 @@ button.pop-chip {
   background: var(--arc-gold);
 }
 
-/* Rozet glifi: adın önünde, 15px + kademe rengi (12px silik kalıyordu) */
+/* Rozet glifi: adın önünde, 18px + kademe rengi */
 .rank-badge {
   flex: 0 0 auto;
-  width: 18px;
+  width: 20px;
   font-style: normal;
-  font-size: 15px;
+  font-size: 18px;
   line-height: 1;
   text-align: center;
   color: var(--arc-gold);
@@ -1868,11 +1868,19 @@ button.pop-chip {
  * Rozetler — pencere ve kademe renkleri
  * ---------------------------------------------------------------- */
 
-/* Kademe renkleri: glif, etiket ve nokta aynı dört tonu paylaşıyor */
-.t-black  { color: #9aa7b8; }
-.t-bronze { color: #d39a5c; }
-.t-silver { color: #d6dde6; }
-.t-gold   { color: var(--arc-gold); }
+/* Kademe renkleri — glif ve nokta aynı dört tonu paylaşıyor; etiket yok,
+   kademeyi renk anlatıyor. Siyah, koyu zeminde okunmalı: siyah taş
+   derisiyle aynı çözüm — koyu dolgu + ince açık kenar. */
+.t-black  { color: #12151b; text-shadow: 0 0 1px rgba(255, 255, 255, 0.75), 0 0 2px rgba(255, 255, 255, 0.35); }
+.t-bronze { color: #cd8a4a; text-shadow: 0 0 6px rgba(205, 138, 74, 0.35); }
+.t-silver { color: #dfe6ef; text-shadow: 0 0 6px rgba(223, 230, 239, 0.35); }
+.t-gold   { color: var(--arc-gold); text-shadow: 0 0 8px rgba(255, 210, 63, 0.45); }
+
+/* Nokta ve çerçeve gibi dolgu kullanan yerlerde text-shadow anlamsız */
+.bdg-dots i.t-black { background: #3a4452; border-color: #6b7787; }
+.bdg-dots i.t-bronze { background: #cd8a4a; }
+.bdg-dots i.t-silver { background: #dfe6ef; }
+.bdg-dots i.t-gold { background: var(--arc-gold); }
 
 .pop.badges {
   max-width: 420px;
@@ -1953,14 +1961,10 @@ button.pop-chip {
 }
 
 .bdg-glyph {
-  font-size: 20px;
+  font-size: 18px;
   line-height: 1;
   text-align: center;
   color: #4e6076;
-}
-
-.bdg-row.got .bdg-glyph {
-  text-shadow: 0 0 8px rgba(255, 210, 63, 0.25);
 }
 
 .bdg-main {
@@ -1977,13 +1981,6 @@ button.pop-chip {
   font-weight: 400;
 }
 
-.bdg-tier {
-  font-style: normal;
-  font-size: 8px;
-  letter-spacing: 0.16em;
-  padding: 1px 5px;
-  border: 1px solid currentColor;
-}
 
 .bdg-how {
   font-size: 9.5px;
@@ -2006,8 +2003,7 @@ button.pop-chip {
 }
 
 .bdg-dots i.on {
-  background: currentColor;
-  border-color: currentColor;
+  border-color: transparent;
 }
 
 .bdg-val {
@@ -2059,9 +2055,9 @@ button.pop-chip {
 .outro-badges li {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   padding: 4px 9px;
-  border: 1px solid currentColor;
+  border: 1px solid rgba(255, 255, 255, 0.16);
   font-size: 10px;
   letter-spacing: 0.1em;
   animation: row-drop 260ms steps(3, end) both;
@@ -2078,7 +2074,7 @@ button.pop-chip {
 }
 
 .outro-badges .bdg-glyph {
-  font-size: 14px;
+  font-size: 18px;
   color: currentColor;
 }
 
@@ -2141,7 +2137,7 @@ button.pop-chip {
 }
 
 .bdg-chip .bdg-glyph {
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .bdg-chip.none {

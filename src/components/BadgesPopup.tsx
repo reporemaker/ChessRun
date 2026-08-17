@@ -183,15 +183,16 @@ function BadgeRow({
 
   return (
     <li className={`bdg-row${earned ? ' got' : ''}${selected ? ' sel' : ''}${badge.server ? ' srv' : ''}`}>
-      <span className={`bdg-glyph${tier ? ` t-${tier}` : ''}`} aria-hidden="true">
+      <span
+        className={`bdg-glyph${tier ? ` t-${tier}` : ''}`}
+        title={tier && !isOnce ? t(`tier.${tier}`) : undefined}
+        aria-label={tier && !isOnce ? t(`tier.${tier}`) : undefined}
+      >
         {fullyHidden ? '?' : badge.glyph}
       </span>
 
       <span className="bdg-main">
-        <b className="bdg-name">
-          {fullyHidden ? '???' : t(badge.nameKey)}
-          {tier && !isOnce && <em className={`bdg-tier t-${tier}`}>{t(`tier.${tier}`)}</em>}
-        </b>
+        <b className="bdg-name">{fullyHidden ? '???' : t(badge.nameKey)}</b>
         <small className="bdg-how">
           {fullyHidden
             ? t('badges.hidden')

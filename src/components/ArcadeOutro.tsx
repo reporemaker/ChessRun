@@ -139,10 +139,9 @@ export function ArcadeOutro({
                 const badge = badgeOf(award.id)
                 const tier = badge.tiers[Math.min(award.tier, badge.tiers.length - 1)]
                 return (
-                  <li key={`${award.id}-${award.tier}`} className={`t-${tier}`}>
-                    <span className="bdg-glyph" aria-hidden="true">{badge.glyph}</span>
+                  <li key={`${award.id}-${award.tier}`} title={badge.tiers.length > 1 ? t(`tier.${tier}`) : undefined}>
+                    <span className={`bdg-glyph t-${tier}`} aria-hidden="true">{badge.glyph}</span>
                     <b>{t(badge.nameKey)}</b>
-                    {badge.tiers.length > 1 && <small>{t(`tier.${tier}`)}</small>}
                   </li>
                 )
               })}
