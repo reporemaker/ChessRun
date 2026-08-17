@@ -3,6 +3,7 @@ import { minColsOf } from './engine/config'
 import { Game, type GameConfig, type GameHandle } from './components/Game'
 import { Home } from './components/Home'
 import { Page, type PageId } from './components/Pages'
+import { RankingPopup } from './components/RankingPopup'
 import { Settings } from './components/Settings'
 import { useSettings } from './ui/settings'
 import { unlockSound } from './ui/sound'
@@ -41,6 +42,9 @@ export default function App() {
   )
   const { lang } = useSettings()
   const gameRef = useRef<GameHandle>(null)
+  // Sıralama kendi penceresi. ?dev=rank örnek veriyle açıyor (yalnızca DEV).
+  const demoRank = import.meta.env.DEV && window.location.search.includes('dev=rank')
+  const [rankOpen, setRankOpen] = useState<boolean>(demoRank)
 
   // Ekran okuyucular ve tarayıcı tireleme kuralları için
   useEffect(() => {
@@ -95,6 +99,7 @@ export default function App() {
           onExit={() => setConfig(null)}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPage={setPage}
+          onOpenRanking={() => setRankOpen(true)}
           onRestartWithCols={restartWithCols}
         />
       ) : (
@@ -122,6 +127,7 @@ export default function App() {
             setSettingsOpen(false)
             setPage(next)
           }}
+          onOpenRanking={() => setRankOpen(true)}
           game={
             config
               ? {
@@ -132,6 +138,10 @@ export default function App() {
               : undefined
           }
         />
+      )}
+
+      {rankOpen && (
+        <RankingPopup mode={config?.mode} demo={demoRank} onClose={() => setRankOpen(false)} />
       )}
 
       {page && <Page page={page} onClose={() => setPage(null)} />}

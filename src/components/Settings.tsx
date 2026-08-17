@@ -2,9 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { COL_CHOICES } from '../engine/config'
 import { feedbackHref } from '../ui/feedback'
 import { getIdentity, shortToken } from '../ui/identity'
-import { type Lang, LANGS, hasFullProse, localeOf } from '../ui/i18n'
+import { LANGS, hasFullProse } from '../ui/i18n'
 import { GLYPH } from '../ui/pieces'
-import { type RankScope, readRanking } from '../ui/ranking'
+import { readRanking } from '../ui/ranking'
 import { setCols, setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
 import { useT } from '../ui/text'
 import { APP_VERSION } from '../ui/version'
@@ -28,18 +28,8 @@ interface SettingsProps {
   onOpenPage: (page: 'help' | 'about') => void
   /** Oyun sürüyorsa menüye dönüş bağlantısı — mobilde tek çıkış yolu */
   onExitGame?: () => void
+  onOpenRanking: () => void
   game?: LiveGame
-}
-
-/** Koşu tarihi, seçili dilin takvim biçiminde: 16.08 · 14:32 */
-function dateLabel(at: string, lang: Lang): string {
-  const date = new Date(at)
-  return date.toLocaleString(localeOf(lang), {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
 }
 
 /**
@@ -53,14 +43,12 @@ function dateLabel(at: string, lang: Lang): string {
  *
  * Rozetler son bölüm olarak gelecek; yeri altta kesik çizgiyle duruyor.
  */
-export function Settings({ onClose, onOpenPage, onExitGame, game }: SettingsProps) {
+export function Settings({ onClose, onOpenPage, onExitGame, onOpenRanking, game }: SettingsProps) {
   const settings = useSettings()
   const t = useT()
   const closeRef = useRef<HTMLButtonElement>(null)
 
-  const [showList, setShowList] = useState(false)
-  const [scope, setScope] = useState<RankScope>('allTime')
-  const ranking = useMemo(() => readRanking(scope), [scope])
+  const ranking = useMemo(() => readRanking('week'), [])
 
   const [identity, setIdentity] = useState(() => getIdentity())
 
@@ -252,13 +240,8 @@ export function Settings({ onClose, onOpenPage, onExitGame, game }: SettingsProp
           {/* D · ayraç */}
           <div className="pop-dv">{t('settings.ranking')}</div>
 
-          {/* E · sıralama */}
-          <button
-            type="button"
-            className="pop-trio"
-            aria-expanded={showList}
-            onClick={() => setShowList((open) => !open)}
-          >
+          {/* E · sıralama özeti — tam liste kendi penceresinde */}
+          <button type="button" className="pop-trio" onClick={onOpenRanking}>
             <span>
               <span className="v gold num">{ranking.rank == null ? '—' : `#${ranking.rank}`}</span>
               <span className="l">{t('settings.rankMine')}</span>
@@ -274,42 +257,9 @@ export function Settings({ onClose, onOpenPage, onExitGame, game }: SettingsProp
           </button>
 
           <div className="pop-trioft">
-            <span>{showList ? t('settings.closeFull') : t('settings.openFull')}</span>
+            <span>{t('settings.openFull')}</span>
             {ranking.pending && <span className="pend">{t('settings.serverPending')}</span>}
           </div>
-
-          {showList && (
-            <div className="pop-full">
-              <div className="pop-fh">
-                {(['allTime', 'week'] as const).map((key) => (
-                  <button
-                    key={key}
-                    type="button"
-                    className={scope === key ? 'on' : ''}
-                    onClick={() => setScope(key)}
-                  >
-                    {key === 'allTime' ? t('settings.listAllTime') : t('settings.listWeek')}
-                  </button>
-                ))}
-              </div>
-
-              <div className="pop-fl">
-                {ranking.rows.length === 0 && <p className="pop-fempty">{t('settings.empty')}</p>}
-                {ranking.rows.map((row) => (
-                  <div key={row.at} className={`pop-fr ${row.me ? 'me' : ''}`}>
-                    <span className="rk num">{row.place}</span>
-                    {/* Sunucu yokken satırı tarih anlatıyor: liste kendi
-                        koşuların, tekrar eden isim bir şey söylemiyordu */}
-                    <b>
-                      {ranking.pending ? dateLabel(row.at, settings.lang) : row.name}
-                      {row.me && ` (${t('settings.you')})`}
-                    </b>
-                    <span className="num">{row.score}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* ayraç */}
           <div className="pop-dv">{t('settings.info')}</div>

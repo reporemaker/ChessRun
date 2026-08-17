@@ -85,6 +85,7 @@ interface GameProps {
   onExit: () => void
   onOpenSettings: () => void
   onOpenPage: (page: 'help' | 'about') => void
+  onOpenRanking: () => void
   /** Sağ sütundaki koridor seçimi onaylanınca: App koşuyu kapatıp yeni genişlikte kurar */
   onRestartWithCols: (cols: number) => void
   ref?: Ref<GameHandle>
@@ -110,7 +111,15 @@ interface RunResult {
 
 const TIP_MS = 7000
 
-export function Game({ config, onExit, onOpenSettings, onOpenPage, onRestartWithCols, ref }: GameProps) {
+export function Game({
+  config,
+  onExit,
+  onOpenSettings,
+  onOpenPage,
+  onOpenRanking,
+  onRestartWithCols,
+  ref,
+}: GameProps) {
   const [game, setGame] = useState<GameState>(() => createGame(config))
   const [phase, setPhase] = useState<Phase>('input')
   const [ghostRow, setGhostRow] = useState<Row | null>(null)
@@ -126,7 +135,7 @@ export function Game({ config, onExit, onOpenSettings, onOpenPage, onRestartWith
   const [pendingCols, setPendingCols] = useState<number | null>(null)
   const [identity, setIdentity] = useState(() => getIdentity())
   // Sıralama özeti — koşu bitince (result değişince) tazeleniyor
-  const ranking = useMemo(() => readRanking('allTime'), [result]) // eslint-disable-line react-hooks/exhaustive-deps
+  const ranking = useMemo(() => readRanking('week', config.mode), [result, config.mode]) // eslint-disable-line react-hooks/exhaustive-deps
 
   /* Reklam yalnızca gerçek bir slot tanımlıysa çiziliyor — tanımsızken
      yer tutucu kutu göstermiyoruz. */
@@ -844,8 +853,8 @@ export function Game({ config, onExit, onOpenSettings, onOpenPage, onRestartWith
 
         <div className="gv-hr" />
 
-        {/* Sıralama özeti: üç sayı; tam liste ayarlar penceresinde */}
-        <button type="button" className="gv-rank" onClick={onOpenSettings}>
+        {/* Sıralama özeti: üç sayı; tam liste kendi penceresinde */}
+        <button type="button" className="gv-rank" onClick={onOpenRanking}>
           <span className="gv-lb">{t('settings.ranking')}</span>
           <span className="gv-rank-row">
             <span className="gv-cell">
