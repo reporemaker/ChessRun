@@ -1074,15 +1074,27 @@
   padding: 0 16px 16px;
 }
 
-/* Uzun dillerde (FR "COULEUR DES PIÈCES") etiket ile kontrol yan yana
-   sığmayabiliyor: taşırmak yerine alt satıra insin. */
+/* Etiket ile kontrol HER dilde aynı satırda: kontrol sağda sabit, uzun
+   etiket (FR "COULEUR DES PIÈCES") iki satıra sarıyor. Böylece taş rengi,
+   koridor, ses aynı yerde kalıyor — dil değişince düzen kaymıyor. */
 .pop-lin {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px 12px;
   padding: 8px 0;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+}
+
+.pop-lin > .pop-k {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Sağdaki kontroller daralmaz */
+.pop-lin > .pop-sw,
+.pop-lin > .pop-tg {
+  flex: 0 0 auto;
 }
 
 /* İki sütunlu satır: koridor (sol, geniş) + ses (sağ, dar). Dar ekranda
@@ -1176,6 +1188,7 @@
 .pop-k {
   font-size: 12px;
   letter-spacing: 0.08em;
+  line-height: 1.25;
 }
 
 .pop-k small {

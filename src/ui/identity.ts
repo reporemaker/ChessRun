@@ -23,13 +23,6 @@ export interface Identity {
   /** Görünen ad — oyuncu değiştirebilir */
   name: string
   createdAt: string
-  /**
-   * Oyuncu adı kendisi mi yazdı? Yazmadıysa (rastgele üretildiyse) dil
-   * değişince ad yeni dilde yeniden üretiliyor — Almanca'ya geçen oyuncunun
-   * künyesinde "Gölge Vezir" kalmasın. Eski kayıtlarda alan yok → rastgele
-   * sayılıyor, ki zaten öyleydiler.
-   */
-  custom?: boolean
 }
 
 const IDENTITY_KEY = 'chessrun:identity'
@@ -38,8 +31,12 @@ const SECRET_KEY = 'chessrun:secret'
 const PIECES: PieceType[] = ['n', 'b', 'r', 'q', 'p', 'k']
 
 /**
- * Rastgele ad, oyuncunun arayüz dilinde. Kalıp ve belirteç listesi
+ * Rastgele ad, o anki arayüz dilinde. Kalıp ve belirteç listesi
  * sözlükten (`name.pattern`, `name.mods`) geliyor; taş adı `piece.*`.
+ *
+ * Yalnızca iki anda çağrılıyor: ilk kimlik oluşturulurken (site İngilizce
+ * açıldıysa İngilizce ad) ve oyuncu ⟳'a bastığında (o an seçili dilde).
+ * Dil değiştirmek ada DOKUNMAZ — ad oyuncunun etiketi, arayüz metni değil.
  *
  * Sıfat değil AD-belirteç kullanılıyor ("Gölge Vezir", "Shadow Queen",
  * "Schatten-Dame", "Dama Sombra", "Dame Ombre"): sıfat olsaydı DE/ES/FR'de
@@ -97,7 +94,6 @@ export function getIdentity(): Identity {
     token: randomToken(),
     name: randomName(),
     createdAt: new Date().toISOString(),
-    custom: false,
   }
   store(identity)
   cached = identity
@@ -147,27 +143,14 @@ export function cleanName(raw: string): string | null {
 export function renameIdentity(name: string): Identity | null {
   const current = getIdentity()
   if (!name.trim()) {
-    const identity: Identity = { ...current, name: randomName(), custom: false }
+    const identity: Identity = { ...current, name: randomName() }
     store(identity)
     cached = identity
     return identity
   }
   const cleaned = cleanName(name)
   if (!cleaned) return null
-  const identity: Identity = { ...current, name: cleaned, custom: true }
-  store(identity)
-  cached = identity
-  return identity
-}
-
-/**
- * Dil değişince: ad rastgele üretilmişse yeni dilde yeniden üret, oyuncu
- * kendi yazdıysa dokunma. Settings bileşeni dil düğmesinde çağırıyor.
- */
-export function refreshRandomName(lang: Lang): Identity {
-  const current = getIdentity()
-  if (current.custom) return current
-  const identity: Identity = { ...current, name: randomName(lang), custom: false }
+  const identity: Identity = { ...current, name: cleaned }
   store(identity)
   cached = identity
   return identity

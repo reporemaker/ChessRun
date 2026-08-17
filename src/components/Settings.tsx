@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { COL_CHOICES } from '../engine/config'
 import { feedbackHref } from '../ui/feedback'
-import { NAME_MAX, getIdentity, refreshRandomName, renameIdentity, shortToken } from '../ui/identity'
+import { NAME_MAX, getIdentity, renameIdentity, shortToken } from '../ui/identity'
 import { type Lang, LANGS, hasFullProse, localeOf } from '../ui/i18n'
 import { GLYPH } from '../ui/pieces'
 import { type RankScope, readRanking } from '../ui/ranking'
@@ -246,12 +246,7 @@ export function Settings({ onClose, onOpenPage, onExitGame, game }: SettingsProp
                   aria-pressed={settings.lang === entry.code}
                   lang={entry.code}
                   title={entry.name}
-                  onClick={() => {
-                    setLang(entry.code)
-                    // Rastgele ad yeni dilde yeniden üretiliyor; oyuncunun
-                    // kendi yazdığı ada dokunulmuyor
-                    setIdentity(refreshRandomName(entry.code))
-                  }}
+                  onClick={() => setLang(entry.code)}
                 >
                   {entry.label}
                 </button>
