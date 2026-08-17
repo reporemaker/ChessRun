@@ -283,7 +283,7 @@ export const BADGES: Badge[] = [
   },
   {
     id: 'musketeers',
-    glyph: '⚔',
+    glyph: '⚜\uFE0E', // fleur-de-lis: silahşörlerin arması; ⚔ X gibi okunuyordu
     section: 'pieces',
     reveal: 'firstOpen',
     nameKey: 'badge.musketeers',
@@ -296,7 +296,7 @@ export const BADGES: Badge[] = [
   /* --- Kümülatif ustalık --- */
   {
     id: 'harakiri',
-    glyph: '♟',
+    glyph: '†', // hançer — piyon glifi Piyon ailesinin
     section: 'skill',
     reveal: 'firstOpen',
     nameKey: 'badge.harakiri',
@@ -307,7 +307,7 @@ export const BADGES: Badge[] = [
   },
   {
     id: 'oneUp',
-    glyph: '♥',
+    glyph: '♥\uFE0E',
     section: 'skill',
     reveal: 'firstOpen',
     nameKey: 'badge.oneUp',
@@ -320,7 +320,7 @@ export const BADGES: Badge[] = [
   /* --- Tek koşu ustalık — kademesiz, hepsi açık --- */
   {
     id: 'chain',
-    glyph: '⚡',
+    glyph: '⚡\uFE0E', // FE0E: emoji değil metin çizimi
     section: 'skill',
     reveal: 'open',
     nameKey: 'badge.chain',
@@ -331,7 +331,7 @@ export const BADGES: Badge[] = [
   },
   {
     id: 'hunter',
-    glyph: '♛',
+    glyph: '◎', // hedef — vezir glifi Vezir ailesinin
     section: 'skill',
     reveal: 'open',
     nameKey: 'badge.hunter',
@@ -364,7 +364,7 @@ export const BADGES: Badge[] = [
   },
   {
     id: 'transform',
-    glyph: '♞',
+    glyph: '⟳', // döngü — at glifi At ailesinin
     section: 'skill',
     reveal: 'open',
     nameKey: 'badge.transform',
@@ -424,7 +424,7 @@ export const BADGES: Badge[] = [
   },
   {
     id: 'weekKing',
-    glyph: '♚',
+    glyph: '♔', // içi boş şah — dolu ♚ Şah ailesinin
     section: 'league',
     reveal: 'hidden',
     nameKey: 'badge.weekKing',
@@ -436,7 +436,7 @@ export const BADGES: Badge[] = [
   },
   {
     id: 'emperor',
-    glyph: '♛',
+    glyph: '✪', // taçlı yıldız
     section: 'league',
     reveal: 'hidden',
     nameKey: 'badge.emperor',

@@ -114,7 +114,7 @@ export function demoRanking(mode: GameMode): RankingView {
     'Buz Şah 181', 'Moon Rook 547', 'Himmel-König 318', 'Alfil Oro 722', 'Pion Acier 550',
     'Demir Piyon 903', 'Storm Knight 66', 'Nacht-Läufer 430', 'Rey Viento 275', 'Reine Nuit 802',
   ]
-  const badges = ['♞', '♛', '⚡', '♚', undefined, '○', undefined, '♜', undefined, '◆']
+  const badges = ['♞', '♛', '⚡\uFE0E', '♚', undefined, '○', undefined, '♜', undefined, '◆']
   const identity = getIdentity()
   // Av'da 4. (listede), Kaçış'ta 47. (liste dışı → altta yapışık satır), Üçlü'de 2.
   const mePlace = mode === 'classic' ? 4 : mode === 'kingRun' ? 47 : 2
@@ -139,7 +139,7 @@ export function demoRanking(mode: GameMode): RankingView {
     rows: [
       { place: 1, name: names[(seed * 5) % names.length], score: Math.round(top * 1.08), badge: '♛' },
       { place: 2, name: names[(seed * 6) % names.length], score: Math.round(top * 0.93), badge: undefined },
-      { place: 3, name: names[(seed * 7) % names.length], score: Math.round(top * 0.81), badge: '⚡' },
+      { place: 3, name: names[(seed * 7) % names.length], score: Math.round(top * 0.81), badge: '⚡\uFE0E' },
     ],
   }
   return { rank: mePlace, score: myScore, players: 312, pending: false, rows, lastWeek }

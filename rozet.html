@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ChessRun — Rozet renkleri</title>
+<link rel="stylesheet" href="/src/index.css" />
+<link rel="stylesheet" href="/src/App.css" />
+<style>
+  body { display:block; padding: 24px 20px 80px; background: var(--bg); }
+  #root { max-width: none; }
+  .wrap { max-width: 1180px; margin: 0 auto; font-family: var(--mono); color: var(--arc-text); }
+  h1 { font-size: 22px; margin: 0 0 6px; letter-spacing: -.01em; }
+  h2 { font-size: 11px; letter-spacing: .2em; color: var(--arc-dim); margin: 34px 0 10px; text-transform: uppercase; }
+  .lede { color: var(--arc-dim); font-size: 12px; margin: 0 0 18px; line-height: 1.6; max-width: 80ch; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid rgba(255,255,255,.06); font-size: 11px; vertical-align: middle; }
+  th { color: var(--arc-dim); font-weight: 400; letter-spacing: .12em; font-size: 9.5px; }
+  td.n { color: var(--arc-text); }
+  td.g { font-size: 18px; line-height: 1; width: 44px; text-align: center; }
+  .cell { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; }
+  .ink { background: var(--arc-ink); }
+  .surface { background: var(--surface); }
+  .light { background: var(--sq-light); }
+  .paletteRow { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+  .pal { padding: 12px 14px; border: 1px solid rgba(255,255,255,.1); background: var(--arc-ink); }
+  .pal h3 { margin: 0 0 8px; font-size: 11px; letter-spacing: .12em; }
+  .pal p { margin: 0 0 8px; font-size: 10.5px; color: var(--arc-dim); line-height: 1.5; }
+  .strip { display: flex; gap: 14px; align-items: center; font-size: 26px; line-height: 1; }
+  .strip small { font-size: 9px; letter-spacing: .12em; color: var(--arc-dim); display: block; margin-top: 4px; text-align: center; }
+  .strip > span { display: grid; justify-items: center; }
+  .unearned { color: #4e6076; }
+  .dots { display: inline-flex; gap: 4px; margin-left: 10px; vertical-align: middle; }
+  .dots i { width: 7px; height: 7px; border: 1px solid rgba(255,255,255,.28); }
+  code { font-size: 10px; color: var(--arc-gold); }
+  i { font-style: normal; }
+  td.g { font-size: 20px; }
+
+  /* --- Alternatif paletler (yalnızca bu sayfada) --- */
+  /* B · Metalik: siyah = grafit + kenar, bronz kızıl, gümüş beyaz-mavi, altın */
+  .pB .t-black  { color:#1a1f28; text-shadow:0 0 1px rgba(255,255,255,.9), 0 0 2px rgba(255,255,255,.4); }
+  .pB .t-bronze { color:#9c5f2e; text-shadow:0 0 6px rgba(156,95,46,.45); }
+  .pB .t-silver { color:#e8eef5; text-shadow:0 0 6px rgba(200,215,235,.5); }
+  .pB .t-gold   { color:#ffd23f; text-shadow:0 0 8px rgba(255,210,63,.55); }
+  /* C · Yumuşak: siyah = koyu gri, bronz turuncu-kahve, gümüş açık gri, altın sarı — parıltısız */
+  .pC .t-black  { color:#5a6577; text-shadow:none; }
+  .pC .t-bronze { color:#d59a63; text-shadow:none; }
+  .pC .t-silver { color:#c9d2dc; text-shadow:none; }
+  .pC .t-gold   { color:#ffd23f; text-shadow:none; }
+  /* D · Kontrast: siyah = beyaz kenarlı koyu, bronz kızıl-turuncu, gümüş saf beyaz, altın turuncu-sarı */
+  .pD .t-black  { color:#0b0e14; text-shadow:0 0 0 #fff, 0 0 1px #fff, 0 0 1px #fff, 0 0 2px #cfd6e0; }
+  .pD .t-bronze { color:#e0873a; text-shadow:0 0 5px rgba(224,135,58,.5); }
+  .pD .t-silver { color:#ffffff; text-shadow:0 0 6px rgba(255,255,255,.55); }
+  .pD .t-gold   { color:#ffc21a; text-shadow:0 0 9px rgba(255,194,26,.6); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Rozet renkleri</h1>
+  <p class="lede">
+    Solda <b>mevcut palet (A)</b> — App.css'teki gerçek sınıflar (<code>.t-black .t-bronze .t-silver .t-gold</code>).
+    Sağda üç alternatif. Her hücre 18px, koyu zeminde. Kazanılmamış = gri (<code>#4e6076</code>).
+    Oyunda "hepsi gri" görünmesi büyük ihtimalle henüz rozet kazanılmadığı için: aileler ilk yemeye kadar gizli,
+    diğerleri kazanılana kadar gri.
+  </p>
+
+  <h2>Dört kademe · dört palet</h2>
+  <div class="paletteRow">
+    <div class="pal pA">
+      <h3>A · Mevcut</h3>
+      <p>Siyah = koyu dolgu + kalın açık kenar. Bronz kahveye yakın (#b06f3a).</p>
+      <div class="strip"><span><i class="unearned">♜</i><small>YOK</small></span><span><i class="t-black">♜</i><small>SİYAH</small></span><span><i class="t-bronze">♜</i><small>BRONZ</small></span><span><i class="t-silver">♜</i><small>GÜMÜŞ</small></span><span><i class="t-gold">♜</i><small>ALTIN</small></span></div>
+    </div>
+    <div class="pal pB">
+      <h3>B · Metalik</h3>
+      <p>Bronz daha koyu kahve (#9c5f2e), gümüş beyaz-mavi.</p>
+      <div class="strip"><span><i class="unearned">♜</i><small>YOK</small></span><span><i class="t-black">♜</i><small>SİYAH</small></span><span><i class="t-bronze">♜</i><small>BRONZ</small></span><span><i class="t-silver">♜</i><small>GÜMÜŞ</small></span><span><i class="t-gold">♜</i><small>ALTIN</small></span></div>
+    </div>
+    <div class="pal pC">
+      <h3>C · Yumuşak</h3>
+      <p>Parıltı yok, düz renkler. Siyah = koyu gri (kenarsız). En sakin.</p>
+      <div class="strip"><span><i class="unearned">♜</i><small>YOK</small></span><span><i class="t-black">♜</i><small>SİYAH</small></span><span><i class="t-bronze">♜</i><small>BRONZ</small></span><span><i class="t-silver">♜</i><small>GÜMÜŞ</small></span><span><i class="t-gold">♜</i><small>ALTIN</small></span></div>
+    </div>
+    <div class="pal pD">
+      <h3>D · Kontrast</h3>
+      <p>Siyah beyaz kenarlı, gümüş saf beyaz, altın turuncuya kayık — en ayrık dört ton.</p>
+      <div class="strip"><span><i class="unearned">♜</i><small>YOK</small></span><span><i class="t-black">♜</i><small>SİYAH</small></span><span><i class="t-bronze">♜</i><small>BRONZ</small></span><span><i class="t-silver">♜</i><small>GÜMÜŞ</small></span><span><i class="t-gold">♜</i><small>ALTIN</small></span></div>
+    </div>
+  </div>
+
+  <h2>Tüm rozetler × kademeler (palet A, gerçek sınıflar)</h2>
+  <table id="all"></table>
+
+  <h2>Aynı glif, farklı zeminler (palet A)</h2>
+  <p class="lede">Rozet üç yerde görünüyor: pencere/fiş (mürekkep zemin), sıralama satırı (yüzey), ve — ileride — belki tahta karesi. Siyah kademe her üçünde okunmalı.</p>
+  <table>
+    <tr><th></th><th>YOK</th><th>SİYAH</th><th>BRONZ</th><th>GÜMÜŞ</th><th>ALTIN</th></tr>
+    <tr><td class="n">mürekkep</td><td><span class="cell ink"><i class="unearned" style="font-size:18px">♞</i></span></td><td><span class="cell ink"><i class="t-black" style="font-size:18px">♞</i></span></td><td><span class="cell ink"><i class="t-bronze" style="font-size:18px">♞</i></span></td><td><span class="cell ink"><i class="t-silver" style="font-size:18px">♞</i></span></td><td><span class="cell ink"><i class="t-gold" style="font-size:18px">♞</i></span></td></tr>
+    <tr><td class="n">yüzey</td><td><span class="cell surface"><i class="unearned" style="font-size:18px">♞</i></span></td><td><span class="cell surface"><i class="t-black" style="font-size:18px">♞</i></span></td><td><span class="cell surface"><i class="t-bronze" style="font-size:18px">♞</i></span></td><td><span class="cell surface"><i class="t-silver" style="font-size:18px">♞</i></span></td><td><span class="cell surface"><i class="t-gold" style="font-size:18px">♞</i></span></td></tr>
+    <tr><td class="n">açık kare</td><td><span class="cell light"><i class="unearned" style="font-size:18px">♞</i></span></td><td><span class="cell light"><i class="t-black" style="font-size:18px">♞</i></span></td><td><span class="cell light"><i class="t-bronze" style="font-size:18px">♞</i></span></td><td><span class="cell light"><i class="t-silver" style="font-size:18px">♞</i></span></td><td><span class="cell light"><i class="t-gold" style="font-size:18px">♞</i></span></td></tr>
+  </table>
+
+  <h2>Bağlam örnekleri (palet A)</h2>
+  <div style="display:grid; gap:14px; max-width:420px">
+    <div class="pop-badgebar" style="padding:10px 12px; background:var(--arc-ink); border:1px solid rgba(255,255,255,.1)">
+      <span class="bdg-chip"><span class="bdg-glyph t-gold">♞</span><b>At</b></span>
+      <button type="button" class="pop-badgebtn">ROZETLER</button>
+    </div>
+    <div style="background:var(--arc-ink); border:1px solid rgba(255,255,255,.1); padding:6px 0">
+      <div class="rank-row me"><span class="rank-pos">4</span><span class="rank-name"><i class="rank-badge t-bronze">♥</i><b>Gölge Vezir 417</b><em>SEN</em></span><span class="rank-dist">147<small>satır</small></span><span class="rank-score">3.519</span></div>
+      <div class="rank-row"><span class="rank-pos">5</span><span class="rank-name"><i class="rank-badge t-black">♜</i><b>Himmel-König 318</b></span><span class="rank-dist">124<small>satır</small></span><span class="rank-score">2.969</span></div>
+      <div class="rank-row"><span class="rank-pos">6</span><span class="rank-name"><i class="rank-badge t-silver">⚡&#xFE0E;</i><b>Demir Piyon 903</b></span><span class="rank-dist">107<small>satır</small></span><span class="rank-score">2.576</span></div>
+      <div class="rank-row"><span class="rank-pos">7</span><span class="rank-name"><i class="rank-badge"></i><b>Rey Viento 275</b></span><span class="rank-dist">93<small>satır</small></span><span class="rank-score">2.242</span></div>
+    </div>
+    <ul class="outro-badges" style="justify-content:flex-start">
+      <li><span class="bdg-glyph t-black">♞</span><b>At</b></li>
+      <li><span class="bdg-glyph t-bronze">♥</span><b>1UP</b></li>
+      <li><span class="bdg-glyph t-gold">⚡&#xFE0E;</span><b>Zincir</b></li>
+    </ul>
+  </div>
+</div>
+
+<script>
+const BADGES = [
+  ['♜','Kale','4'],['♞','At','4'],['♝','Fil','4'],
+  ['♟','Piyon','3'],['♛','Vezir','3'],['♚','Şah','3'],['⚜\uFE0E','Üç Silahşörler','3'],
+  ['†','Harakiri','4'],['♥\uFE0E','1UP','4'],
+  ['⚡\uFE0E','Zincir','1'],['◎','Avcı','1'],['✕','Mat','1'],['○','Nefes','1'],['⟳','Dönüşüm','1'],
+  ['▲','Yedi gün','1'],['◆','Otuz gün','1'],['▬','Dar koridor','1'],
+  ['①','Haftanın birincisi','1'],['♔','Kral','1'],['✪','İmparator','1'],
+]
+const TIERS4 = ['black','bronze','silver','gold']
+const TIERS3 = ['bronze','silver','gold']
+const rows = ['<tr><th></th><th>ROZET</th><th>YOK</th><th>SİYAH</th><th>BRONZ</th><th>GÜMÜŞ</th><th>ALTIN</th><th>NOKTALAR</th></tr>']
+for (const [g,name,k] of BADGES) {
+  const tiers = k==='4'?TIERS4: k==='3'?TIERS3:['gold']
+  const cell = (t)=> tiers.includes(t) ? `<td class="g"><i class="t-${t}">${g}</i></td>` : `<td class="g" style="color:#2a323f">·</td>`
+  const dots = tiers.length>1 ? `<span class="dots">${tiers.map(t=>`<i class="on t-${t}"></i>`).join('')}</span>` : ''
+  rows.push(`<tr><td class="g"><i class="unearned">${g}</i></td><td class="n">${name} <span style="color:var(--arc-dim);font-size:9px;margin-left:6px">${k==='4'?'kümülatif':k==='3'?'tek koşu':'kademesiz'}</span></td><td class="g"><i class="unearned">${g}</i></td>${cell('black')}${cell('bronze')}${cell('silver')}${cell('gold')}<td>${dots}</td></tr>`)
+}
+document.getElementById('all').innerHTML = rows.join('')
+</script>
+</body>
+</html>

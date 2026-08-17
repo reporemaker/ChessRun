@@ -1693,12 +1693,12 @@ button.pop-chip {
   background: var(--arc-gold);
 }
 
-/* Rozet glifi: adın önünde, 18px + kademe rengi */
+/* Rozet glifi: adın önünde, 20px + kademe rengi */
 .rank-badge {
   flex: 0 0 auto;
-  width: 20px;
+  width: 22px;
   font-style: normal;
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1;
   text-align: center;
   color: var(--arc-gold);
@@ -1870,16 +1870,23 @@ button.pop-chip {
 
 /* Kademe renkleri — glif ve nokta aynı dört tonu paylaşıyor; etiket yok,
    kademeyi renk anlatıyor. Siyah, koyu zeminde okunmalı: siyah taş
-   derisiyle aynı çözüm — koyu dolgu + ince açık kenar. */
-.t-black  { color: #12151b; text-shadow: 0 0 1px rgba(255, 255, 255, 0.75), 0 0 2px rgba(255, 255, 255, 0.35); }
-.t-bronze { color: #cd8a4a; text-shadow: 0 0 6px rgba(205, 138, 74, 0.35); }
-.t-silver { color: #dfe6ef; text-shadow: 0 0 6px rgba(223, 230, 239, 0.35); }
-.t-gold   { color: var(--arc-gold); text-shadow: 0 0 8px rgba(255, 210, 63, 0.45); }
+   derisiyle aynı çözüm — koyu dolgu + kalın açık kenar. Bronz kahveye
+   yakın (sarıdan uzak dursun). Glifler her yerde DÜZ: <i> ile çizilse bile. */
+.t-black,
+.t-bronze,
+.t-silver,
+.t-gold {
+  font-style: normal;
+}
+.t-black  { color: #0e1117; text-shadow: 0 0 1px #d8dfe8, 0 0 1px #d8dfe8, 0 0 2px rgba(216, 223, 232, 0.7); }
+.t-bronze { color: #b06f3a; text-shadow: 0 0 6px rgba(176, 111, 58, 0.4); }
+.t-silver { color: #e2e9f1; text-shadow: 0 0 6px rgba(226, 233, 241, 0.4); }
+.t-gold   { color: var(--arc-gold); text-shadow: 0 0 8px rgba(255, 210, 63, 0.5); }
 
 /* Nokta ve çerçeve gibi dolgu kullanan yerlerde text-shadow anlamsız */
-.bdg-dots i.t-black { background: #3a4452; border-color: #6b7787; }
-.bdg-dots i.t-bronze { background: #cd8a4a; }
-.bdg-dots i.t-silver { background: #dfe6ef; }
+.bdg-dots i.t-black { background: #2c3440; border-color: #8a97a8; }
+.bdg-dots i.t-bronze { background: #b06f3a; }
+.bdg-dots i.t-silver { background: #e2e9f1; }
 .bdg-dots i.t-gold { background: var(--arc-gold); }
 
 .pop.badges {
@@ -1936,7 +1943,7 @@ button.pop-chip {
   display: grid;
   /* Sabit sütunlar: kademesiz rozette noktalar ve değer boş kalınca
      düğme sıkışmasın */
-  grid-template-columns: 30px 1fr 40px 74px 58px;
+  grid-template-columns: 34px 1fr 40px 74px 58px;
   align-items: center;
   gap: 10px;
   padding: 7px 8px;
@@ -1961,8 +1968,9 @@ button.pop-chip {
 }
 
 .bdg-glyph {
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1;
+  font-style: normal;
   text-align: center;
   color: #4e6076;
 }
@@ -2074,7 +2082,7 @@ button.pop-chip {
 }
 
 .outro-badges .bdg-glyph {
-  font-size: 18px;
+  font-size: 20px;
   color: currentColor;
 }
 
@@ -2137,7 +2145,7 @@ button.pop-chip {
 }
 
 .bdg-chip .bdg-glyph {
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .bdg-chip.none {
