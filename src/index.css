@@ -1,0 +1,87 @@
+:root {
+  /* Kabuk */
+  --bg: #0e1015;
+  --surface: #161b25;
+  --surface-2: #1c2231;
+  --border: #26303f;
+  --text: #eef1f6;
+  --text-dim: #8b96aa;
+
+  /* Vurgular */
+  --accent: #34d399;
+  --accent-soft: rgba(52, 211, 153, 0.16);
+  --danger: #f43f5e;
+  --danger-soft: rgba(244, 63, 94, 0.18);
+  --gold: #fbbf24;
+
+  /* Tahta — iki taş rengi de okunsun diye orta tonlar */
+  --sq-light: #dfe5ec;
+  --sq-dark: #94a3b4;
+
+  --cell: clamp(36px, 11vw, 60px);
+  --radius: 16px;
+
+  /* Arcade yüzeyler (ana sayfa, ayarlar penceresi, bilgi sayfaları) */
+  --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  --arc-gold: #ffd23f;
+  --arc-amber: #e0a33a;
+  --arc-ink: #0d1219;
+  --arc-text: #dbe4f0;
+  --arc-dim: #7d8ca3;
+
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-synthesis-weight: none;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(900px 420px at 50% -8%, rgba(52, 211, 153, 0.09), transparent 70%),
+    radial-gradient(700px 500px at 100% 100%, rgba(99, 102, 241, 0.07), transparent 70%),
+    var(--bg);
+  color: var(--text);
+  display: flex;
+  justify-content: center;
+  padding: 18px 16px 32px;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Dar ekranda tek sütun; geniş ekranda tahta ile yan panel yan yana
+   sığsın diye genişliyor. Eski 520px'lik şerit masaüstünde sayfayı
+   cılız gösteriyordu. */
+#root {
+  width: 100%;
+  max-width: 560px;
+}
+
+@media (min-width: 940px) {
+  #root {
+    max-width: 900px;
+  }
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
