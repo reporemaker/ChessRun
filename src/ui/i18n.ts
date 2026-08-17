@@ -137,6 +137,8 @@ const tr = {
 
   /* --- sayfa: nasıl oynanır --- */
   'help.title': 'NASIL OYNANIR',
+  'help.notice.title': 'BU SATRANÇ DEĞİL',
+  'help.notice.body': 'Bildiğin satranç kuralları burada geçmez: tahta her hamlede kayar, yediğin taşa dönüşürsün ve şah yenilebilir — mat oyunun sonu değil, ödülüdür. Daha iyi oynamak için kuralları bir kez oku.',
   'help.core.title': 'ÜÇ OYUNUN ORTAK KURALI',
   'help.core.1':
     'Tur sırası hep aynı: sen oynarsın, tahta bir satır kayar, rakip oynar. Kaymada üstten yeni satır gelir, en alttaki silinir; alt satırda kalırsan düşersin.',
@@ -159,7 +161,7 @@ const tr = {
   'help.classic.3':
     'Rakip şaha şah çekersen rakip sadece şahını kurtaran hamleyi oynar; kurtaracak hamle yoksa mat: +5 puan, rakip başka bir taşını oynar. Her şah 2 puan × zincir — üst üste çektikçe katlanır, en çok 5 kata kadar.',
   'help.classic.4':
-    'Rakip şahı yersen +25 puan ve +1 can kazanırsın, tahta baştan kurulur — kazandığın canı hemen kaybetmeyesin diye.',
+    'Satrançta şah yenmez — burada yenir. Rakip şahı yersen +25 puan ve +1 can kazanırsın, tahta baştan kurulur; koşu sürer.',
   'help.classic.5':
     'Yeme puanı taşın değeridir: piyon 1 · at ve fil 3 · kale 5 · vezir 9 · şah 25.',
   'help.kingRun.1': 'Şah sensin. Dönüşüm yok, tek canın var.',
@@ -201,7 +203,7 @@ const tr = {
   'demo.mustDefend': 'Şah kaçtı — rakip başka bir taş oynayamadı. Şah çekmek rakibi kilitler.',
   'demo.checkAgain': 'Yine şah: zincir katlanıyor. İkinci şah 2×2 = +4, üçüncü ×3… en çok ×5. Kaçamazsa mat: +5.',
   'demo.kingInReach': 'Rakip şah atın menzilinde: altın halka. Bu en değerli hedef.',
-  'demo.kingTaken': 'Şahı yedin: +25 puan ve +1 can. Rakip şahı yemek koşuyu bitirmez.',
+  'demo.kingTaken': 'Şahı yedin — evet, bu oyunda şah yenir. +25 puan ve +1 can; koşu bitmez, sürer.',
   'demo.freshBoard': 'Tahta baştan kuruldu — kazandığın canı hemen kaybetmeyesin diye temiz başlangıç.',
   'demo.attacked': 'Sen şahsın. Kale kendi sütununu vuruyor: × kareler yasak, şah oraya giremez. Noktalar güvenli.',
   'demo.stepUp': 'Güvenli bir kareye bir adım yukarı. Şah her tur tam bir kare gider.',
@@ -536,6 +538,8 @@ const en: Partial7 = {
     'Long-form pages and in-game text are not translated yet — showing English.',
 
   'help.title': 'HOW TO PLAY',
+  'help.notice.title': 'THIS IS NOT CHESS',
+  'help.notice.body': "The chess rules you know don't apply here: the board scrolls after every move, you become the piece you capture, and the king can be captured — mate isn't the end of the game, it's a reward. Read the rules once to play better.",
   'help.core.title': 'RULES ALL THREE MODES SHARE',
   'help.core.1':
     'The turn order never changes: you move, the board scrolls one row, the enemy moves. On a scroll a new row enters at the top and the bottom one is erased; stay on the bottom row and you fall.',
@@ -557,7 +561,7 @@ const en: Partial7 = {
   'help.classic.3':
     "Give check and the enemy may only play the move that saves its king; if none exists it's mate: +5 points and it plays another piece. Each check scores 2 × chain — consecutive checks multiply, up to 5×.",
   'help.classic.4':
-    "Capture the enemy king and you gain +25 points and +1 life; the board is rebuilt so you don't lose that life right away.",
+    'In chess the king is never captured — here it is. Capture the enemy king and you gain +25 points and +1 life; the board is rebuilt and the run goes on.',
   'help.classic.5':
     'Capture points equal piece value: pawn 1 · knight and bishop 3 · rook 5 · queen 9 · king 25.',
   'help.kingRun.1': 'You are the king. No transformation, a single life.',
@@ -599,7 +603,7 @@ const en: Partial7 = {
   'demo.mustDefend': "The king escaped — the enemy couldn't move anything else. Check locks the enemy down.",
   'demo.checkAgain': 'Check again: the chain multiplies. Second check 2×2 = +4, third ×3… up to ×5. No escape = mate: +5.',
   'demo.kingInReach': "The enemy king is in the knight's reach: gold ring. The most valuable target.",
-  'demo.kingTaken': 'King captured: +25 points and +1 life. Taking the enemy king does not end the run.',
+  'demo.kingTaken': 'You captured the king — yes, in this game the king can be taken. +25 points and +1 life; the run does not end, it goes on.',
   'demo.freshBoard': "The board was rebuilt — a clean start so you don't lose that life right away.",
   'demo.attacked': 'You are the king. The rook attacks its file: × squares are forbidden, the king may not enter. Dots are safe.',
   'demo.stepUp': 'One step up to a safe square. The king moves exactly one square per turn.',
@@ -926,6 +930,8 @@ const de: Partial7 = {
     'Lange Texte und Spieltexte sind noch nicht übersetzt — Englisch wird angezeigt.',
 
   'help.title': 'SPIELANLEITUNG',
+  'help.notice.title': 'DAS IST KEIN SCHACH',
+  'help.notice.body': 'Die Schachregeln, die du kennst, gelten hier nicht: das Brett rückt nach jedem Zug, du wirst zu der Figur, die du schlägst, und der König kann geschlagen werden — Matt ist nicht das Ende, sondern eine Belohnung. Lies die Regeln einmal, um besser zu spielen.',
   'about.title': 'ÜBER',
   'about.credit.title': 'WER ES GEMACHT HAT',
   'about.credit.1': 'ChessRun ist ein SmartKraft-Projekt.',
@@ -953,7 +959,7 @@ const de: Partial7 = {
   'help.classic.3':
     'Bietest du Schach, spielt der Gegner nur den Zug, der seinen König rettet; gibt es keinen, ist es matt: +5 Punkte, er zieht eine andere Figur. Jedes Schach zählt 2 × Kette — Schach in Serie vervielfacht, bis zu 5×.',
   'help.classic.4':
-    'Schlägst du den gegnerischen König, gibt es +25 Punkte und +1 Leben; das Brett wird neu aufgebaut, damit du das Leben nicht sofort wieder verlierst.',
+    'Im Schach wird der König nie geschlagen — hier schon. Schlägst du den gegnerischen König, gibt es +25 Punkte und +1 Leben; das Brett wird neu aufgebaut, der Lauf geht weiter.',
   'help.classic.5':
     'Schlagpunkte sind der Figurenwert: Bauer 1 · Springer und Läufer 3 · Turm 5 · Dame 9 · König 25.',
   'help.kingRun.1': 'Du bist der König. Keine Verwandlung, ein einziges Leben.',
@@ -995,7 +1001,7 @@ const de: Partial7 = {
   'demo.mustDefend': 'Der König ist entkommen — der Gegner konnte nichts anderes ziehen. Schach legt den Gegner lahm.',
   'demo.checkAgain': 'Wieder Schach: die Kette vervielfacht. Zweites Schach 2×2 = +4, drittes ×3… bis ×5. Kein Ausweg = matt: +5.',
   'demo.kingInReach': 'Der gegnerische König ist in Reichweite des Springers: goldener Ring. Das wertvollste Ziel.',
-  'demo.kingTaken': 'König geschlagen: +25 Punkte und +1 Leben. Den gegnerischen König zu schlagen beendet den Lauf nicht.',
+  'demo.kingTaken': 'Du hast den König geschlagen — ja, in diesem Spiel kann man den König schlagen. +25 Punkte und +1 Leben; der Lauf geht weiter.',
   'demo.freshBoard': 'Das Brett wurde neu aufgebaut — ein sauberer Start, damit du das Leben nicht sofort verlierst.',
   'demo.attacked': 'Du bist der König. Der Turm greift seine Linie an: ×-Felder sind verboten, der König darf nicht hin. Punkte sind sicher.',
   'demo.stepUp': 'Ein Schritt hoch auf ein sicheres Feld. Der König zieht genau ein Feld pro Runde.',
@@ -1304,6 +1310,8 @@ const es: Partial7 = {
     'Los textos largos y del juego aún no están traducidos — se muestra en inglés.',
 
   'help.title': 'CÓMO SE JUEGA',
+  'help.notice.title': 'ESTO NO ES AJEDREZ',
+  'help.notice.body': 'Las reglas de ajedrez que conoces no valen aquí: el tablero se desplaza tras cada jugada, te conviertes en la pieza que capturas y el rey se puede capturar — el mate no es el final, es una recompensa. Lee las reglas una vez para jugar mejor.',
   'about.title': 'ACERCA DE',
   'about.credit.title': 'QUIÉN LO HIZO',
   'about.credit.1': 'ChessRun es un proyecto de SmartKraft.',
@@ -1331,7 +1339,7 @@ const es: Partial7 = {
   'help.classic.3':
     'Si das jaque, el rival solo juega la jugada que salva a su rey; si no existe, es mate: +5 puntos y mueve otra pieza. Cada jaque vale 2 × cadena — los jaques seguidos se multiplican, hasta 5×.',
   'help.classic.4':
-    'Si capturas al rey rival ganas +25 puntos y +1 vida; el tablero se reconstruye para que no pierdas esa vida enseguida.',
+    'En ajedrez el rey nunca se captura — aquí sí. Si capturas al rey rival ganas +25 puntos y +1 vida; el tablero se reconstruye y la partida sigue.',
   'help.classic.5':
     'Los puntos por captura son el valor de la pieza: peón 1 · caballo y alfil 3 · torre 5 · dama 9 · rey 25.',
   'help.kingRun.1': 'Eres el rey. Sin transformaciones y con una sola vida.',
@@ -1373,7 +1381,7 @@ const es: Partial7 = {
   'demo.mustDefend': 'El rey escapó — el rival no pudo mover otra cosa. El jaque bloquea al rival.',
   'demo.checkAgain': 'Jaque otra vez: la cadena se multiplica. Segundo jaque 2×2 = +4, tercero ×3… hasta ×5. Sin escape es mate: +5.',
   'demo.kingInReach': 'El rey rival está al alcance del caballo: anillo dorado. El objetivo más valioso.',
-  'demo.kingTaken': 'Rey capturado: +25 puntos y +1 vida. Capturar al rey rival no termina la partida.',
+  'demo.kingTaken': 'Capturaste al rey — sí, en este juego el rey se puede capturar. +25 puntos y +1 vida; la partida no termina, sigue.',
   'demo.freshBoard': 'El tablero se reconstruyó — un inicio limpio para que no pierdas esa vida enseguida.',
   'demo.attacked': 'Tú eres el rey. La torre ataca su columna: las casillas × están prohibidas, el rey no puede entrar. Los puntos son seguros.',
   'demo.stepUp': 'Un paso arriba a una casilla segura. El rey mueve exactamente una casilla por turno.',
@@ -1681,6 +1689,8 @@ const fr: Partial7 = {
     'Les textes longs et ceux du jeu ne sont pas encore traduits — affichés en anglais.',
 
   'help.title': 'COMMENT JOUER',
+  'help.notice.title': "CE N'EST PAS DES ÉCHECS",
+  'help.notice.body': "Les règles des échecs que tu connais ne s'appliquent pas ici : l'échiquier défile après chaque coup, tu deviens la pièce que tu prends et le roi peut être pris — le mat n'est pas la fin, c'est une récompense. Lis les règles une fois pour mieux jouer.",
   'about.title': 'À PROPOS',
   'about.credit.title': 'QUI L\'A FAIT',
   'about.credit.1': 'ChessRun est un projet SmartKraft.',
@@ -1708,7 +1718,7 @@ const fr: Partial7 = {
   'help.classic.3':
     "Si tu fais échec, l'adversaire ne joue que le coup qui sauve son roi ; s'il n'en existe pas, c'est mat : +5 points et il joue une autre pièce. Chaque échec vaut 2 × chaîne — les échecs enchaînés se multiplient, jusqu'à 5×.",
   'help.classic.4':
-    "Capture le roi adverse et tu gagnes +25 points et +1 vie ; l'échiquier est reconstruit pour que tu ne perdes pas cette vie aussitôt.",
+    "Aux échecs le roi n'est jamais pris — ici, si. Capture le roi adverse et tu gagnes +25 points et +1 vie ; l'échiquier est reconstruit et la partie continue.",
   'help.classic.5':
     'Les points de capture valent la pièce : pion 1 · cavalier et fou 3 · tour 5 · dame 9 · roi 25.',
   'help.kingRun.1': 'Tu es le roi. Aucune transformation, une seule vie.',
@@ -1751,7 +1761,7 @@ const fr: Partial7 = {
   'demo.mustDefend': "Le roi s'est échappé — l'adversaire ne pouvait rien jouer d'autre. L'échec verrouille l'adversaire.",
   'demo.checkAgain': "Encore échec : la chaîne se multiplie. Deuxième échec 2×2 = +4, troisième ×3… jusqu'à ×5. Sans issue, c'est mat : +5.",
   'demo.kingInReach': 'Le roi adverse est à portée du cavalier : anneau doré. La cible la plus précieuse.',
-  'demo.kingTaken': 'Roi pris : +25 points et +1 vie. Prendre le roi adverse ne termine pas la partie.',
+  'demo.kingTaken': "Tu as pris le roi — oui, dans ce jeu le roi se prend. +25 points et +1 vie ; la partie ne s'arrête pas, elle continue.",
   'demo.freshBoard': "L'échiquier a été reconstruit — un départ propre pour ne pas perdre cette vie aussitôt.",
   'demo.attacked': 'Tu es le roi. La tour attaque sa colonne : les cases × sont interdites, le roi ne peut pas y aller. Les points sont sûrs.',
   'demo.stepUp': "Un pas vers le haut, sur une case sûre. Le roi avance d'exactement une case par tour.",

@@ -120,6 +120,12 @@ export function Page({ page, onClose }: PageProps) {
       </header>
 
       <div className="page-bd">
+        {page === 'help' && (
+          <aside className="page-notice" role="note">
+            <b>{t('help.notice.title')}</b>
+            <p>{t('help.notice.body')}</p>
+          </aside>
+        )}
         {sections.map((section, n) => (
           <section key={section.titleKey} className={`page-sec ${section.lessons ? 'spread' : ''}`}>
             <h2>
