@@ -9,6 +9,7 @@ import {
   dayKey,
   readRuns,
 } from '../ui/scores'
+import { lifetimeStreak } from '../ui/lifetime'
 import { useSettings } from '../ui/settings'
 import { useT } from '../ui/text'
 import { APP_VERSION } from '../ui/version'
@@ -56,7 +57,7 @@ export function Home({ onStart, onOpenSettings }: HomeProps) {
   }, [])
 
   const runs = useMemo(() => readRuns(), [])
-  const streak = useMemo(() => currentStreak(runs), [runs])
+  const streak = useMemo(() => Math.max(currentStreak(runs), lifetimeStreak()), [runs])
   const seed = dailySeed(day)
   const todayMode = dailyMode(day)
   const hi = useMemo(

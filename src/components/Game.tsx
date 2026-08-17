@@ -21,7 +21,7 @@ import { key } from '../engine/moves'
 import type { EndReason } from '@shared/events'
 import type { Color, GameEvent, GameMode, GameState, PieceType, Pos, Row } from '../engine/types'
 import { emptyTally, tallyEvents, tallyStep } from '../ui/badges'
-import { recordLifetime } from '../ui/lifetime'
+import { lifetimeStreak, recordLifetime } from '../ui/lifetime'
 import { type TipId, TIP_KEY, readSeenTips, storeSeenTips } from '../ui/coach'
 import { getIdentity, shortToken } from '../ui/identity'
 import { LANGS } from '../ui/i18n'
@@ -260,7 +260,7 @@ export function Game({
     })
 
     // Ömür boyu sayaçlar: kümülatif rozet aileleri (defter 300 koşuyla sınırlı)
-    recordLifetime(counts, { mode: state.mode, distance: state.distance })
+    recordLifetime(counts, { mode: state.mode, distance: state.distance, daily: config.daily })
 
     // Sunucu tanımlıysa aynı kayıt imzasıyla haftalık tabloya gider
     void submitRun(run)
@@ -464,7 +464,7 @@ export function Game({
           score: game.score,
           distance: game.distance,
           chain: game.chain,
-          streak: currentStreak(readRuns()),
+          streak: Math.max(currentStreak(readRuns()), lifetimeStreak()),
           mated: game.events.some((event) => event.kind === 'checkmated'),
         }, t),
       ),

@@ -33,6 +33,18 @@ export interface Lifetime {
     mated: number
     distance: number
   }
+  /**
+   * Günlük meydan okuma serisi. Defterden hesaplanan seri (scores.currentStreak)
+   * 300 koşu sınırına takılıyor: günde 30 oyun oynayan birinin defteri 10 günü
+   * kapsar, 30 günlük seri asla 30 okunmaz. Burada koşu koşu güncelleniyor.
+   */
+  streak: {
+    /** Şu anki seri (gün) */
+    current: number
+    best: number
+    /** Serinin son sayıldığı gün anahtarı (YYYY-MM-DD, yerel) */
+    lastDay: string | null
+  }
   best: {
     /** Av: piyonken tek koşuda en çok adım */
     pawnSteps: number
@@ -63,8 +75,19 @@ export function emptyLifetime(now = new Date()): Lifetime {
       mated: 0,
       distance: 0,
     },
+    streak: { current: 0, best: 0, lastDay: null },
     best: { pawnSteps: 0, queenCaptures: 0, kingDistance: 0, trioNoLoss: 0, kingsInRun: 0, streak: 0 },
   }
+}
+
+/** 'YYYY-MM-DD' → bir önceki gün, yerel takvim */
+export function prevDayKey(day: string): string {
+  const [y, m, d] = day.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  date.setDate(date.getDate() - 1)
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+  return `${date.getFullYear()}-${mm}-${dd}`
 }
 
 export function readLifetime(): Lifetime {
@@ -84,6 +107,7 @@ export function readLifetime(): Lifetime {
         captured: { ...ZERO, ...parsed.total?.captured },
         steps: { ...ZERO, ...parsed.total?.steps },
       },
+      streak: { ...base.streak, ...parsed.streak },
       best: { ...base.best, ...parsed.best },
     }
   } catch {
@@ -102,6 +126,8 @@ function write(lifetime: Lifetime): void {
 export interface RunFacts {
   mode: GameMode
   distance: number
+  /** Günlük meydan okumaysa gün anahtarı — seri buradan ilerliyor */
+  daily?: string
 }
 
 /** Saf: bir koşuyu ömür boyu toplamlara ekler, yeni nesne döndürür */
@@ -112,9 +138,20 @@ export function addRun(life: Lifetime, tally: RunTally, run: RunFacts): Lifetime
     captured[t] += tally.captured[t]
     steps[t] += tally.steps[t]
   }
+  // Seri: aynı gün → değişmez; dün → +1; kopuk → 1. Yalnızca günlük koşular.
+  let streak = life.streak
+  if (run.daily) {
+    if (life.streak.lastDay === run.daily) streak = life.streak
+    else if (life.streak.lastDay === prevDayKey(run.daily)) {
+      const current = life.streak.current + 1
+      streak = { current, best: Math.max(life.streak.best, current), lastDay: run.daily }
+    } else streak = { current: 1, best: Math.max(life.streak.best, 1), lastDay: run.daily }
+  }
+
   return {
     ...life,
     runs: life.runs + 1,
+    streak,
     runsByMode: { ...life.runsByMode, [run.mode]: life.runsByMode[run.mode] + 1 },
     total: {
       captured,
@@ -141,4 +178,22 @@ export function recordLifetime(tally: RunTally, run: RunFacts): Lifetime {
   const next = addRun(readLifetime(), tally, run)
   write(next)
   return next
+}
+
+/**
+ * Bugün itibarıyla geçerli seri: son günlük koşu bugün ya da dünse `current`,
+ * değilse seri kopmuş demektir → 0. Home ve rozetler bunu defter serisiyle
+ * `Math.max` yapıyor: eski oyuncuların bu depo açılmadan önceki serisi
+ * defterden geliyor.
+ */
+export function lifetimeStreak(life: Lifetime = readLifetime(), today: string = localDayKey()): number {
+  if (!life.streak.lastDay) return 0
+  if (life.streak.lastDay === today || life.streak.lastDay === prevDayKey(today)) return life.streak.current
+  return 0
+}
+
+function localDayKey(now = new Date()): string {
+  const mm = String(now.getMonth() + 1).padStart(2, '0')
+  const dd = String(now.getDate()).padStart(2, '0')
+  return `${now.getFullYear()}-${mm}-${dd}`
 }

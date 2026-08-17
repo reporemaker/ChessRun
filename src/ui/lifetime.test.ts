@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { emptyTally, tallyEvents, tallyStep } from './badges'
-import { addRun, emptyLifetime, readLifetime, recordLifetime } from './lifetime'
+import { addRun, emptyLifetime, lifetimeStreak, prevDayKey, readLifetime, recordLifetime } from './lifetime'
 
 function installStore() {
   const map = new Map<string, string>()
@@ -66,6 +66,49 @@ describe('addRun (saf)', () => {
     const life = emptyLifetime()
     addRun(life, emptyTally(), { mode: 'classic', distance: 5 })
     expect(life.runs).toBe(0)
+  })
+})
+
+describe('günlük seri (defter sınırından bağımsız)', () => {
+  it('ardışık günler +1, aynı gün değişmez, kopunca 1', () => {
+    let life = emptyLifetime()
+    life = addRun(life, emptyTally(), { mode: 'classic', distance: 1, daily: '2026-08-10' })
+    life = addRun(life, emptyTally(), { mode: 'classic', distance: 1, daily: '2026-08-10' }) // aynı gün
+    life = addRun(life, emptyTally(), { mode: 'kingRun', distance: 1, daily: '2026-08-11' })
+    life = addRun(life, emptyTally(), { mode: 'trio', distance: 1 }) // serbest koşu seriyi etkilemez
+    life = addRun(life, emptyTally(), { mode: 'classic', distance: 1, daily: '2026-08-12' })
+    expect(life.streak.current).toBe(3)
+    expect(life.streak.best).toBe(3)
+    life = addRun(life, emptyTally(), { mode: 'classic', distance: 1, daily: '2026-08-15' }) // 13-14 boş
+    expect(life.streak.current).toBe(1)
+    expect(life.streak.best).toBe(3)
+  })
+
+  it('ay ve yıl sınırında da ardışık', () => {
+    expect(prevDayKey('2026-03-01')).toBe('2026-02-28')
+    expect(prevDayKey('2026-01-01')).toBe('2025-12-31')
+    let life = emptyLifetime()
+    life = addRun(life, emptyTally(), { mode: 'classic', distance: 1, daily: '2025-12-31' })
+    life = addRun(life, emptyTally(), { mode: 'classic', distance: 1, daily: '2026-01-01' })
+    expect(life.streak.current).toBe(2)
+  })
+
+  /**
+   * 300 koşu sınırı: günde 30 oyun oynayan biri için 30 günlük seri defterden
+   * asla okunamaz. Ömür boyu depo koşu koşu ilerlediği için 30'u görüyor.
+   */
+  it('30 gün seri 900 koşuda da 30 okunuyor', () => {
+    let life = emptyLifetime()
+    for (let d = 1; d <= 30; d++) {
+      const day = `2026-07-${String(d).padStart(2, '0')}`
+      life = addRun(life, emptyTally(), { mode: 'classic', distance: 1, daily: day })
+      for (let i = 0; i < 29; i++) life = addRun(life, emptyTally(), { mode: 'classic', distance: 1 })
+    }
+    expect(life.runs).toBe(900)
+    expect(life.streak.current).toBe(30)
+    expect(lifetimeStreak(life, '2026-07-30')).toBe(30)
+    expect(lifetimeStreak(life, '2026-07-31')).toBe(30) // dün oynadı, seri sürüyor
+    expect(lifetimeStreak(life, '2026-08-01')).toBe(0) // koptu
   })
 })
 
