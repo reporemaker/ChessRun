@@ -491,24 +491,67 @@
   pointer-events: none;
 }
 
+/* Taşlarda `filter` YOK, bilerek. Gölge ve parlama text-shadow ile.
+   Oynanan taş FLIP ile `transform` animasyonu alıyor (Board.tsx); filtreli
+   bir eleman kompozit katmana alınınca Safari (macOS + iOS) katmanı bir
+   sonraki yeniden çizime kadar SİYAH DİKDÖRTGEN olarak basıyor — "taşı
+   oynayınca kare siyah kaplanıyor, rakip oynayınca düzeliyor" hatası.
+   text-shadow katman zorlamıyor, görünüm aynı. */
 .piece.white {
   color: #fdfdfb;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.55));
-  text-shadow: 0 0 2px #0b0d12, 0 0 1px #0b0d12, 0 0 1px #0b0d12;
+  text-shadow:
+    0 0 2px #0b0d12,
+    0 0 1px #0b0d12,
+    0 0 1px #0b0d12,
+    0 1px 1px rgba(0, 0, 0, 0.55);
 }
 
 .piece.black {
   color: #12151b;
-  filter: drop-shadow(0 1px 1px rgba(255, 255, 255, 0.25));
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.25);
 }
 
-.piece.king {
-  animation: king-pulse 1.8s ease-in-out infinite;
+/* Şah nabzı da text-shadow: filter animasyonu aynı Safari hatasına açık.
+   Animasyon text-shadow'u EZDİĞİ için renk başına ayrı keyframe — beyaz
+   şahın kenar çizgisi nabızla birlikte kalmalı, yoksa açık karede erir. */
+.piece.white.king {
+  animation: king-pulse-w 1.8s ease-in-out infinite;
 }
 
-@keyframes king-pulse {
-  0%, 100% { filter: drop-shadow(0 0 0 rgba(251, 191, 36, 0)); }
-  50% { filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.95)); }
+.piece.black.king {
+  animation: king-pulse-b 1.8s ease-in-out infinite;
+}
+
+@keyframes king-pulse-w {
+  0%, 100% {
+    text-shadow:
+      0 0 2px #0b0d12,
+      0 0 1px #0b0d12,
+      0 0 1px #0b0d12,
+      0 1px 1px rgba(0, 0, 0, 0.55),
+      0 0 0 rgba(251, 191, 36, 0);
+  }
+  50% {
+    text-shadow:
+      0 0 2px #0b0d12,
+      0 0 1px #0b0d12,
+      0 0 1px #0b0d12,
+      0 1px 1px rgba(0, 0, 0, 0.55),
+      0 0 8px rgba(251, 191, 36, 0.95);
+  }
+}
+
+@keyframes king-pulse-b {
+  0%, 100% {
+    text-shadow:
+      0 1px 1px rgba(255, 255, 255, 0.25),
+      0 0 0 rgba(251, 191, 36, 0);
+  }
+  50% {
+    text-shadow:
+      0 1px 1px rgba(255, 255, 255, 0.25),
+      0 0 8px rgba(251, 191, 36, 0.95);
+  }
 }
 
 .piece.pop {
