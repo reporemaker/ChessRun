@@ -1878,15 +1878,17 @@ button.pop-chip {
 .t-gold {
   font-style: normal;
 }
-.t-black  { color: #0e1117; text-shadow: 0 0 1px #d8dfe8, 0 0 1px #d8dfe8, 0 0 2px rgba(216, 223, 232, 0.7); }
-.t-bronze { color: #b06f3a; text-shadow: 0 0 6px rgba(176, 111, 58, 0.4); }
-.t-silver { color: #e2e9f1; text-shadow: 0 0 6px rgba(226, 233, 241, 0.4); }
-.t-gold   { color: var(--arc-gold); text-shadow: 0 0 8px rgba(255, 210, 63, 0.5); }
+/* Parlama yok (kullanıcı kararı). Siyahtaki text-shadow parıltı değil,
+   koyu glifin koyu zeminde görünmesini sağlayan 1px kontur. */
+.t-black  { color: #1a1f28; text-shadow: 0 0 1px rgba(255, 255, 255, 0.9), 0 0 1px rgba(255, 255, 255, 0.9); }
+.t-bronze { color: #9c5f2e; text-shadow: none; }
+.t-silver { color: #e8eef5; text-shadow: none; }
+.t-gold   { color: #ffd23f; text-shadow: none; }
 
 /* Nokta ve çerçeve gibi dolgu kullanan yerlerde text-shadow anlamsız */
-.bdg-dots i.t-black { background: #2c3440; border-color: #8a97a8; }
-.bdg-dots i.t-bronze { background: #b06f3a; }
-.bdg-dots i.t-silver { background: #e2e9f1; }
+.bdg-dots i.t-black { background: #1a1f28; border-color: #9aa7b8; }
+.bdg-dots i.t-bronze { background: #9c5f2e; }
+.bdg-dots i.t-silver { background: #e8eef5; }
 .bdg-dots i.t-gold { background: var(--arc-gold); }
 
 .pop.badges {

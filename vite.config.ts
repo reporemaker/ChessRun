@@ -1,10 +1,44 @@
+import { writeFileSync } from 'node:fs'
 import { fileURLToPath, URL } from 'node:url'
-import { defineConfig } from 'vite'
+import { type Plugin, defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+
+/**
+ * Yalnızca geliştirme: rozet.html'deki tıklamalı seçimleri kökteki
+ * rozet-secim.json'a yazar. Üretim derlemesine girmez (configureServer
+ * sadece dev sunucusunda çalışır). Tasarım kararlarını tarayıcıdan
+ * dosyaya taşımanın en kısa yolu.
+ */
+function devPickSink(): Plugin {
+  return {
+    name: 'chessrun-dev-pick-sink',
+    configureServer(server) {
+      server.middlewares.use('/__pick', (req, res) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405
+          res.end()
+          return
+        }
+        let body = ''
+        req.on('data', (chunk: Buffer) => (body += chunk))
+        req.on('end', () => {
+          try {
+            const file = fileURLToPath(new URL('./rozet-secim.json', import.meta.url))
+            writeFileSync(file, JSON.stringify(JSON.parse(body), null, 2))
+            res.statusCode = 204
+          } catch {
+            res.statusCode = 400
+          }
+          res.end()
+        })
+      })
+    },
+  }
+}
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), devPickSink()],
   server: {
     /* Üretimde toplama ucu APEX'te, yani oyunla AYNI ORIGIN — CORS diye
        bir şey yok ve `sendBeacon` sorunsuz çalışıyor (beacon preflight
