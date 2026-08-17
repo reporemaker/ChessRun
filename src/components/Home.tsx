@@ -9,10 +9,12 @@ import {
   dayKey,
   readRuns,
 } from '../ui/scores'
+import { fetchPulse } from '../ui/leaderboard'
 import { lifetimeStreak } from '../ui/lifetime'
 import { useSettings } from '../ui/settings'
 import { useT } from '../ui/text'
 import { APP_VERSION } from '../ui/version'
+import type { StringKey } from '../ui/i18n'
 import type { GameConfig } from './Game'
 
 interface HomeProps {
@@ -39,6 +41,29 @@ export function Home({ onStart, onOpenSettings }: HomeProps) {
   // Koridor genişliği ayarlar penceresinden geliyor: ana sayfa artık
   // yalnızca "hangi oyunu oynayacağım" sorusunu soruyor
   const { cols } = useSettings()
+
+  /* Alt satır: her açılışta farklı bir mikro-ipucu. Rastgele ama son
+     gösterileni sessionStorage'dan okuyup bir daha seçmiyor — sekmede
+     ardışık iki açılış aynı cümleyi göstermesin. Sunucu bugünün nabzını
+     verirse (fetchPulse) ipucu yerine o gösteriliyor. */
+  const hint = useMemo<StringKey>(() => {
+    const total = 10
+    let last = -1
+    try {
+      last = Number(sessionStorage.getItem('chessrun:hint') ?? '-1')
+    } catch {
+      // yok sayılıyor
+    }
+    let pick = Math.floor(Math.random() * total)
+    if (pick === last) pick = (pick + 1) % total
+    try {
+      sessionStorage.setItem('chessrun:hint', String(pick))
+    } catch {
+      // yok sayılıyor
+    }
+    return `home.hint.${pick + 1}` as StringKey
+  }, [])
+
   const [day, setDay] = useState(() => dayKey())
   const [clock, setClock] = useState(() => clockOf(dayEnd(new Date()).getTime() - Date.now()))
 
@@ -55,6 +80,15 @@ export function Home({ onStart, onOpenSettings }: HomeProps) {
     }, 1000)
     return () => clearInterval(timer)
   }, [])
+
+  const [pulse, setPulse] = useState<number | null>(null)
+  useEffect(() => {
+    let alive = true
+    void fetchPulse(day).then((n) => alive && setPulse(n))
+    return () => {
+      alive = false
+    }
+  }, [day])
 
   const runs = useMemo(() => readRuns(), [])
   const streak = useMemo(() => Math.max(currentStreak(runs), lifetimeStreak()), [runs])
@@ -147,8 +181,10 @@ export function Home({ onStart, onOpenSettings }: HomeProps) {
         </div>
 
         <footer className="bi-ft">
-          <span>{t('home.foot')}</span>
-          <span>CHESSRUN v{APP_VERSION}</span>
+          <span className="bi-hint">{pulse != null ? t('home.pulse', { n: pulse }) : t(hint)}</span>
+          <span className="bi-ver">
+            CHESSRUN v{APP_VERSION} · <b>SmartKraft</b>
+          </span>
         </footer>
       </div>
     </div>
