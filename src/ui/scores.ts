@@ -214,6 +214,13 @@ export interface RunInput {
   level: number
   daily?: string
   chain?: PieceType[]
+  /* --- Rozet sayaçları. `RunRecord`'da baştan tanımlıydılar ama hiçbir
+     şey yazmıyordu; `badges.ts`'in geriye dönük hesabı bunları okuyor.
+     Buradan itibaren dolduruluyorlar. --- */
+  kings?: number
+  bestStreak?: number
+  stuckUsed?: number
+  mated?: boolean
 }
 
 /** Koşuyu imzalayıp deftere yazar */
@@ -222,6 +229,9 @@ export async function recordRun(input: RunInput, now = new Date()): Promise<RunR
   const at = now.toISOString()
   const week = isoWeekKey(now)
 
+  // İmzalanan alan listesi bilerek genişletilmiyor: rozet sayaçları
+  // eklenseydi daha önce imzalanmış her kayıt doğrulanamaz hale gelirdi,
+  // karşılığında hiçbir şey kazanılmazdı — imza skoru cihaza bağlamak için.
   const payload = runPayload([
     identity.token,
     input.mode,
@@ -244,6 +254,10 @@ export async function recordRun(input: RunInput, now = new Date()): Promise<RunR
     week,
     daily: input.daily,
     chain: input.chain?.join('>'),
+    kings: input.kings,
+    bestStreak: input.bestStreak,
+    stuckUsed: input.stuckUsed,
+    mated: input.mated,
     sig: (await signPayload(payload)) ?? undefined,
   }
 

@@ -5,6 +5,7 @@ import { Page, type PageId } from './components/Pages'
 import { Settings } from './components/Settings'
 import { useSettings } from './ui/settings'
 import { unlockSound } from './ui/sound'
+import { trackSessionEnd, trackVisit } from './ui/stats'
 import './App.css'
 
 /**
@@ -35,6 +36,23 @@ export default function App() {
   useEffect(() => {
     document.documentElement.lang = lang
   }, [lang])
+
+  /* Ziyaret Game'den bağımsız, burada sayılıyor — siteye girip hiç
+     oynamayan da ziyaretçidir. Oturum sonu için `visibilitychange` +
+     `pagehide` çifti kullanılıyor: `beforeunload`/`unload` mobil
+     Safari'de güvenilir tetiklenmiyor. Uç tanımsızken hepsi sessiz. */
+  useEffect(() => {
+    trackVisit()
+    const onHide = () => {
+      if (document.visibilityState === 'hidden') trackSessionEnd()
+    }
+    document.addEventListener('visibilitychange', onHide)
+    window.addEventListener('pagehide', trackSessionEnd)
+    return () => {
+      document.removeEventListener('visibilitychange', onHide)
+      window.removeEventListener('pagehide', trackSessionEnd)
+    }
+  }, [])
 
   const runKey = config
     ? `${config.mode}-${config.cols}-${config.seed ?? 'free'}-${config.daily ?? ''}`

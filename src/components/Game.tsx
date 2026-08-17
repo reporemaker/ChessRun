@@ -18,7 +18,8 @@ import {
   selectPiece,
 } from '../engine/game'
 import { key } from '../engine/moves'
-import type { Color, GameEvent, GameMode, GameState, Pos, Row } from '../engine/types'
+import type { Color, GameEvent, GameMode, GameState, PieceType, Pos, Row } from '../engine/types'
+import { emptyTally, tallyEvents } from '../ui/badges'
 import { type TipId, TIP_KEY, readSeenTips, storeSeenTips } from '../ui/coach'
 import { LANGS } from '../ui/i18n'
 import type { StringKey } from '../ui/i18n'
@@ -35,6 +36,7 @@ import {
 } from '../ui/scores'
 import { setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
 import { shareRun, shareText } from '../ui/share'
+import { endReasonOf, trackRun } from '../ui/stats'
 import { type Translate, useT } from '../ui/text'
 import { playEvents, playSound, unlockSound } from '../ui/sound'
 import {
@@ -118,6 +120,30 @@ export function Game({ config, onExit, onOpenSettings, onOpenPage }: GameProps) 
   const turnRef = useRef(0)
   useEffect(() => () => void turnRef.current++, [])
 
+  /* --- Koşu ölçümü ---------------------------------------------------
+     Koşu tam iki yerde doğuyor: bu bileşenin kurulması ve restart().
+     restart() yeniden monte ETMİYOR, o yüzden mount'a bağlı bir effect
+     ikinci doğumu kaçırırdı; [game]'e bağlı olan ise her commit'te
+     çalışırdı. Doğrusu ref + restart()'ta tek satır.
+
+     performance.now(), Date.now() değil: monoton, saat düzeltmelerinden
+     etkilenmiyor. Kusuru sekme arka plandayken de işlemesi — gece açık
+     kalan bir koşu şişik süre üretir; sunucu kırpıyor, panel medyanı da
+     gösteriyor.
+
+     Motora saat konmuyor: tohum + hamle dizisi bayt bayt aynı tahtayı
+     üretmeli, günlük meydan okuma ve ileride sunucu doğrulaması buna
+     dayanıyor. */
+  const runStart = useRef(performance.now())
+  const tally = useRef(emptyTally())
+  // tallyEvents hamleden ÖNCEKİ taş tipini istiyor. commit'in kapanışındaki
+  // `game` bir tur zincirinde bayatlıyor (runTurn arada render olmadan
+  // commit'i birkaç kez çağırıyor), bu yüzden tipi commit'in kendisi taşıyor.
+  const prevType = useRef<PieceType>(game.playerType)
+  // Motor gameover'ı bir kez yayıyor (cloneState events'i sıfırlıyor) ama o
+  // garanti üç dosya ötede yaşıyor — tek satırlık sigorta.
+  const finished = useRef(false)
+
   const moves = useMemo(() => legalMoves(game), [game])
   const safe = useMemo(() => new Set(safeMoves(game).map(key)), [game])
   const checkedKing = useMemo(() => checkedKingSquare(game), [game])
@@ -142,6 +168,9 @@ export function Game({ config, onExit, onOpenSettings, onOpenPage }: GameProps) 
   }
 
   function commit(next: GameState) {
+    tally.current = tallyEvents(tally.current, next.events, prevType.current)
+    prevType.current = next.playerType
+
     setGame(next)
     playEvents(next.events)
 
@@ -161,22 +190,33 @@ export function Game({ config, onExit, onOpenSettings, onOpenPage }: GameProps) 
       }
       if (event.kind === 'kingBonus') buzz([30, 40, 30])
       if (event.kind === 'capture') buzz(18)
-      if (event.kind === 'gameover') void finishRun(next)
+      if (event.kind === 'gameover' && !finished.current) {
+        finished.current = true
+        void finishRun(next)
+      }
     }
   }
 
   /** Koşuyu imzalayıp deftere yaz, rekor kırıldıysa kutla */
   async function finishRun(state: GameState) {
     const before = readStanding(state.mode)
+    const durationMs = performance.now() - runStart.current
+    const counts = tally.current
+    const cols = colsOf(state.board)
+    const level = levelOf(state.distance) + 1
 
     const run = await recordRun({
       mode: state.mode,
       score: state.score,
       distance: state.distance,
-      cols: colsOf(state.board),
-      level: levelOf(state.distance) + 1,
+      cols,
+      level,
       daily: config.daily,
       chain: state.chain,
+      kings: counts.kings,
+      bestStreak: counts.bestStreak,
+      stuckUsed: counts.stuckUsed,
+      mated: counts.mated,
     })
 
     const after = readStanding(state.mode)
@@ -198,12 +238,36 @@ export function Game({ config, onExit, onOpenSettings, onOpenPage }: GameProps) 
 
     // Sunucu tanımlıysa aynı kayıt imzasıyla haftalık tabloya gider
     void submitRun(run)
+
+    // İstatistik ayrı uç, ayrı tip, cihaz jetonu YOK. Oyunu bekletmiyor.
+    trackRun({
+      mode: state.mode,
+      daily: Boolean(config.daily),
+      score: state.score,
+      distance: state.distance,
+      cols,
+      level,
+      durationMs,
+      endReason: endReasonOf(state.events),
+      speed,
+      kings: counts.kings,
+      bestStreak: counts.bestStreak,
+      stuckUsed: counts.stuckUsed,
+      mated: counts.mated,
+    })
   }
 
   function restart() {
     turnRef.current++
     unlockSound()
-    setGame(createGame(config))
+    const next = createGame(config)
+    // Koşunun ikinci doğum yeri — bileşen yeniden monte olmadığı için
+    // ölçüm ref'lerini burada elle sıfırlamak zorundayız
+    runStart.current = performance.now()
+    tally.current = emptyTally()
+    prevType.current = next.playerType
+    finished.current = false
+    setGame(next)
     setPhase('input')
     setGhostRow(null)
     setFlash(null)
