@@ -143,28 +143,36 @@ export function RankingPopup({ onClose, mode: initialMode, demo = false }: Props
             </div>
           )}
 
-          {/* Geçen haftanın ilk üçü — sunucu gelince dolacak (Faz 9) */}
+          {/* Geçen haftanın ilk üçü — kürsü. Sıra 2·1·3: ortadaki en yüksek.
+              Sunucu (Faz 9) gelince dolacak; şimdilik yalnızca demo. */}
           {view.lastWeek && (
             <div className="rank-last">
               <span className="rank-last-lb">
                 {t('rank.lastWeek')} <small>{view.lastWeek.week}</small>
               </span>
               <ol className="rank-podium">
-                {view.lastWeek.rows.map((row) => (
-                  <li key={row.place} className={`p${row.place}`}>
-                    <span className="rank-pos">{row.place}</span>
-                    <span className="rank-name">
-                      <i className="rank-badge" aria-hidden="true">{row.badge ?? ''}</i>
-                      <b>{row.name}</b>
-                    </span>
-                    <span className="rank-score">{row.score.toLocaleString(lang)}</span>
-                  </li>
-                ))}
+                {[2, 1, 3].map((place) => {
+                  const row = view.lastWeek!.rows.find((r) => r.place === place)
+                  if (!row) return null
+                  return (
+                    <li key={place} className={`p${place}`}>
+                      <span className="pd-name">
+                        {row.badge && <i className="rank-badge" aria-hidden="true">{row.badge}</i>}
+                        <b>{row.name}</b>
+                      </span>
+                      <span className="pd-score">{row.score.toLocaleString(lang)}</span>
+                      <span className="pd-step">
+                        {place === 1 && <i className="pd-crown" aria-hidden="true">♛</i>}
+                        <span className="pd-num">{place}</span>
+                      </span>
+                    </li>
+                  )
+                })}
               </ol>
             </div>
           )}
 
-          {/* En alt satır: hafta sayacı solda, not sağda */}
+          {/* En alt: hafta sayacı ortada, varsa not altında */}
           <div className="rank-ft">
             <span className="rank-ends">{t('rank.endsIn', { t: endsIn })}</span>
             {demo ? (

@@ -1747,11 +1747,13 @@ button.pop-chip {
   color: var(--arc-dim);
 }
 
-/* Geçen haftanın ilk üçü: listenin altında, sessiz bir şerit */
+/* Geçen haftanın ilk üçü — kürsü, bir tık kutlama: alçak bloklar,
+   altın/gümüş/bronz, birincide sabit küçük taç. Yanıp sönme, parıltı,
+   konfeti yok — geçmiş bugünle yarışmıyor. */
 .rank-last {
   display: grid;
-  gap: 6px;
-  padding-top: 8px;
+  gap: 8px;
+  padding-top: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -1759,6 +1761,7 @@ button.pop-chip {
   font-size: 8.5px;
   letter-spacing: 0.2em;
   color: var(--arc-dim);
+  text-align: center;
 }
 
 .rank-last-lb small {
@@ -1770,35 +1773,79 @@ button.pop-chip {
 
 .rank-podium {
   margin: 0;
-  padding: 0;
+  padding: 0 6px;
   list-style: none;
   display: grid;
-  gap: 1px;
+  grid-template-columns: 1fr 1.15fr 1fr;
+  align-items: end;
+  gap: 6px;
 }
 
 .rank-podium li {
   display: grid;
-  grid-template-columns: 30px 1fr 64px;
+  justify-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.pd-name {
+  display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 5px 8px;
-  font-size: 11.5px;
+  gap: 5px;
+  max-width: 100%;
+  font-size: 10.5px;
+  color: var(--arc-text);
+}
+
+.pd-name b {
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pd-score {
+  font-size: 11px;
   color: var(--arc-dim);
   font-variant-numeric: tabular-nums;
 }
 
-.rank-podium li b { font-weight: 400; color: var(--arc-text); opacity: 0.85; }
-.rank-podium li .rank-score { font-size: 12px; color: var(--arc-dim); }
-.rank-podium li.p1 .rank-pos { color: var(--arc-gold); font-weight: 700; }
-.rank-podium li.p2 .rank-pos { color: #cfd6e0; font-weight: 700; }
-.rank-podium li.p3 .rank-pos { color: #d39a5c; font-weight: 700; }
+.pd-step {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-bottom: 0;
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--arc-dim);
+}
+
+.rank-podium li.p1 .pd-step { height: 40px; color: var(--arc-ink); background: var(--arc-gold); border-color: var(--arc-gold); }
+.rank-podium li.p2 .pd-step { height: 30px; color: #dfe6ef; background: rgba(207, 214, 224, 0.14); border-color: rgba(207, 214, 224, 0.35); }
+.rank-podium li.p3 .pd-step { height: 24px; color: #e5b184; background: rgba(211, 154, 92, 0.14); border-color: rgba(211, 154, 92, 0.4); }
+
+.rank-podium li.p1 .pd-name { color: var(--arc-gold); font-size: 11.5px; }
+.rank-podium li.p1 .pd-score { color: var(--arc-text); }
+
+/* Taç: birincinin adının önünde, sabit ve küçük */
+.pd-crown {
+  position: absolute;
+  top: -13px;
+  font-style: normal;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--arc-gold);
+}
+
+.pd-num { line-height: 1; }
 
 .rank-ft {
-  min-height: 14px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
   padding-top: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -1807,7 +1854,7 @@ button.pop-chip {
   font-size: 9px;
   letter-spacing: 0.06em;
   color: var(--arc-dim);
-  text-align: right;
+  text-align: center;
 }
 
 .rank-note.demo {
