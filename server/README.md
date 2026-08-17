@@ -1,0 +1,64 @@
+# chessrun-stats — istatistik Worker'ı
+
+Cloudflare Worker + D1. Tek betik, iki alan adı:
+
+| Yol | Erişim |
+|---|---|
+| `ALAN/collect/*` | herkese açık toplama — **oyunla aynı origin** |
+| `stats.ALAN/*` | panel + `/api/*` — **Cloudflare Access arkasında** |
+
+Toplamanın apex'te olması tesadüf değil. `sendBeacon` preflight yapamaz;
+çapraz origin'de oturum olayları iOS'ta sessizce kaybolur. Aynı origin'de
+CORS diye bir şey yok ve Worker'ın hiç CORS kodu taşıması gerekmiyor.
+
+## Yerelde çalıştırma
+
+```bash
+cd server
+npm install
+npm run migrate:local     # wrangler d1 migrations apply chessrun --local
+npm run dev               # 8787
+```
+
+Sonra proje kökünde `cp .env.example .env.local` ve `npm run dev`.
+Vite'ın dev proxy'si `/collect`'i 8787'ye yönlendiriyor, böylece **yerel de
+üretim gibi aynı origin** oluyor.
+
+Satırları görmek için:
+
+```bash
+npx wrangler d1 execute chessrun --local --json \
+  --command "SELECT mode, COUNT(*) FROM run_event GROUP BY mode"
+```
+
+## Yayına almadan önce doldurulacaklar
+
+`wrangler.toml` içinde `PLACEHOLDER` ve `ALAN` geçen her yer:
+
+- `database_id` ← `wrangler d1 create chessrun`
+- KV `id` ← `wrangler kv namespace create SALT`
+- `[[routes]]` blokları ← alan adı kesinleşince (şu an açık tartışma)
+- `ACCESS_TEAM` / `ACCESS_AUD` ← Access uygulaması kurulunca
+- `[assets]` bloğu ← `sub/` kurulunca (Faz 5)
+
+## Değişmez kurallar
+
+- **IP hiçbir yere yazılmıyor.** Yalnızca istek işleyicisinde yerel değişken
+  olarak var, günlük dönen tuzla hash'leniyor, tuz 48 saatte siliniyor.
+- **Cihaz jetonu buraya hiç gelmiyor.** Sıralama tablosu jetona ihtiyaç
+  duyuyor çünkü o bir kimlik iddiası; istatistik duymuyor.
+- **Ham User-Agent saklanmıyor** — üç kovaya ayrıştırılıyor.
+- **Şehir alınmıyor.** Şehir + tarayıcı + işletim sistemi + saat dilimi bir
+  haneyi tekilleştirir ve hiçbir ürün sorusunu cevaplamaz.
+- **Toplama uçları her durumda 204 döner** — doğrulama başarısız olsa bile.
+  Şema şeklini sızdırmamak ve istemciyi yeniden denemeye itmemek için.
+- **`workers_dev = false` kalmalı.** Access rotanın önünde duruyor; Worker
+  `*.workers.dev` üstünden erişilebilir olsaydı Access baypas edilir, tüm
+  veri seti tahmin edilecek bir alan adı uzaklıkta kalırdı.
+
+## Kapsam dışı (bilinçli)
+
+Mail (gelen/giden/yazma) — `/api/mail/*` ve `mail_*` tabloları olarak sonra
+eklenecek, mevcut hiçbir şey değişmeden. Gerçek zamanlı görünüm, veri dışa
+aktarma, çoklu yönetici, geçmiş `localStorage` verisinin aktarımı (cihaz
+başına tutulduğu için sunucuya taşınamaz).

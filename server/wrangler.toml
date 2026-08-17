@@ -1,0 +1,59 @@
+name = "chessrun-stats"
+main = "src/index.ts"
+compatibility_date = "2026-08-01"
+
+# ÖNEMLİ: kapalı kalmalı. Access *rotanın* önünde duruyor; Worker hâlâ
+# chessrun-stats.<hesap>.workers.dev adresinden erişilebilir olsaydı Access
+# tamamen baypas edilir, tüm veri seti tahmin edilecek bir alan adı
+# uzaklıkta kalırdı. Plandaki en olası güvenlik hatası bu.
+workers_dev = false
+
+[observability]
+enabled = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "chessrun"
+# wrangler d1 create chessrun → çıkan id buraya
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+[[kv_namespaces]]
+binding = "SALT"
+# wrangler kv namespace create SALT → çıkan id buraya
+id = "00000000000000000000000000000000"
+
+[triggers]
+# 00:05 UTC: tuzu döndür, dünü topla, 35 günü aşan ham satırları sil
+crons = ["5 0 * * *"]
+
+# --- Rotalar -----------------------------------------------------------
+# Alan adı henüz kesinleşmedi (chesswalker.com / chessrun.* tartışması).
+# Karar verilince ALAN yerine yazılacak; başka hiçbir yer değişmiyor.
+#
+# Toplama APEX'te, yani oyunla aynı origin. Bu tesadüf değil: sendBeacon
+# preflight yapamaz, çapraz origin'de oturum olayları iOS'ta sessizce
+# kaybolur. Panel ayrı alan adında çünkü Access politikaları alan adı
+# başına tanımlanıyor — tek alan adında "collect hariç" muafiyeti bir
+# politika düzenlemesi uzaklıkta ya oyunu bozar ya veriyi açar.
+#
+# [[routes]]
+# pattern = "ALAN/collect/*"
+# zone_name = "ALAN"
+#
+# [[routes]]
+# pattern = "stats.ALAN/*"
+# zone_name = "ALAN"
+
+# Panel derlemesi Worker ile birlikte yayınlanıyor — ayrı hosting yok.
+# Faz 5'te sub/ kurulunca açılacak; şu an ../sub/dist yok ve wrangler
+# olmayan bir dizine bakınca başlamıyor.
+# [assets]
+# directory = "../sub/dist"
+# binding = "ASSETS"
+# not_found_handling = "single-page-application"
+
+[vars]
+STATS_HOST = "stats.ALAN"
+ACCESS_TEAM = "PLACEHOLDER"
+ACCESS_AUD = "PLACEHOLDER"
