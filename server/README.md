@@ -4,8 +4,8 @@ Cloudflare Worker + D1. Tek betik, iki alan adı:
 
 | Yol | Erişim |
 |---|---|
-| `ALAN/collect/*` | herkese açık toplama — **oyunla aynı origin** |
-| `stats.ALAN/*` | panel + `/api/*` — **Cloudflare Access arkasında** |
+| `chessrun.app/collect/*` | herkese açık toplama — **oyunla aynı origin** |
+| `1403.chessrun.app/*` | panel + `/api/*` — **Cloudflare Access arkasında** |
 
 Toplamanın apex'te olması tesadüf değil. `sendBeacon` preflight yapamaz;
 çapraz origin'de oturum olayları iOS'ta sessizce kaybolur. Aynı origin'de
@@ -33,11 +33,10 @@ npx wrangler d1 execute chessrun --local --json \
 
 ## Yayına almadan önce doldurulacaklar
 
-`wrangler.toml` içinde `PLACEHOLDER` ve `ALAN` geçen her yer:
+`wrangler.toml` içinde `PLACEHOLDER` geçen her yer:
 
 - `database_id` ← `wrangler d1 create chessrun`
 - KV `id` ← `wrangler kv namespace create SALT`
-- `[[routes]]` blokları ← alan adı kesinleşince (şu an açık tartışma)
 - `ACCESS_TEAM` / `ACCESS_AUD` ← Access uygulaması kurulunca
 - `[assets]` bloğu ← `sub/` kurulunca (Faz 5)
 
@@ -58,7 +57,7 @@ npx wrangler d1 execute chessrun --local --json \
 
 ## Kapsam dışı (bilinçli)
 
-Mail (gelen/giden/yazma) — `/api/mail/*` ve `mail_*` tabloları olarak sonra
-eklenecek, mevcut hiçbir şey değişmeden. Gerçek zamanlı görünüm, veri dışa
-aktarma, çoklu yönetici, geçmiş `localStorage` verisinin aktarımı (cihaz
-başına tutulduğu için sunucuya taşınamaz).
+Mail — panelde hiç olmayacak; iletişim `chessrun@smartkraft.ch` üstünden.
+Gerçek zamanlı görünüm, veri dışa aktarma, çoklu yönetici, geçmiş
+`localStorage` verisinin aktarımı (cihaz başına tutulduğu için sunucuya
+taşınamaz).

@@ -28,22 +28,19 @@ id = "00000000000000000000000000000000"
 crons = ["5 0 * * *"]
 
 # --- Rotalar -----------------------------------------------------------
-# Alan adı henüz kesinleşmedi (chesswalker.com / chessrun.* tartışması).
-# Karar verilince ALAN yerine yazılacak; başka hiçbir yer değişmiyor.
-#
 # Toplama APEX'te, yani oyunla aynı origin. Bu tesadüf değil: sendBeacon
 # preflight yapamaz, çapraz origin'de oturum olayları iOS'ta sessizce
 # kaybolur. Panel ayrı alan adında çünkü Access politikaları alan adı
 # başına tanımlanıyor — tek alan adında "collect hariç" muafiyeti bir
 # politika düzenlemesi uzaklıkta ya oyunu bozar ya veriyi açar.
 #
-# [[routes]]
-# pattern = "ALAN/collect/*"
-# zone_name = "ALAN"
-#
-# [[routes]]
-# pattern = "stats.ALAN/*"
-# zone_name = "ALAN"
+[[routes]]
+pattern = "chessrun.app/collect/*"
+zone_name = "chessrun.app"
+
+[[routes]]
+pattern = "1403.chessrun.app/*"
+zone_name = "chessrun.app"
 
 # Panel derlemesi Worker ile birlikte yayınlanıyor — ayrı hosting yok.
 # Faz 5'te sub/ kurulunca açılacak; şu an ../sub/dist yok ve wrangler
@@ -54,6 +51,6 @@ crons = ["5 0 * * *"]
 # not_found_handling = "single-page-application"
 
 [vars]
-STATS_HOST = "stats.ALAN"
+STATS_HOST = "1403.chessrun.app"
 ACCESS_TEAM = "PLACEHOLDER"
 ACCESS_AUD = "PLACEHOLDER"
