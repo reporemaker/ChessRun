@@ -1,5 +1,6 @@
 import { type BadgeId, badgeOf, readBadges, readSelectedBadge } from '../ui/badges'
 import { useT } from '../ui/text'
+import { BadgeGlyph } from './BadgeGlyph'
 
 interface Props {
   /** Değişimi yeniden okutmak için — App'in tuttuğu sayaç */
@@ -24,12 +25,15 @@ export function BadgeChip({ version, onOpen, skin }: Props) {
   return (
     <div className={`${skin}-badgebar`}>
       <span className={`bdg-chip${badge ? '' : ' none'}`} title={badge ? t(badge.howKey, { n: badge.thresholds[tierIdx] }) : undefined}>
-        <span
-          className={`bdg-glyph${tier ? ` t-${tier}` : ''}`}
-          aria-label={tier && badge && badge.tiers.length > 1 ? t(`tier.${tier}`) : undefined}
-        >
-          {badge ? badge.glyph : '·'}
-        </span>
+        {badge && id ? (
+          <BadgeGlyph
+            id={id}
+            className={`bdg-glyph${tier ? ` t-${tier}` : ''}`}
+            ariaLabel={tier && badge.tiers.length > 1 ? t(`tier.${tier}`) : undefined}
+          />
+        ) : (
+          <span className="bdg-glyph" aria-hidden="true">·</span>
+        )}
         <b>{badge ? t(badge.nameKey) : t('badges.none')}</b>
       </span>
       <button type="button" className={`${skin}-badgebtn`} onClick={onOpen}>

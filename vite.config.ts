@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath, URL } from 'node:url'
 import { type Plugin, defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -24,7 +24,21 @@ function devPickSink(): Plugin {
         req.on('end', () => {
           try {
             const file = fileURLToPath(new URL('./rozet-secim.json', import.meta.url))
-            writeFileSync(file, JSON.stringify(JSON.parse(body), null, 2))
+            // Birleştir, ezme: başka bir sekmeden ya da elle yapılan bir istek
+            // önceki seçimleri silmesin. Bir rozeti kaldırmak için istemci
+            // değerini null gönderir.
+            let current: Record<string, unknown> = {}
+            try {
+              current = JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>
+            } catch {
+              current = {}
+            }
+            const incoming = JSON.parse(body) as Record<string, unknown>
+            for (const [k, v] of Object.entries(incoming)) {
+              if (v === null) delete current[k]
+              else current[k] = v
+            }
+            writeFileSync(file, JSON.stringify(current, null, 2))
             res.statusCode = 204
           } catch {
             res.statusCode = 400

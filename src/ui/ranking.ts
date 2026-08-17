@@ -1,5 +1,5 @@
 import type { GameMode } from '../engine/types'
-import { badgeOf, readBadges, readSelectedBadge } from './badges'
+import { type BadgeId, badgeOf, readBadges, readSelectedBadge } from './badges'
 import { getIdentity } from './identity'
 import { leaderboardEnabled } from './leaderboard'
 import { type RunRecord, bestOf, isoWeekKey, readRuns, runsOfMode, runsOfWeek } from './scores'
@@ -22,18 +22,18 @@ export interface RankRow {
   me: boolean
   /** ISO zaman damgası, React anahtarı olarak da kullanılıyor */
   at: string
-  /** Oyuncunun seçtiği rozet glifi (adın önünde) */
-  badge?: string
+  /** Oyuncunun seçtiği rozet (adın önünde) — sunucu da bu kimliği gönderecek */
+  badge?: BadgeId
   /** Kademe rengi için */
   badgeTier?: 'black' | 'bronze' | 'silver' | 'gold'
 }
 
-function selectedBadgeGlyph(): { glyph: string; tier: 'black' | 'bronze' | 'silver' | 'gold' } | null {
+function selectedBadgeGlyph(): { id: BadgeId; tier: 'black' | 'bronze' | 'silver' | 'gold' } | null {
   const id = readSelectedBadge()
   if (!id) return null
   const badge = badgeOf(id)
   const idx = readBadges()[id]?.tier ?? 0
-  return { glyph: badge.glyph, tier: badge.tiers[Math.min(idx, badge.tiers.length - 1)] }
+  return { id, tier: badge.tiers[Math.min(idx, badge.tiers.length - 1)] }
 }
 
 export interface RankingView {
@@ -50,7 +50,7 @@ export interface RankingView {
    * Geçen haftanın ilk üçü — Pazartesi 00:00'da kazananlar iz bırakmadan
    * silinmesin. Sunucu (Faz 9) gelene kadar yok; şimdilik yalnızca demo.
    */
-  lastWeek?: { week: string; rows: Array<Pick<RankRow, 'place' | 'name' | 'score' | 'badge'>> }
+  lastWeek?: { week: string; rows: Array<Pick<RankRow, 'place' | 'name' | 'score' | 'badge' | 'badgeTier'>> }
 }
 
 const LIST_LIMIT = 12
@@ -87,7 +87,7 @@ export function readRanking(mode?: GameMode, now: Date = new Date()): RankingVie
       distance: run.distance,
       me: !pending,
       at: run.at,
-      badge: myBadge?.glyph,
+      badge: myBadge?.id,
       badgeTier: myBadge?.tier,
     }))
 
@@ -114,7 +114,8 @@ export function demoRanking(mode: GameMode): RankingView {
     'Buz Şah 181', 'Moon Rook 547', 'Himmel-König 318', 'Alfil Oro 722', 'Pion Acier 550',
     'Demir Piyon 903', 'Storm Knight 66', 'Nacht-Läufer 430', 'Rey Viento 275', 'Reine Nuit 802',
   ]
-  const badges = ['♞', '♛', '⚡\uFE0E', '♚', undefined, '○', undefined, '♜', undefined, '◆']
+  const badges: Array<BadgeId | undefined> = ['knight', 'queen', 'chain', 'king', undefined, 'breath', undefined, 'rook', undefined, 'thirtyDays']
+  const tiers = ['gold', 'silver', 'gold', 'bronze', undefined, 'gold', undefined, 'black', undefined, 'gold'] as const
   const identity = getIdentity()
   // Av'da 4. (listede), Kaçış'ta 47. (liste dışı → altta yapışık satır), Üçlü'de 2.
   const mePlace = mode === 'classic' ? 4 : mode === 'kingRun' ? 47 : 2
@@ -130,16 +131,17 @@ export function demoRanking(mode: GameMode): RankingView {
       distance: Math.round(score / (mode === 'kingRun' ? 60 : 24)),
       me,
       at: `demo-${mode}-${i}`,
-      badge: me ? '♞' : badges[(i * seed) % badges.length],
+      badge: me ? 'oneUp' : badges[(i * seed) % badges.length],
+      badgeTier: me ? 'bronze' : tiers[(i * seed) % tiers.length],
     }
   })
   const myScore = rows[mePlace - 1]?.score ?? Math.round(top * Math.pow(0.86, 14) * 0.7)
-  const lastWeek = {
+  const lastWeek: NonNullable<RankingView['lastWeek']> = {
     week: '2026-W33',
     rows: [
-      { place: 1, name: names[(seed * 5) % names.length], score: Math.round(top * 1.08), badge: '♛' },
+      { place: 1, name: names[(seed * 5) % names.length], score: Math.round(top * 1.08), badge: 'queen', badgeTier: 'gold' },
       { place: 2, name: names[(seed * 6) % names.length], score: Math.round(top * 0.93), badge: undefined },
-      { place: 3, name: names[(seed * 7) % names.length], score: Math.round(top * 0.81), badge: '⚡\uFE0E' },
+      { place: 3, name: names[(seed * 7) % names.length], score: Math.round(top * 0.81), badge: 'chain', badgeTier: 'gold' },
     ],
   }
   return { rank: mePlace, score: myScore, players: 312, pending: false, rows, lastWeek }

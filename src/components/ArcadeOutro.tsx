@@ -4,6 +4,7 @@ import { useT } from '../ui/text'
 import type { PieceType } from '../engine/types'
 import { type BadgeAward, badgeOf } from '../ui/badges'
 import { GLYPH } from '../ui/pieces'
+import { BadgeGlyph } from './BadgeGlyph'
 import type { RunRecord } from '../ui/scores'
 
 /**
@@ -140,7 +141,7 @@ export function ArcadeOutro({
                 const tier = badge.tiers[Math.min(award.tier, badge.tiers.length - 1)]
                 return (
                   <li key={`${award.id}-${award.tier}`} title={badge.tiers.length > 1 ? t(`tier.${tier}`) : undefined}>
-                    <span className={`bdg-glyph t-${tier}`} aria-hidden="true">{badge.glyph}</span>
+                    <BadgeGlyph id={award.id} className={`bdg-glyph t-${tier}`} />
                     <b>{t(badge.nameKey)}</b>
                   </li>
                 )

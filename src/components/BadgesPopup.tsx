@@ -12,6 +12,7 @@ import {
 } from '../ui/badges'
 import { readLifetime } from '../ui/lifetime'
 import { useT } from '../ui/text'
+import { BadgeGlyph } from './BadgeGlyph'
 
 interface Props {
   onClose: () => void
@@ -183,13 +184,16 @@ function BadgeRow({
 
   return (
     <li className={`bdg-row${earned ? ' got' : ''}${selected ? ' sel' : ''}${badge.server ? ' srv' : ''}`}>
-      <span
-        className={`bdg-glyph${tier ? ` t-${tier}` : ''}`}
-        title={tier && !isOnce ? t(`tier.${tier}`) : undefined}
-        aria-label={tier && !isOnce ? t(`tier.${tier}`) : undefined}
-      >
-        {fullyHidden ? '?' : badge.glyph}
-      </span>
+      {fullyHidden ? (
+        <span className="bdg-glyph" aria-hidden="true">?</span>
+      ) : (
+        <BadgeGlyph
+          id={badge.id}
+          className={`bdg-glyph${tier ? ` t-${tier}` : ''}`}
+          title={tier && !isOnce ? t(`tier.${tier}`) : undefined}
+          ariaLabel={tier && !isOnce ? t(`tier.${tier}`) : undefined}
+        />
+      )}
 
       <span className="bdg-main">
         <b className="bdg-name">{fullyHidden ? '???' : t(badge.nameKey)}</b>

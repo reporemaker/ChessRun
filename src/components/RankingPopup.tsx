@@ -5,6 +5,7 @@ import { type RankingView, demoRanking, readRanking } from '../ui/ranking'
 import { formatRemaining, isoWeekKey, weekEnd } from '../ui/scores'
 import { useSettings } from '../ui/settings'
 import { useT } from '../ui/text'
+import { BadgeGlyph } from './BadgeGlyph'
 
 interface Props {
   onClose: () => void
@@ -117,9 +118,11 @@ export function RankingPopup({ onClose, mode: initialMode, demo = false }: Props
                 <span className="rank-pos">{row.place}</span>
                 <span className="rank-name">
                   {/* Rozet yeri her satırda sabit: glif yoksa boş kalır, adlar hizada durur */}
-                  <i className={`rank-badge${row.badgeTier ? ` t-${row.badgeTier}` : ''}`} aria-hidden="true">
-                    {row.badge ?? ''}
-                  </i>
+                  {row.badge ? (
+                    <BadgeGlyph id={row.badge} className={`rank-badge${row.badgeTier ? ` t-${row.badgeTier}` : ''}`} />
+                  ) : (
+                    <i className="rank-badge" aria-hidden="true" />
+                  )}
                   <b>{row.name}</b>
                   {row.me && <em>{t('settings.you')}</em>}
                 </span>
@@ -159,7 +162,9 @@ export function RankingPopup({ onClose, mode: initialMode, demo = false }: Props
                   return (
                     <li key={place} className={`p${place}`}>
                       <span className="pd-name">
-                        {row.badge && <i className="rank-badge" aria-hidden="true">{row.badge}</i>}
+                        {row.badge && (
+                          <BadgeGlyph id={row.badge} className={`rank-badge${row.badgeTier ? ` t-${row.badgeTier}` : ''}`} />
+                        )}
                         <b>{row.name}</b>
                       </span>
                       <span className="pd-score">{row.score.toLocaleString(lang)}</span>

@@ -1885,6 +1885,19 @@ button.pop-chip {
 .t-silver { color: #e8eef5; text-shadow: none; }
 .t-gold   { color: #ffd23f; text-shadow: none; }
 
+/* SVG ikonlar: dolgu currentColor, .st konturlu parça; siyah kademede
+   1px açık kontur (Unicode'daki text-shadow'un SVG karşılığı) */
+.has-svg { display: inline-flex; align-items: center; justify-content: center; }
+.has-svg svg { width: 20px; height: 20px; display: block; fill: currentColor; stroke: none; }
+.has-svg svg .st { fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+.has-svg svg .dim { opacity: 0.55; }
+.has-svg svg .ink { fill: #0d1219; }
+.has-svg svg text { font-family: var(--mono); font-weight: 700; fill: currentColor; stroke: none; }
+.t-black.has-svg svg { paint-order: stroke fill; stroke: #d8dfe8; stroke-width: 1.4px; stroke-linejoin: round; }
+.t-black.has-svg svg .st { stroke: #d8dfe8; }
+.t-black.has-svg svg .ink { fill: #d8dfe8; }
+.rank-badge.has-svg { display: inline-flex; }
+
 /* Nokta ve çerçeve gibi dolgu kullanan yerlerde text-shadow anlamsız */
 .bdg-dots i.t-black { background: #1a1f28; border-color: #9aa7b8; }
 .bdg-dots i.t-bronze { background: #9c5f2e; }
