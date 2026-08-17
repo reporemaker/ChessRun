@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { COL_CHOICES } from '../engine/config'
 import { feedbackHref } from '../ui/feedback'
-import { NAME_MAX, getIdentity, renameIdentity, shortToken } from '../ui/identity'
+import { getIdentity, shortToken } from '../ui/identity'
 import { type Lang, LANGS, hasFullProse, localeOf } from '../ui/i18n'
 import { GLYPH } from '../ui/pieces'
 import { type RankScope, readRanking } from '../ui/ranking'
 import { setCols, setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
 import { useT } from '../ui/text'
 import { APP_VERSION } from '../ui/version'
+import { NameChip } from './NameChip'
 
 /**
  * Oyun sürerken pencere açıldıysa App bunu geçiriyor: koridor değişimi
@@ -61,36 +62,10 @@ export function Settings({ onClose, onOpenPage, onExitGame, game }: SettingsProp
   const [scope, setScope] = useState<RankScope>('allTime')
   const ranking = useMemo(() => readRanking(scope), [scope])
 
-  // Ad düzenleme: kalem → satır içi giriş. Kaydet/İptal/Rastgele.
   const [identity, setIdentity] = useState(() => getIdentity())
-  const [editingName, setEditingName] = useState(false)
-  const [nameDraft, setNameDraft] = useState('')
-  const [nameError, setNameError] = useState(false)
-  const nameRef = useRef<HTMLInputElement>(null)
 
   // Koridor: oyun sürerken seçilen genişlik önce burada bekler, onay ister
   const [pendingCols, setPendingCols] = useState<number | null>(null)
-
-  useEffect(() => {
-    if (editingName) nameRef.current?.select()
-  }, [editingName])
-
-  function startEditName() {
-    setNameDraft(identity.name)
-    setNameError(false)
-    setEditingName(true)
-  }
-
-  function saveName(raw: string) {
-    const next = renameIdentity(raw)
-    if (!next) {
-      setNameError(true)
-      return
-    }
-    setIdentity(next)
-    setEditingName(false)
-    setNameError(false)
-  }
 
   function pickCols(cols: number) {
     if (cols === settings.cols) return
@@ -260,75 +235,17 @@ export function Settings({ onClose, onOpenPage, onExitGame, game }: SettingsProp
             </div>
           </div>
 
-          {/* G · künye — ad düzenlenebilir (kalem). Tekillik yok, hijyen var:
+          {/* G · künye — ad düzenlenebilir (NameChip). Tekillik yok, hijyen var:
               bkz. identity.ts cleanName. */}
-          {editingName ? (
-            <form
-              className="pop-name"
-              onSubmit={(event) => {
-                event.preventDefault()
-                saveName(nameDraft)
-              }}
-            >
-              <input
-                ref={nameRef}
-                value={nameDraft}
-                maxLength={NAME_MAX}
-                autoComplete="off"
-                autoCapitalize="words"
-                spellCheck={false}
-                aria-label={t('name.edit')}
-                aria-invalid={nameError}
-                onChange={(event) => {
-                  setNameDraft(event.target.value)
-                  setNameError(false)
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === 'Escape') setEditingName(false)
-                }}
-              />
-              <button type="submit" className="go">
-                {t('name.save')}
-              </button>
-              <button type="button" onClick={() => saveName('')} title={t('name.random')}>
-                ⟳
-              </button>
-              <button type="button" onClick={() => setEditingName(false)}>
-                ×
-              </button>
-              <small className={nameError ? 'err' : ''}>
-                {nameError ? t('name.invalid') : t('name.hint', { n: NAME_MAX })}
-              </small>
-            </form>
-          ) : (
-            <div className="pop-chips">
-              <span className="pop-chip">
-                v<b>{APP_VERSION}</b>
-              </span>
-              <span className="pop-chip">
-                #<b>{shortToken(identity.token)}</b>
-              </span>
-              <button
-                type="button"
-                className="pop-chip name"
-                onClick={startEditName}
-                aria-label={t('name.edit')}
-                title={t('name.edit')}
-              >
-                <b>{identity.name}</b>
-                <svg viewBox="0 0 16 16" width="11" height="11" aria-hidden="true">
-                  <path
-                    d="M11.3 1.7a1 1 0 0 1 1.4 0l1.6 1.6a1 1 0 0 1 0 1.4L5.5 13.5 1.5 14.5l1-4z M9.8 3.2l3 3"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                    strokeLinejoin="round"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </button>
-            </div>
-          )}
+          <div className="pop-chips">
+            <span className="pop-chip">
+              v<b>{APP_VERSION}</b>
+            </span>
+            <span className="pop-chip">
+              #<b>{shortToken(identity.token)}</b>
+            </span>
+            <NameChip identity={identity} onChange={setIdentity} skin="pop" />
+          </div>
 
           {/* rozetler sekizinci bölüm olarak buraya gelecek */}
           <div className="pop-future">↓ {t('settings.badgesSoon')} ↓</div>

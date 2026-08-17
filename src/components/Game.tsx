@@ -1,5 +1,5 @@
 import { type Ref, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { ROWS, STUCK_RIGHTS, STUCK_SCORE, levelOf } from '../engine/config'
+import { COL_CHOICES, ROWS, STUCK_RIGHTS, STUCK_SCORE, levelOf } from '../engine/config'
 import {
   applyBoardRefresh,
   applyEnemyMove,
@@ -22,6 +22,7 @@ import type { EndReason } from '@shared/events'
 import type { Color, GameEvent, GameMode, GameState, PieceType, Pos, Row } from '../engine/types'
 import { emptyTally, tallyEvents } from '../ui/badges'
 import { type TipId, TIP_KEY, readSeenTips, storeSeenTips } from '../ui/coach'
+import { getIdentity, shortToken } from '../ui/identity'
 import { LANGS } from '../ui/i18n'
 import type { StringKey } from '../ui/i18n'
 import { submitRun } from '../ui/leaderboard'
@@ -35,12 +36,14 @@ import {
   recordRun,
   topRuns,
 } from '../ui/scores'
-import { setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
+import { readRanking } from '../ui/ranking'
+import { setCols, setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
 import { shareRun, shareText } from '../ui/share'
 import { feedbackHref } from '../ui/feedback'
 import { endReasonOf, trackRun } from '../ui/stats'
 import { type Translate, useT } from '../ui/text'
 import { playEvents, playSound, unlockSound } from '../ui/sound'
+import { APP_VERSION } from '../ui/version'
 import {
   PHASE_MS,
   type Phase,
@@ -52,6 +55,7 @@ import {
   wait,
 } from '../ui/timing'
 import { ArcadeOutro } from './ArcadeOutro'
+import { NameChip } from './NameChip'
 import { Board } from './Board'
 
 export interface GameConfig {
@@ -81,6 +85,8 @@ interface GameProps {
   onExit: () => void
   onOpenSettings: () => void
   onOpenPage: (page: 'help' | 'about') => void
+  /** Sağ sütundaki koridor seçimi onaylanınca: App koşuyu kapatıp yeni genişlikte kurar */
+  onRestartWithCols: (cols: number) => void
   ref?: Ref<GameHandle>
 }
 
@@ -104,7 +110,7 @@ interface RunResult {
 
 const TIP_MS = 7000
 
-export function Game({ config, onExit, onOpenSettings, onOpenPage, ref }: GameProps) {
+export function Game({ config, onExit, onOpenSettings, onOpenPage, onRestartWithCols, ref }: GameProps) {
   const [game, setGame] = useState<GameState>(() => createGame(config))
   const [phase, setPhase] = useState<Phase>('input')
   const [ghostRow, setGhostRow] = useState<Row | null>(null)
@@ -116,6 +122,11 @@ export function Game({ config, onExit, onOpenSettings, onOpenPage, ref }: GamePr
   const [result, setResult] = useState<RunResult | null>(null)
   const [shared, setShared] = useState<'shared' | 'copied' | 'failed' | null>(null)
   const [stuckBanner, setStuckBanner] = useState(false)
+  // Sağ sütun: koridor seçimi onay bekliyor (pencereyle aynı akış)
+  const [pendingCols, setPendingCols] = useState<number | null>(null)
+  const [identity, setIdentity] = useState(() => getIdentity())
+  // Sıralama özeti — koşu bitince (result değişince) tazeleniyor
+  const ranking = useMemo(() => readRanking('allTime'), [result]) // eslint-disable-line react-hooks/exhaustive-deps
 
   /* Reklam yalnızca gerçek bir slot tanımlıysa çiziliyor — tanımsızken
      yer tutucu kutu göstermiyoruz. */
@@ -682,6 +693,7 @@ export function Game({ config, onExit, onOpenSettings, onOpenPage, ref }: GamePr
         <div className="gv-set">
           <span className="gv-lb">{t('settings.title')}</span>
 
+          {/* Hız yalnızca oyunda var — o yüzden pencerede yok, burada ilk */}
           <span className="gv-field">
             <span className="gv-tx">{t('hud.speed')}</span>
             <span className="gv-seg">
@@ -699,23 +711,8 @@ export function Game({ config, onExit, onOpenSettings, onOpenPage, ref }: GamePr
             </span>
           </span>
 
-          <span className="gv-field">
-            <span className="gv-tx">{t('hud.sound')}</span>
-            <span className="gv-seg">
-              {[true, false].map((on) => (
-                <button
-                  key={String(on)}
-                  type="button"
-                  className={settings.sound === on ? 'on' : ''}
-                  aria-pressed={settings.sound === on}
-                  onClick={() => setSound(on)}
-                >
-                  {on ? t('settings.soundOn') : t('settings.soundOff')}
-                </button>
-              ))}
-            </span>
-          </span>
-
+          {/* Buradan aşağısı ayarlar penceresiyle aynı sırada:
+              taş rengi → koridor → ses → dil */}
           <span className="gv-field">
             <span className="gv-tx">{t('settings.pieceColor')}</span>
             <span className="gv-seg">
@@ -728,6 +725,71 @@ export function Game({ config, onExit, onOpenSettings, onOpenPage, ref }: GamePr
                   onClick={() => setPieceColor(color)}
                 >
                   {color === 'w' ? t('settings.white') : t('settings.black')}
+                </button>
+              ))}
+            </span>
+          </span>
+
+          <span className="gv-field">
+            <span className="gv-tx">
+              {t('settings.corridor')} <b>· {t('corridor.cols', { n: settings.cols })}</b>
+            </span>
+            <span className="gv-seg" role="radiogroup" aria-label={t('settings.corridor')}>
+              {COL_CHOICES.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  role="radio"
+                  className={(pendingCols ?? settings.cols) === n ? 'on' : ''}
+                  aria-checked={(pendingCols ?? settings.cols) === n}
+                  onClick={() => {
+                    if (n === settings.cols) return
+                    // Günlük meydan okumada genişlik sabit: sorulmaz, ayar sonrakine kalır
+                    if (config.daily) setCols(n)
+                    else setPendingCols(n)
+                  }}
+                >
+                  {n}
+                </button>
+              ))}
+            </span>
+            {pendingCols != null && (
+              <span className="gv-warn" role="alertdialog" aria-live="polite">
+                <b>{t('corridor.restart.title')}</b>
+                <span>{t('corridor.restart.body', { score: game.score, n: pendingCols })}</span>
+                <span className="gv-warn-act">
+                  <button type="button" onClick={() => setPendingCols(null)}>
+                    {t('corridor.restart.cancel')}
+                  </button>
+                  <button
+                    type="button"
+                    className="go"
+                    onClick={() => {
+                      const cols = pendingCols
+                      setPendingCols(null)
+                      setCols(cols)
+                      onRestartWithCols(cols)
+                    }}
+                  >
+                    {t('corridor.restart.ok')}
+                  </button>
+                </span>
+              </span>
+            )}
+          </span>
+
+          <span className="gv-field">
+            <span className="gv-tx">{t('hud.sound')}</span>
+            <span className="gv-seg">
+              {[true, false].map((on) => (
+                <button
+                  key={String(on)}
+                  type="button"
+                  className={settings.sound === on ? 'on' : ''}
+                  aria-pressed={settings.sound === on}
+                  onClick={() => setSound(on)}
+                >
+                  {on ? t('settings.soundOn') : t('settings.soundOff')}
                 </button>
               ))}
             </span>
@@ -753,6 +815,19 @@ export function Game({ config, onExit, onOpenSettings, onOpenPage, ref }: GamePr
 
         <div className="gv-hr" />
 
+        {/* Künye: sürüm · cihaz · ad (kalemle düzenlenir) — pencereyle aynı */}
+        <div className="gv-meta">
+          <span className="gv-chip">
+            v<b>{APP_VERSION}</b>
+          </span>
+          <span className="gv-chip">
+            #<b>{shortToken(identity.token)}</b>
+          </span>
+          <NameChip identity={identity} onChange={setIdentity} skin="gv" />
+        </div>
+
+        <div className="gv-hr" />
+
         {/* Rozet sistemi henüz yok: yeri ayrıldı, sahte ilerleme gösterilmiyor */}
         <div className="gv-cell">
           <span className="gv-lb">
@@ -767,12 +842,37 @@ export function Game({ config, onExit, onOpenSettings, onOpenPage, ref }: GamePr
           </span>
         </div>
 
+        <div className="gv-hr" />
+
+        {/* Sıralama özeti: üç sayı; tam liste ayarlar penceresinde */}
+        <button type="button" className="gv-rank" onClick={onOpenSettings}>
+          <span className="gv-lb">{t('settings.ranking')}</span>
+          <span className="gv-rank-row">
+            <span className="gv-cell">
+              <span className="gv-n md gold">{ranking.rank == null ? '—' : `#${ranking.rank}`}</span>
+              <span className="gv-lb">{t('settings.rankMine')}</span>
+            </span>
+            <span className="gv-cell">
+              <span className="gv-n md">{ranking.score}</span>
+              <span className="gv-lb">{t('settings.scoreMine')}</span>
+            </span>
+            <span className="gv-cell">
+              <span className="gv-n md">{ranking.players ?? '—'}</span>
+              <span className="gv-lb">{t('settings.players')}</span>
+            </span>
+          </span>
+          <span className="gv-rank-ft">
+            <span>{t('settings.openFull')}</span>
+            {ranking.pending && <i>{t('settings.serverPending')}</i>}
+          </span>
+        </button>
+
         <div className="gv-links">
-          <button type="button" className="gv-lk" onClick={() => onOpenPage('help')}>
-            {t('settings.howTo')}
-          </button>
           <button type="button" className="gv-lk" onClick={() => onOpenPage('about')}>
             {t('settings.about')}
+          </button>
+          <button type="button" className="gv-lk" onClick={() => onOpenPage('help')}>
+            {t('settings.howTo')}
           </button>
           <a className="gv-lk" href={feedbackHref(settings.lang, config.mode)}>
             {t('settings.feedback')}

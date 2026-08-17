@@ -2106,6 +2106,195 @@ a.gv-lk {
   color: #0a0d12;
 }
 
+/* --- Künye: sürüm · cihaz · ad — pencerenin fişleri sütun dilinde --- */
+.gv-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.gv-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.05);
+  color: #7d8fa6;
+  font-family: inherit;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.gv-chip b {
+  color: #dbe4f0;
+  font-weight: 400;
+}
+
+button.gv-chip {
+  cursor: pointer;
+}
+
+.gv-chip.name svg {
+  color: #7d8fa6;
+}
+
+.gv-chip.name:hover b,
+.gv-chip.name:hover svg {
+  color: var(--arc-gold);
+}
+
+/* Ad düzenleme, sütun genişliğinde */
+.gv-name {
+  flex: 1 1 100%;
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.gv-name input {
+  min-width: 0;
+  padding: 7px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: transparent;
+  color: #dbe4f0;
+  font: inherit;
+  font-size: 12px;
+}
+
+.gv-name input:focus {
+  outline: none;
+  border-color: var(--arc-gold);
+}
+
+.gv-name input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.gv-name button {
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: transparent;
+  color: #dbe4f0;
+  font-family: inherit;
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+}
+
+.gv-name button.go {
+  border-color: var(--arc-gold);
+  background: var(--arc-gold);
+  color: #0a0d12;
+}
+
+.gv-name small {
+  grid-column: 1 / -1;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: #7d8fa6;
+}
+
+.gv-name small.err {
+  color: #ff8fa3;
+}
+
+/* --- Koridor uyarısı, alanın hemen altında --- */
+.gv-warn {
+  display: grid;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 9px 11px;
+  border: 1px solid rgba(255, 210, 63, 0.45);
+  background: rgba(255, 210, 63, 0.06);
+  text-transform: none;
+}
+
+.gv-warn > b {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--arc-gold);
+}
+
+.gv-warn > span:not(.gv-warn-act) {
+  font-size: 10.5px;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  color: #dbe4f0;
+}
+
+.gv-warn-act {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.gv-warn-act button {
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: transparent;
+  color: #dbe4f0;
+  font-family: inherit;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.gv-warn-act button.go {
+  border-color: var(--arc-gold);
+  background: var(--arc-gold);
+  color: #0a0d12;
+}
+
+/* --- Sıralama özeti: üç sayı, tıklanınca pencere (tam liste orada) --- */
+.gv-rank {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.gv-rank-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.gv-rank-row .gv-cell {
+  gap: 5px;
+}
+
+.gv-n.gold {
+  color: var(--arc-gold);
+}
+
+.gv-rank-ft {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7d8fa6;
+}
+
+.gv-rank-ft i {
+  font-style: normal;
+  color: var(--arc-gold);
+}
+
+.gv-rank:hover .gv-rank-ft span {
+  color: #dbe4f0;
+}
+
 .gv-bdg {
   display: flex;
   align-items: center;

@@ -64,6 +64,23 @@ export default function App() {
     }
   }, [])
 
+  /**
+   * Koridor genişliği oyun sürerken değişirse: önce mevcut koşu deftere
+   * yazılsın (puan kaybolmuyor, kapanıyor), sonra yeni genişlikte baştan
+   * kurulsun. runKey cols'u içerdiği için setConfig Game'i yeniden monte
+   * ediyor — abandon'un bitmesini beklemek şart, yoksa kayıt sökülen
+   * bileşenle birlikte gider. Hem ayarlar penceresi hem oyun sütunu
+   * buradan geçiyor.
+   */
+  function restartWithCols(cols: number) {
+    if (!config) return
+    void (async () => {
+      await gameRef.current?.abandon()
+      setSettingsOpen(false)
+      setConfig({ ...config, cols: Math.max(cols, minColsOf(config.mode)) })
+    })()
+  }
+
   const runKey = config
     ? `${config.mode}-${config.cols}-${config.seed ?? 'free'}-${config.daily ?? ''}`
     : ''
@@ -78,6 +95,7 @@ export default function App() {
           onExit={() => setConfig(null)}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPage={setPage}
+          onRestartWithCols={restartWithCols}
         />
       ) : (
         <Home
@@ -109,18 +127,7 @@ export default function App() {
               ? {
                   daily: Boolean(config.daily),
                   score: () => gameRef.current?.score() ?? 0,
-                  restart: (cols) => {
-                    // Önce mevcut koşu deftere yazılsın (puan kaybolmuyor,
-                    // kapanıyor), sonra yeni genişlikte baştan kurulsun.
-                    // runKey cols'u içerdiği için setConfig Game'i yeniden
-                    // monte ediyor — abandon'un bitmesini beklemek şart,
-                    // yoksa kayıt sökülen bileşenle birlikte gider.
-                    void (async () => {
-                      await gameRef.current?.abandon()
-                      setSettingsOpen(false)
-                      setConfig({ ...config, cols: Math.max(cols, minColsOf(config.mode)) })
-                    })()
-                  },
+                  restart: restartWithCols,
                 }
               : undefined
           }
