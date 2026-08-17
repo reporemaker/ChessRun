@@ -455,7 +455,7 @@ const trioBackDemo: Demo = {
     F(B('. . . wQ .', '. . . . .', '. . . . .', '. . . . .', '. . wR . .'), {
       marks: [...M('ring', [0, 3]), ...M('select', [4, 2])],
       tag: '+25',
-      captionKey: 'demo.kingTaken',
+      captionKey: 'demo.kingTaken2',
       hold: 1.3,
     }),
     F(B('. bP . . bR', '. . . . .', '. . . . .', 'wQ . wR . .', '. . . . wB'), {

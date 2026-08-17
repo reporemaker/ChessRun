@@ -3,7 +3,22 @@ import { getIdentity, shortToken } from '../ui/identity'
 import type { StringKey } from '../ui/i18n'
 import type { DemoId } from '../ui/demos'
 import { MODES } from '../ui/modes'
-import { MiniBoard } from './MiniBoard'
+import { GLYPH } from '../ui/pieces'
+import { LessonStage } from './LessonStage'
+import {
+  CHECK_SCORE,
+  KING_BONUS_LIVES,
+  MATE_SCORE,
+  MAX_CHECK_STREAK,
+  PIECE_VALUE,
+  ROW_SCORE,
+  STUCK_RIGHTS,
+  STUCK_SCORE,
+  TRIO_MATE_SCORE,
+  TRIO_THREAT_CAP,
+  TRIO_THREAT_SCORE,
+} from '../engine/config'
+import type { PieceType } from '../engine/types'
 import { useT } from '../ui/text'
 import { APP_VERSION, CONTACT_MAIL } from '../ui/version'
 
@@ -17,61 +32,45 @@ interface PageProps {
 interface Section {
   titleKey: StringKey
   glyph?: string
-  /** Madde anahtarı ya da [madde, yanında oynayan mini tahta] çifti */
-  bodyKeys: Array<StringKey | [StringKey, DemoId]>
+  bodyKeys: StringKey[]
+  /** Bölümün başındaki ders sahnesi: her ders bir demo (ui/demos.ts) */
+  lessons?: DemoId[]
   /** Motorda henüz olmayan mod — bölüm "yakında" damgasıyla çiziliyor */
   soon?: boolean
 }
 
-// Animasyon anlattığı maddenin YANINDA duruyor (ui/demos.ts): önce kural,
-// hemen sağında o kuralın tahtası. Yer sabit — dil değişince kaymaz.
+// Kılavuz düzeni: her bölüm önce EKRAN (dersler, adım adım animasyon),
+// altında KURALLAR (kısa maddeler). Sonda puan tablosu — Atari kılavuzlarının
+// "SCORING" sayfası gibi, sayılar doğrudan motor sabitlerinden.
 const HELP: Section[] = [
   {
     titleKey: 'help.core.title',
-    bodyKeys: [
-      ['help.core.1', 'scroll'],
-      'help.core.2',
-      ['help.core.3', 'stuck'],
-      'help.core.4',
-      'help.core.6',
-      ['help.core.7', 'ambush'],
-      'help.core.5',
-    ],
+    lessons: ['scroll', 'stuck', 'ambush'],
+    bodyKeys: ['help.core.1', 'help.core.2', 'help.core.3', 'help.core.4', 'help.core.6', 'help.core.7', 'help.core.5'],
   },
   {
     titleKey: 'mode.classic.name',
     glyph: '♞',
-    bodyKeys: [
-      'help.classic.1',
-      ['help.classic.2', 'transform'],
-      'help.classic.5',
-      ['help.classic.3', 'chain'],
-      ['help.classic.4', 'kingBonus'],
-    ],
+    lessons: ['transform', 'chain', 'kingBonus'],
+    bodyKeys: ['help.classic.1', 'help.classic.2', 'help.classic.5', 'help.classic.3', 'help.classic.4'],
   },
   {
     titleKey: 'mode.kingRun.name',
     glyph: '♚',
-    bodyKeys: [
-      'help.kingRun.1',
-      ['help.kingRun.2', 'kingSafe'],
-      ['help.kingRun.3', 'kingClimb'],
-      ['help.kingRun.4', 'kingEnd'],
-    ],
+    lessons: ['kingSafe', 'kingClimb', 'kingEnd'],
+    bodyKeys: ['help.kingRun.1', 'help.kingRun.2', 'help.kingRun.3', 'help.kingRun.4'],
   },
   {
     titleKey: 'mode.trio.name',
     glyph: '♛',
-    bodyKeys: [
-      ['help.trio.1', 'trioPick'],
-      ['help.trio.2', 'trioDrift'],
-      'help.trio.5',
-      'help.trio.3',
-      ['help.trio.4', 'trioBack'],
-    ],
+    lessons: ['trioPick', 'trioDrift', 'trioBack'],
+    bodyKeys: ['help.trio.1', 'help.trio.2', 'help.trio.5', 'help.trio.3', 'help.trio.4'],
     soon: !MODES.find((entry) => entry.id === 'trio')?.ready,
   },
 ]
+
+/** Puan tablosu satırları — etiket anahtarı + motor sabitinden değer */
+const PIECE_ORDER: PieceType[] = ['p', 'n', 'b', 'r', 'q', 'k']
 
 const ABOUT: Section[] = [
   { titleKey: 'about.what.title', bodyKeys: ['about.what.1', 'about.what.2'] },
@@ -121,39 +120,90 @@ export function Page({ page, onClose }: PageProps) {
       </header>
 
       <div className="page-bd">
-        {sections.map((section) => (
+        {page === 'help' && (
+          <p className="page-lede">{t('manual.lede')}</p>
+        )}
+        {sections.map((section, n) => (
           <section key={section.titleKey} className="page-sec">
             <h2>
+              {page === 'help' && <span className="page-num">{n + 1}</span>}
               {section.glyph && <span className="page-glyph">{section.glyph}</span>}
               {t(section.titleKey)}
               {section.soon && <em className="page-soon">{t('common.soon')}</em>}
             </h2>
+            {section.lessons && <LessonStage lessons={section.lessons} />}
+            {section.lessons && <h3 className="page-sub">{t('manual.rules')}</h3>}
             <ul>
-              {section.bodyKeys.map((entry) => {
-                const [key, demo] = Array.isArray(entry) ? entry : [entry, undefined]
-                if (key === 'about.credit.2') {
-                  return (
-                    <li key={key}>
-                      {t(key, { mail: '' })}
-                      <a className="page-mail" href={`mailto:${CONTACT_MAIL}`}>
-                        {CONTACT_MAIL}
-                      </a>
-                    </li>
-                  )
-                }
-                if (demo) {
-                  return (
-                    <li key={key} className="page-rule">
-                      <p>{t(key)}</p>
-                      <MiniBoard id={demo} />
-                    </li>
-                  )
-                }
-                return <li key={key}>{t(key)}</li>
-              })}
+              {section.bodyKeys.map((key) =>
+                key === 'about.credit.2' ? (
+                  <li key={key}>
+                    {t(key, { mail: '' })}
+                    <a className="page-mail" href={`mailto:${CONTACT_MAIL}`}>
+                      {CONTACT_MAIL}
+                    </a>
+                  </li>
+                ) : (
+                  <li key={key}>{t(key)}</li>
+                ),
+              )}
             </ul>
           </section>
         ))}
+
+        {page === 'help' && (
+          <section className="page-sec">
+            <h2>
+              <span className="page-num">{HELP.length + 1}</span>
+              {t('score.title')}
+            </h2>
+            <table className="page-score">
+              <tbody>
+                <tr>
+                  <td>{t('score.row')}</td>
+                  <td>+{ROW_SCORE}</td>
+                </tr>
+                <tr>
+                  <td>{t('score.capture')}</td>
+                  <td>
+                    {PIECE_ORDER.map((p) => (
+                      <span key={p} className="page-pv">
+                        {GLYPH[p]}
+                        {PIECE_VALUE[p]}
+                      </span>
+                    ))}
+                  </td>
+                </tr>
+                <tr>
+                  <td>{t('score.check')}</td>
+                  <td>{t('score.checkVal', { n: CHECK_SCORE, max: MAX_CHECK_STREAK })}</td>
+                </tr>
+                <tr>
+                  <td>{t('score.mate')}</td>
+                  <td>+{MATE_SCORE}</td>
+                </tr>
+                <tr>
+                  <td>{t('score.king')}</td>
+                  <td>
+                    +{PIECE_VALUE.k} · ♥ +{KING_BONUS_LIVES}
+                  </td>
+                </tr>
+                <tr>
+                  <td>{t('score.stuck', { n: STUCK_RIGHTS })}</td>
+                  <td>+{STUCK_SCORE}</td>
+                </tr>
+                <tr>
+                  <td>{t('score.trioThreat')}</td>
+                  <td>{t('score.trioThreatVal', { n: TRIO_THREAT_SCORE, cap: TRIO_THREAT_CAP })}</td>
+                </tr>
+                <tr>
+                  <td>{t('score.trioMate')}</td>
+                  <td>+{TRIO_MATE_SCORE}</td>
+                </tr>
+              </tbody>
+            </table>
+            <p className="page-note">{t('score.noteKingRun')}</p>
+          </section>
+        )}
 
         {page === 'about' && (
           <div className="page-meta">
