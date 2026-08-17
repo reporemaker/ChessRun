@@ -15,6 +15,7 @@ dist-ssr
 # Cloudflare Worker (server/) — yerel durum ve gizli değişkenler
 .wrangler/
 .dev.vars
+.dev.vars.bak
 
 # Vite env dosyaları: uç adresleri depoya girmesin
 .env

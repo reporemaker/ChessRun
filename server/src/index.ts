@@ -1,4 +1,7 @@
 import { dayKeyUtc } from '../../shared/events'
+import { verifyAccess } from './access'
+import { breakdown, pruneRaw, rollupDay, series, summary } from './api'
+import { addDays } from './period'
 import { currentSalt, hashVisitor, rotateSalt } from './salt'
 import {
   MAX_BODY_BYTES,
@@ -233,29 +236,71 @@ export default {
       return noContent()
     }
 
-    if (path === '/api/health') {
-      const rollup = await env.DB.prepare(`SELECT MAX(day) AS d FROM daily_totals`).first<{
-        d: string | null
-      }>()
-      const raw = await env.DB.prepare(
-        `SELECT COUNT(*) AS n, MIN(day) AS oldest FROM run_event`,
-      ).first<{ n: number; oldest: string | null }>()
-      const salted = Boolean(await env.SALT.get('salt:today'))
+    if (path.startsWith('/api/')) {
+      // Çift kilit: Access rotanın önünde, ama Worker da doğruluyor —
+      // yanlış bir rota ya da workers.dev sızıntısı veriyi açmasın.
+      if (env.SKIP_ACCESS !== '1') {
+        const who = env.ACCESS_TEAM && env.ACCESS_AUD
+          ? await verifyAccess(request, env.ACCESS_TEAM, env.ACCESS_AUD)
+          : null
+        if (!who) return new Response('forbidden', { status: 403 })
+      }
 
-      return Response.json({
-        ok: true,
-        lastRollupDay: rollup?.d ?? null,
-        rawRows: raw?.n ?? 0,
-        oldestRawDay: raw?.oldest ?? null,
-        salted,
-      })
+      if (request.method !== 'GET') return new Response('method', { status: 405 })
+
+      if (path === '/api/health') return Response.json(await health(env))
+      // Yalnızca yerel: geçmiş günleri elle topla (tohum verisi için).
+      // SKIP_ACCESS üretimde asla 1 olmayacağı için orada yok sayılır.
+      if (path === '/api/rollup' && env.SKIP_ACCESS === '1') {
+        const from = url.searchParams.get('from') ?? addDays(dayKeyUtc(Date.now()), -1)
+        const to = url.searchParams.get('to') ?? addDays(dayKeyUtc(Date.now()), -1)
+        let n = 0
+        for (let day = from; day <= to; day = addDays(day, 1)) {
+          await rollupDay(env.DB, day)
+          n++
+        }
+        return Response.json({ rolled: n, from, to })
+      }
+      if (path === '/api/summary') return json(await summary(env.DB, url))
+      if (path === '/api/series') return json(await series(env.DB, url))
+      if (path === '/api/breakdown') return json(await breakdown(env.DB, url))
+      return new Response('not found', { status: 404 })
     }
 
     return new Response('not found', { status: 404 })
   },
 
-  /** 00:05 UTC — tuzu döndür (toplama ve budama Faz 4'te ekleniyor) */
+  /**
+   * 00:05 UTC. Sıra önemli: önce tuz döner (bugünün ziyaretleri yeni
+   * tuzla), sonra DÜN toplanır (artık yeni satır gelmiyor), sonra 35 günü
+   * aşan ham satırlar gider. Toplamlar kalıyor — "yıllık"ı mümkün kılan
+   * onlar.
+   */
   async scheduled(_event: ScheduledController, env: Env): Promise<void> {
     await rotateSalt(env.SALT)
+    const today = dayKeyUtc(Date.now())
+    await rollupDay(env.DB, addDays(today, -1))
+    await pruneRaw(env.DB, today)
   },
+}
+
+function json(body: unknown): Response {
+  return body instanceof Response ? body : Response.json(body)
+}
+
+async function health(env: Env) {
+  const rollup = await env.DB.prepare(`SELECT MAX(day) AS d FROM daily_totals`).first<{
+    d: string | null
+  }>()
+  const raw = await env.DB.prepare(`SELECT COUNT(*) AS n, MIN(day) AS oldest FROM run_event`).first<{
+    n: number
+    oldest: string | null
+  }>()
+  return {
+    ok: true,
+    lastRollupDay: rollup?.d ?? null,
+    rawRows: raw?.n ?? 0,
+    oldestRawDay: raw?.oldest ?? null,
+    salted: Boolean(await env.SALT.get('salt:today')),
+  }
 }
