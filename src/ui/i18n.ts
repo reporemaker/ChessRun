@@ -8,12 +8,14 @@
  * kırılmıyor, ayarlar penceresi de eksiği okuyucuya söylüyor.
  */
 
+// Sıra alfabetik (koda göre): arayüzdeki dil düğmeleri bu diziden çiziliyor,
+// Türkçe'nin sözlük referansı olması ona ilk sırayı vermiyor.
 export const LANGS = [
-  { code: 'tr', label: 'TR', name: 'Türkçe', locale: 'tr-TR' },
-  { code: 'en', label: 'EN', name: 'English', locale: 'en-US' },
   { code: 'de', label: 'DE', name: 'Deutsch', locale: 'de-DE' },
+  { code: 'en', label: 'EN', name: 'English', locale: 'en-US' },
   { code: 'es', label: 'ES', name: 'Español', locale: 'es-ES' },
   { code: 'fr', label: 'FR', name: 'Français', locale: 'fr-FR' },
+  { code: 'tr', label: 'TR', name: 'Türkçe', locale: 'tr-TR' },
 ] as const
 
 export type Lang = (typeof LANGS)[number]['code']
