@@ -1897,36 +1897,6 @@ button.pop-chip {
   background: rgba(255, 255, 255, 0.08);
 }
 
-.gv-lk {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: #a3b3c6;
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  white-space: nowrap;
-}
-
-.gv-lk::before {
-  content: '▸';
-  color: #5a6b80;
-  font-size: 9px;
-}
-
-.gv-lk:hover,
-.gv-lk:hover::before {
-  color: var(--arc-gold);
-}
-
-/* Aynı satırda bir de <a> var (öneri mailto): düğmeyle aynı görünsün */
-a.gv-lk {
-  text-decoration: none;
-  cursor: pointer;
-}
-
 /* Dişli: vektör ikon, dokunma alanı 44×44 */
 .gv-gearbtn {
   display: grid;
@@ -2309,17 +2279,17 @@ button.gv-chip {
   color: #5a6b80;
 }
 
-.gv-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 22px;
-}
-
-/* Sütunun altındaki iki düğme: Hakkında · Öneri gönder */
+/* Sütunun altındaki düğmeler: Nasıl oynanır (tek, tam genişlik), altında
+   Hakkında · Öneri gönder yan yana */
 .gv-btns {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+}
+
+.gv-btns.one {
+  grid-template-columns: 1fr;
+  margin-bottom: -6px; /* iki sıra tek blok gibi dursun */
 }
 
 .gv-btns button,

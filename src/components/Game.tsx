@@ -867,10 +867,10 @@ export function Game({ config, onExit, onOpenSettings, onOpenPage, onRestartWith
           </span>
         </button>
 
-        {/* Nasıl oynanır tek başına bağlantı; altında Hakkında + Öneri iki
-            düğme yan yana — sütunun altında rahat bir kapanış */}
-        <div className="gv-links">
-          <button type="button" className="gv-lk" onClick={() => onOpenPage('help')}>
+        {/* Nasıl oynanır tek başına tam genişlik düğme; altında Hakkında +
+            Öneri iki düğme yan yana — üçü aynı düğme dilinde */}
+        <div className="gv-btns one">
+          <button type="button" onClick={() => onOpenPage('help')}>
             {t('settings.howTo')}
           </button>
         </div>
