@@ -38,7 +38,7 @@ npx wrangler d1 execute chessrun --local --json \
 - `database_id` ← `wrangler d1 create chessrun`
 - KV `id` ← `wrangler kv namespace create SALT`
 - `ACCESS_TEAM` / `ACCESS_AUD` ← Access uygulaması kurulunca
-- `[assets]` bloğu ← `sub/` kurulunca (Faz 5)
+
 
 ## Değişmez kurallar
 

@@ -43,12 +43,11 @@ pattern = "1403.chessrun.app/*"
 zone_name = "chessrun.app"
 
 # Panel derlemesi Worker ile birlikte yayınlanıyor — ayrı hosting yok.
-# Faz 5'te sub/ kurulunca açılacak; şu an ../sub/dist yok ve wrangler
-# olmayan bir dizine bakınca başlamıyor.
-# [assets]
-# directory = "../sub/dist"
-# binding = "ASSETS"
-# not_found_handling = "single-page-application"
+# `cd sub && npm run build` sonrası wrangler deploy ikisini birden yollar.
+[assets]
+directory = "../sub/dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
 
 [vars]
 STATS_HOST = "1403.chessrun.app"

@@ -64,6 +64,13 @@ for (let back = DAYS - 1; back >= 0; back--) {
     const session = `seed-${day}-${sid++}`
     const country = pick(COUNTRY)
     const uiLang = country === 'TR' ? pick({ tr: 85, en: 15 }) : pick(UI_LANG)
+    // Üç dil sinyali gerçekte ayrışır: Almanya'daki Türk kullanıcının
+    // tarayıcısı de, seçimi tr; İngilizce arayüz seçen çoğunluğun
+    // tarayıcısı başka dilde. Tohum bunu yansıtsın ki panelde üç kutu
+    // "neden üç tane var" sorusu doğurmasın.
+    const NATIVE = { TR: 'tr', DE: 'de', US: 'en', GB: 'en', FR: 'fr', ES: 'es', NL: 'nl', CH: 'de', XX: 'en' }
+    const navLang = rnd() < 0.8 ? NATIVE[country] : uiLang
+    const acceptLang = rnd() < 0.9 ? navLang : uiLang
     const device = pick(DEVICE)
     const os = device === 'desktop' ? pick({ windows: 55, macos: 35, linux: 10 }) : pick({ android: 58, ios: 42 })
     const browser = os === 'ios' ? 'safari' : pick(BROWSER)
@@ -72,7 +79,7 @@ for (let back = DAYS - 1; back >= 0; back--) {
 
     lines.push(
       `INSERT OR IGNORE INTO visit (day, ts, visitor_hash, session_id, country, tz, ui_lang, nav_lang, accept_lang, browser, os, device, standalone, reduced_motion, touch, viewport, referrer, app_version)
-       VALUES (${q(day)}, ${ts}, ${q('h' + session)}, ${q(session)}, ${q(country)}, 'Europe/Istanbul', ${q(uiLang)}, ${q(uiLang)}, ${q(uiLang)}, ${q(browser)}, ${q(os)}, ${q(device)}, ${standalone}, ${rnd() < 0.05 ? 1 : 0}, ${device === 'desktop' ? 0 : 1}, ${q(device === 'desktop' ? pick({ md: 40, lg: 60 }) : pick(VIEWPORT))}, ${q(pick(REFERRER))}, '1.0');`,
+       VALUES (${q(day)}, ${ts}, ${q('h' + session)}, ${q(session)}, ${q(country)}, 'Europe/Istanbul', ${q(uiLang)}, ${q(navLang)}, ${q(acceptLang)}, ${q(browser)}, ${q(os)}, ${q(device)}, ${standalone}, ${rnd() < 0.05 ? 1 : 0}, ${device === 'desktop' ? 0 : 1}, ${q(device === 'desktop' ? pick({ md: 40, lg: 60 }) : pick(VIEWPORT))}, ${q(pick(REFERRER))}, '1.0');`,
     )
 
     // %62'si oynuyor; oynayan 1–6 koşu
