@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
-import { Game, type GameConfig } from './components/Game'
+import { useEffect, useRef, useState } from 'react'
+import { minColsOf } from './engine/config'
+import { Game, type GameConfig, type GameHandle } from './components/Game'
 import { Home } from './components/Home'
 import { Page, type PageId } from './components/Pages'
 import { Settings } from './components/Settings'
@@ -39,6 +40,7 @@ export default function App() {
       : null,
   )
   const { lang } = useSettings()
+  const gameRef = useRef<GameHandle>(null)
 
   // Ekran okuyucular ve tarayıcı tireleme kuralları için
   useEffect(() => {
@@ -71,6 +73,7 @@ export default function App() {
       {config ? (
         <Game
           key={runKey}
+          ref={gameRef}
           config={config}
           onExit={() => setConfig(null)}
           onOpenSettings={() => setSettingsOpen(true)}
@@ -101,6 +104,26 @@ export default function App() {
             setSettingsOpen(false)
             setPage(next)
           }}
+          game={
+            config
+              ? {
+                  daily: Boolean(config.daily),
+                  score: () => gameRef.current?.score() ?? 0,
+                  restart: (cols) => {
+                    // Önce mevcut koşu deftere yazılsın (puan kaybolmuyor,
+                    // kapanıyor), sonra yeni genişlikte baştan kurulsun.
+                    // runKey cols'u içerdiği için setConfig Game'i yeniden
+                    // monte ediyor — abandon'un bitmesini beklemek şart,
+                    // yoksa kayıt sökülen bileşenle birlikte gider.
+                    void (async () => {
+                      await gameRef.current?.abandon()
+                      setSettingsOpen(false)
+                      setConfig({ ...config, cols: Math.max(cols, minColsOf(config.mode)) })
+                    })()
+                  },
+                }
+              : undefined
+          }
         />
       )}
 

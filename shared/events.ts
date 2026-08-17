@@ -31,7 +31,9 @@ export type Speed = (typeof SPEEDS)[number]
  * `state.events` üstünden türetiliyor. Panelin üreteceği en faydalı oyun
  * tasarımı sayısı bu, ve sıralama tablosunun taşıması için bir sebep yok.
  */
-export const END_REASONS = ['checkmated', 'stuckOut', 'lifeLost', 'fellOff', 'other'] as const
+// `abandoned`: oyuncu koridor genişliğini değiştirip koşuyu yeniden başlattı;
+// koşu deftere yazıldı ama motor bitirmedi. Panelde "yarıda bırakıldı".
+export const END_REASONS = ['checkmated', 'stuckOut', 'lifeLost', 'fellOff', 'abandoned', 'other'] as const
 export type EndReason = (typeof END_REASONS)[number]
 
 /** Kesin piksel değil kova: tam genişlik parmak izi entropisi, kova değil */

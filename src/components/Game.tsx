@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { type Ref, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { ROWS, STUCK_RIGHTS, STUCK_SCORE, levelOf } from '../engine/config'
 import {
   applyBoardRefresh,
@@ -18,6 +18,7 @@ import {
   selectPiece,
 } from '../engine/game'
 import { key } from '../engine/moves'
+import type { EndReason } from '@shared/events'
 import type { Color, GameEvent, GameMode, GameState, PieceType, Pos, Row } from '../engine/types'
 import { emptyTally, tallyEvents } from '../ui/badges'
 import { type TipId, TIP_KEY, readSeenTips, storeSeenTips } from '../ui/coach'
@@ -62,11 +63,25 @@ export interface GameConfig {
   daily?: string
 }
 
+/**
+ * App'in oyuna dışarıdan dokunabildiği tek yer. Koridor genişliği oyun
+ * sürerken değişirse App önce `abandon()` ile mevcut koşuyu deftere
+ * yazdırıyor, sonra yeni genişlikte yeniden kuruyor — puan kaybolmuyor,
+ * kapanıyor.
+ */
+export interface GameHandle {
+  /** Sürmekte olan koşuyu kaydeder (bitmiş ya da hiç başlamamışsa hiçbir şey yapmaz) */
+  abandon: () => Promise<void>
+  /** Uyarı metninde göstermek için anlık skor */
+  score: () => number
+}
+
 interface GameProps {
   config: GameConfig
   onExit: () => void
   onOpenSettings: () => void
   onOpenPage: (page: 'help' | 'about') => void
+  ref?: Ref<GameHandle>
 }
 
 interface Flash {
@@ -89,7 +104,7 @@ interface RunResult {
 
 const TIP_MS = 7000
 
-export function Game({ config, onExit, onOpenSettings, onOpenPage }: GameProps) {
+export function Game({ config, onExit, onOpenSettings, onOpenPage, ref }: GameProps) {
   const [game, setGame] = useState<GameState>(() => createGame(config))
   const [phase, setPhase] = useState<Phase>('input')
   const [ghostRow, setGhostRow] = useState<Row | null>(null)
@@ -198,9 +213,12 @@ export function Game({ config, onExit, onOpenSettings, onOpenPage }: GameProps) 
     }
   }
 
-  /** Koşuyu imzalayıp deftere yaz, rekor kırıldıysa kutla */
-  async function finishRun(state: GameState) {
-    const before = readStanding(state.mode)
+  /**
+   * Koşuyu deftere yazar, sıralamaya ve istatistiğe bildirir. Hem doğal
+   * bitişte (finishRun) hem yarıda bırakmada (abandon) aynı yol —
+   * ikisinin de kaydı ve sayacı aynı olmalı, yalnızca bitiş sebebi farklı.
+   */
+  async function recordAndReport(state: GameState, endReason: EndReason): Promise<RunRecord> {
     const durationMs = performance.now() - runStart.current
     const counts = tally.current
     const cols = colsOf(state.board)
@@ -220,6 +238,33 @@ export function Game({ config, onExit, onOpenSettings, onOpenPage }: GameProps) 
       mated: counts.mated,
     })
 
+    // Sunucu tanımlıysa aynı kayıt imzasıyla haftalık tabloya gider
+    void submitRun(run)
+
+    // İstatistik ayrı uç, ayrı tip, cihaz jetonu YOK. Oyunu bekletmiyor.
+    trackRun({
+      mode: state.mode,
+      daily: Boolean(config.daily),
+      score: state.score,
+      distance: state.distance,
+      cols,
+      level,
+      durationMs,
+      endReason,
+      speed,
+      kings: counts.kings,
+      bestStreak: counts.bestStreak,
+      stuckUsed: counts.stuckUsed,
+      mated: counts.mated,
+    })
+    return run
+  }
+
+  /** Koşuyu imzalayıp deftere yaz, rekor kırıldıysa kutla */
+  async function finishRun(state: GameState) {
+    const before = readStanding(state.mode)
+    const run = await recordAndReport(state, endReasonOf(state.events))
+
     const after = readStanding(state.mode)
     const isBest = run.score > 0 && run.score > (before.allTime?.score ?? 0)
     const runs = readRuns()
@@ -236,27 +281,25 @@ export function Game({ config, onExit, onOpenSettings, onOpenPage }: GameProps) 
     })
 
     if (isBest) buzz([40, 60, 40, 60, 90])
-
-    // Sunucu tanımlıysa aynı kayıt imzasıyla haftalık tabloya gider
-    void submitRun(run)
-
-    // İstatistik ayrı uç, ayrı tip, cihaz jetonu YOK. Oyunu bekletmiyor.
-    trackRun({
-      mode: state.mode,
-      daily: Boolean(config.daily),
-      score: state.score,
-      distance: state.distance,
-      cols,
-      level,
-      durationMs,
-      endReason: endReasonOf(state.events),
-      speed,
-      kings: counts.kings,
-      bestStreak: counts.bestStreak,
-      stuckUsed: counts.stuckUsed,
-      mated: counts.mated,
-    })
   }
+
+  // Ref state'i değil son commit edilen durumu görsün: abandon bir tur
+  // zincirinin ortasında çağrılabilir, kapanıştaki `game` bayat olabilir
+  const latest = useRef(game)
+  latest.current = game
+
+  useImperativeHandle(ref, () => ({
+    score: () => latest.current.score,
+    abandon: async () => {
+      const state = latest.current
+      // Bitmişse zaten yazıldı; hiç oynanmadıysa deftere sıfır satır düşmesin
+      if (finished.current || state.status !== 'playing') return
+      if (state.distance === 0 && state.score === 0) return
+      finished.current = true
+      turnRef.current++ // yarım kalmış tur zinciri artık state yazmasın
+      await recordAndReport(state, 'abandoned')
+    },
+  }))
 
   function restart() {
     turnRef.current++

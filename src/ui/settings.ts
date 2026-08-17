@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { type CorridorId, DEFAULT_CORRIDOR, CORRIDORS } from '../engine/config'
+import { COL_CHOICES, DEFAULT_CORRIDOR_COLS, LEGACY_CORRIDOR } from '../engine/config'
 import type { Color } from '../engine/types'
 import { DEFAULT_LANG, type Lang, isLang } from './i18n'
 import { isMuted, setMuted, unlockSound } from './sound'
@@ -15,8 +15,8 @@ export interface Settings {
   pieceColor: Color
   sound: boolean
   lang: Lang
-  /** Koridor genişliği — yalnızca serbest oyunları etkiliyor */
-  corridor: CorridorId
+  /** Koridor genişliği, sütun olarak (4–8) — yalnızca serbest oyunları etkiliyor */
+  cols: number
 }
 
 const STORAGE_KEY = 'chessrun:settings'
@@ -24,7 +24,9 @@ const STORAGE_KEY = 'chessrun:settings'
 interface Stored {
   pieceColor?: Color
   lang?: Lang
-  corridor?: CorridorId
+  cols?: number
+  /** Eski sürüm: 'narrow' | 'medium' | 'wide' — okunurken sayıya çevriliyor */
+  corridor?: string
 }
 
 function load(): Stored {
@@ -51,11 +53,16 @@ function initial(): Settings {
   return {
     pieceColor: stored.pieceColor === 'b' ? 'b' : 'w',
     lang: isLang(stored.lang) ? stored.lang : detectLang(),
-    corridor: CORRIDORS.some((entry) => entry.id === stored.corridor)
-      ? (stored.corridor as CorridorId)
-      : DEFAULT_CORRIDOR,
+    cols: readCols(stored),
     sound: !isMuted(),
   }
+}
+
+/** Sütun: yeni alan varsa o, yoksa eski adlandırılmış kademe, yoksa varsayılan */
+function readCols(stored: Stored): number {
+  if (typeof stored.cols === 'number' && COL_CHOICES.includes(stored.cols)) return stored.cols
+  if (stored.corridor && stored.corridor in LEGACY_CORRIDOR) return LEGACY_CORRIDOR[stored.corridor]
+  return DEFAULT_CORRIDOR_COLS
 }
 
 /** İlk açılışta tarayıcının dilini dene; tutmazsa Türkçe */
@@ -76,7 +83,7 @@ let snapshot: Settings = initial()
 
 function commit(next: Settings): void {
   snapshot = next
-  save({ pieceColor: next.pieceColor, lang: next.lang, corridor: next.corridor })
+  save({ pieceColor: next.pieceColor, lang: next.lang, cols: next.cols })
   for (const listener of listeners) listener()
 }
 
@@ -94,9 +101,9 @@ export function setPieceColor(pieceColor: Color): void {
   commit({ ...snapshot, pieceColor })
 }
 
-export function setCorridor(corridor: CorridorId): void {
-  if (snapshot.corridor === corridor) return
-  commit({ ...snapshot, corridor })
+export function setCols(cols: number): void {
+  if (!COL_CHOICES.includes(cols) || snapshot.cols === cols) return
+  commit({ ...snapshot, cols })
 }
 
 export function setLang(lang: Lang): void {

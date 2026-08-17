@@ -25,9 +25,43 @@ describe('cihaz kimliği ve imza', () => {
     expect(getIdentity().token).toBe(first.token)
 
     const renamed = renameIdentity('Gölge Vezir')
-    expect(renamed.name).toBe('Gölge Vezir')
-    expect(renamed.token).toBe(first.token) // ad değişti, kimlik aynı
+    expect(renamed?.name).toBe('Gölge Vezir')
+    expect(renamed?.token).toBe(first.token) // ad değişti, kimlik aynı
     expect(shortToken(first.token)).toMatch(/^\w{4}…\w{2}$/)
+  })
+
+  /**
+   * Ad temizliği tekillik değil hijyen: sıralama tablosunda görünecek ad
+   * kısa jetonu taklit edemesin, görünmez olamasın, resmî ada bürünemesin.
+   */
+  it('adı temizler: # ve görünmez karakterler gider, boşluk tekleşir, sınır 24', async () => {
+    const { cleanName, NAME_MAX } = await import('./identity')
+    expect(cleanName('Ahmet #f93c')).toBe('Ahmet f93c')
+    expect(cleanName('Ah\u200bmet\u202e')).toBe('Ahmet')
+    expect(cleanName('  çok    boşluklu   ad  ')).toBe('çok boşluklu ad')
+    expect(cleanName('a'.repeat(50))?.length).toBe(NAME_MAX)
+  })
+
+  it('rezerve adları ve boş sonucu reddeder', async () => {
+    const { cleanName, renameIdentity, getIdentity } = await import('./identity')
+    expect(cleanName('ChessRun')).toBeNull()
+    expect(cleanName('Smart Kraft 2')).toBeNull()
+    expect(cleanName('chess run resmi')).toBeNull()
+    expect(cleanName('###')).toBeNull()
+    expect(cleanName('\u200b')).toBeNull()
+
+    const before = getIdentity().name
+    expect(renameIdentity('SmartKraft')).toBeNull()
+    expect(getIdentity().name).toBe(before) // reddedilince ad değişmez
+  })
+
+  it('boş ad verilirse rastgele yeni ad üretir', async () => {
+    const { renameIdentity, getIdentity } = await import('./identity')
+    const before = getIdentity().name
+    const fresh = renameIdentity('   ')
+    expect(fresh).not.toBeNull()
+    expect(fresh?.name).toBeTruthy()
+    expect(fresh?.name).not.toBe(before)
   })
 
   it('koşu imzalanır ve kurcalama imzayı bozar', async () => {

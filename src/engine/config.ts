@@ -10,26 +10,19 @@ export const DEFAULT_COLS = MAX_COLS
 export const COL_CHOICES: number[] = [4, 5, 6, 7, 8]
 
 /**
- * Oyuncuya sunulan koridor: beş ham sayı yerine üç adlandırılmış kademe.
+ * Oyuncuya sunulan koridor genişlikleri: 4–8 sütun, beşi de seçilebilir.
  *
- * "4 mü 5 mi" sorusunun oyuncu için bir karşılığı yok; "dar mı geniş mi"
- * sorusunun var. Aradaki 5 ve 7 elendi çünkü komşularından ayırt edilebilir
- * bir oyun vermiyorlardı — ölçümde üç genişliğin ortalama mesafesi zaten
- * birbirine yakın çıkmıştı (22.2 / 23.3 / 21.8).
+ * Bir ara üç adlandırılmış kademe (dar/orta/geniş = 4/6/8) denendi; ölçümde
+ * 5 ve 7 komşularından belirgin ayrışmıyordu. Yine de kaldırıldı çünkü
+ * "8'de oynuyorum, biraz daha dar istiyorum" diyen oyuncunun 6'ya düşmek
+ * dışında seçeneği kalmıyordu — ince ayar hakkı ölçümden değerli.
+ * Eski kayıtlardaki `narrow|medium|wide` değerleri okunurken sayıya
+ * çevriliyor (settings.ts), kimsenin tercihi kaybolmuyor.
  */
-export type CorridorId = 'narrow' | 'medium' | 'wide'
+export const DEFAULT_CORRIDOR_COLS = MAX_COLS
 
-export const CORRIDORS: Array<{ id: CorridorId; cols: number }> = [
-  { id: 'narrow', cols: 4 },
-  { id: 'medium', cols: 6 },
-  { id: 'wide', cols: MAX_COLS },
-]
-
-export const DEFAULT_CORRIDOR: CorridorId = 'wide'
-
-export function colsOfCorridor(id: CorridorId): number {
-  return CORRIDORS.find((entry) => entry.id === id)?.cols ?? MAX_COLS
-}
+/** Eski adlandırılmış kademeler → sütun; yalnızca geriye dönük okuma için */
+export const LEGACY_CORRIDOR: Record<string, number> = { narrow: 4, medium: 6, wide: MAX_COLS }
 
 export function clampCols(cols: number): number {
   return Math.max(MIN_COLS, Math.min(MAX_COLS, Math.round(cols)))

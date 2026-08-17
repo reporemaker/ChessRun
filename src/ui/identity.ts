@@ -85,9 +85,57 @@ export function getIdentity(): Identity {
   return identity
 }
 
-export function renameIdentity(name: string): Identity {
-  const trimmed = name.trim().slice(0, 24)
-  const identity = { ...getIdentity(), name: trimmed || randomName() }
+/** Ad için üst sınır — sıralama satırına ve künye fişine sığan uzunluk */
+export const NAME_MAX = 24
+
+/** Kimliğe bürünmeye kapalı adlar: küçük harfe indirilip boşluksuz karşılaştırılıyor */
+const RESERVED = ['chessrun', 'smartkraft', 'admin', 'sistem', 'system']
+
+/**
+ * Adı sıralama tablosuna girecek hâle getirir — tekilliği DEĞİL hijyeni
+ * sağlıyor. Tekillik hesapsız modelde anlamsız: kimlik jeton, ad etiket;
+ * tabloda adın yanında zaten kısa jeton duruyor.
+ *
+ * - `#` yasak: kısa jeton `#f93c` biçimiyle karışıp "Ahmet #f93c" taklidine
+ *   izin vermesin
+ * - kontrol ve yön karakterleri (RTL override, sıfır genişlik) atılıyor —
+ *   görünmez ad ve görsel taklit yolu
+ * - ardışık boşluk teke iniyor, kırpılıyor, NAME_MAX'a kesiliyor
+ * - rezerve adlar reddediliyor
+ *
+ * Boş ya da geçersiz sonuç `null`: çağıran ya eski adı korur ya rastgele üretir.
+ */
+export function cleanName(raw: string): string | null {
+  // Kontrol karakterleri kasıtlı olarak eşleniyor (görünmez ad ve yön
+  // hilesi yolu) — lint uyarısı bilinçli olarak susturuluyor.
+  // eslint-disable-next-line no-control-regex
+  const cleaned = raw
+    .replace(/[#\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, NAME_MAX)
+    .trim()
+  if (!cleaned) return null
+  const flat = cleaned.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
+  if (RESERVED.some((word) => flat === word || flat.startsWith(word))) return null
+  return cleaned
+}
+
+/**
+ * Adı değiştirir. Geçersiz ad verilirse mevcut ad korunur ve `null` döner —
+ * arayüz "olmadı" diyebilsin. Boş verilirse rastgele yeni ad üretilir.
+ */
+export function renameIdentity(name: string): Identity | null {
+  const current = getIdentity()
+  if (!name.trim()) {
+    const identity = { ...current, name: randomName() }
+    store(identity)
+    cached = identity
+    return identity
+  }
+  const cleaned = cleanName(name)
+  if (!cleaned) return null
+  const identity = { ...current, name: cleaned }
   store(identity)
   cached = identity
   return identity

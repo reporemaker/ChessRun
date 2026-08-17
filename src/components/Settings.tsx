@@ -1,19 +1,33 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CORRIDORS, colsOfCorridor } from '../engine/config'
+import { COL_CHOICES } from '../engine/config'
 import { feedbackHref } from '../ui/feedback'
-import { getIdentity, shortToken } from '../ui/identity'
+import { NAME_MAX, getIdentity, renameIdentity, shortToken } from '../ui/identity'
 import { type Lang, LANGS, hasFullProse, localeOf } from '../ui/i18n'
 import { GLYPH } from '../ui/pieces'
 import { type RankScope, readRanking } from '../ui/ranking'
-import { setCorridor, setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
+import { setCols, setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
 import { useT } from '../ui/text'
 import { APP_VERSION, CONTACT_MAIL } from '../ui/version'
+
+/**
+ * Oyun sürerken pencere açıldıysa App bunu geçiriyor: koridor değişimi
+ * mevcut koşuyu etkilesin mi sorusu buradan cevaplanıyor.
+ */
+export interface LiveGame {
+  /** Günlük meydan okumada genişlik sabit — soru sorulmaz, ayar sonrakine kalır */
+  daily: boolean
+  /** Uyarı metnindeki puan */
+  score: () => number
+  /** Onaylanırsa: mevcut koşu deftere yazılır, yeni genişlikte baştan kurulur */
+  restart: (cols: number) => void
+}
 
 interface SettingsProps {
   onClose: () => void
   onOpenPage: (page: 'help' | 'about') => void
   /** Oyun sürüyorsa menüye dönüş bağlantısı — mobilde tek çıkış yolu */
   onExitGame?: () => void
+  game?: LiveGame
 }
 
 /** Koşu tarihi, seçili dilin takvim biçiminde: 16.08 · 14:32 */
@@ -38,7 +52,7 @@ function dateLabel(at: string, lang: Lang): string {
  *
  * Rozetler son bölüm olarak gelecek; yeri altta kesik çizgiyle duruyor.
  */
-export function Settings({ onClose, onOpenPage, onExitGame }: SettingsProps) {
+export function Settings({ onClose, onOpenPage, onExitGame, game }: SettingsProps) {
   const settings = useSettings()
   const t = useT()
   const closeRef = useRef<HTMLButtonElement>(null)
@@ -46,7 +60,47 @@ export function Settings({ onClose, onOpenPage, onExitGame }: SettingsProps) {
   const [showList, setShowList] = useState(false)
   const [scope, setScope] = useState<RankScope>('allTime')
   const ranking = useMemo(() => readRanking(scope), [scope])
-  const identity = useMemo(() => getIdentity(), [])
+
+  // Ad düzenleme: kalem → satır içi giriş. Kaydet/İptal/Rastgele.
+  const [identity, setIdentity] = useState(() => getIdentity())
+  const [editingName, setEditingName] = useState(false)
+  const [nameDraft, setNameDraft] = useState('')
+  const [nameError, setNameError] = useState(false)
+  const nameRef = useRef<HTMLInputElement>(null)
+
+  // Koridor: oyun sürerken seçilen genişlik önce burada bekler, onay ister
+  const [pendingCols, setPendingCols] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (editingName) nameRef.current?.select()
+  }, [editingName])
+
+  function startEditName() {
+    setNameDraft(identity.name)
+    setNameError(false)
+    setEditingName(true)
+  }
+
+  function saveName(raw: string) {
+    const next = renameIdentity(raw)
+    if (!next) {
+      setNameError(true)
+      return
+    }
+    setIdentity(next)
+    setEditingName(false)
+    setNameError(false)
+  }
+
+  function pickCols(cols: number) {
+    if (cols === settings.cols) return
+    // Oyun sürüyor ve genişlik o oyunu etkileyecekse önce sor
+    if (game && !game.daily) {
+      setPendingCols(cols)
+      return
+    }
+    setCols(cols)
+  }
 
   useEffect(() => {
     closeRef.current?.focus()
@@ -110,47 +164,75 @@ export function Settings({ onClose, onOpenPage, onExitGame }: SettingsProps) {
             </span>
           </div>
 
-          {/* A2 · koridor — oyunu etkileyen tek ayar, o yüzden en üstte */}
-          <div className="pop-lin">
-            <span className="pop-k">
-              {t('settings.corridor')}
-              <small>
-                {t('settings.corridorHint')} ·{' '}
-                {t('corridor.cols', { n: colsOfCorridor(settings.corridor) })}
-              </small>
-            </span>
-            <span className="pop-sw">
-              {CORRIDORS.map((entry) => (
-                <button
-                  key={entry.id}
-                  type="button"
-                  className={settings.corridor === entry.id ? 'on' : ''}
-                  aria-pressed={settings.corridor === entry.id}
-                  onClick={() => setCorridor(entry.id)}
-                >
-                  {t(`corridor.${entry.id}`)}
-                </button>
-              ))}
-            </span>
+          {/* A2 · koridor + B · ses — aynı satırda, iki sütun.
+              Koridor oyunu etkileyen tek ayar; ses küçük bir anahtar.
+              İkisini yan yana koymak bir satır kazandırıyor. */}
+          <div className="pop-lin two">
+            <div className="pop-col">
+              <span className="pop-k">
+                {t('settings.corridor')}
+                <small>
+                  {t('settings.corridorHint')} · {t('corridor.cols', { n: settings.cols })}
+                </small>
+              </span>
+              <span className="pop-sw cols" role="radiogroup" aria-label={t('settings.corridor')}>
+                {COL_CHOICES.map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    role="radio"
+                    className={(pendingCols ?? settings.cols) === n ? 'on' : ''}
+                    aria-checked={(pendingCols ?? settings.cols) === n}
+                    onClick={() => pickCols(n)}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </span>
+            </div>
+            <div className="pop-col end">
+              <span className="pop-k">
+                {t('settings.sound')}
+                <small>{t('settings.soundHint')}</small>
+              </span>
+              <button
+                type="button"
+                className={`pop-tg ${settings.sound ? 'on' : ''}`}
+                role="switch"
+                aria-checked={settings.sound}
+                aria-label={t('settings.sound')}
+                onClick={() => setSound(!settings.sound)}
+              >
+                <i />
+              </button>
+            </div>
           </div>
 
-          {/* B · ses */}
-          <div className="pop-lin">
-            <span className="pop-k">
-              {t('settings.sound')}
-              <small>{t('settings.soundHint')}</small>
-            </span>
-            <button
-              type="button"
-              className={`pop-tg ${settings.sound ? 'on' : ''}`}
-              role="switch"
-              aria-checked={settings.sound}
-              aria-label={t('settings.sound')}
-              onClick={() => setSound(!settings.sound)}
-            >
-              <i />
-            </button>
-          </div>
+          {/* Koridor uyarısı: oyun sürerken genişlik değişecekse. Puan
+              kaybolmuyor, kapanıyor — mevcut koşu deftere yazılıyor. */}
+          {pendingCols != null && game && (
+            <div className="pop-warn" role="alertdialog" aria-live="polite">
+              <b>{t('corridor.restart.title')}</b>
+              <p>{t('corridor.restart.body', { score: game.score(), n: pendingCols })}</p>
+              <div className="pop-warn-act">
+                <button type="button" onClick={() => setPendingCols(null)}>
+                  {t('corridor.restart.cancel')}
+                </button>
+                <button
+                  type="button"
+                  className="go"
+                  onClick={() => {
+                    const cols = pendingCols
+                    setPendingCols(null)
+                    setCols(cols)
+                    game.restart(cols)
+                  }}
+                >
+                  {t('corridor.restart.ok')}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* C · dil */}
           <div className="pop-field">
@@ -261,18 +343,75 @@ export function Settings({ onClose, onOpenPage, onExitGame }: SettingsProps) {
             <small>{CONTACT_MAIL}</small>
           </a>
 
-          {/* G · künye */}
-          <div className="pop-chips">
-            <span className="pop-chip">
-              v<b>{APP_VERSION}</b>
-            </span>
-            <span className="pop-chip">
-              #<b>{shortToken(identity.token)}</b>
-            </span>
-            <span className="pop-chip">
-              <b>{identity.name}</b>
-            </span>
-          </div>
+          {/* G · künye — ad düzenlenebilir (kalem). Tekillik yok, hijyen var:
+              bkz. identity.ts cleanName. */}
+          {editingName ? (
+            <form
+              className="pop-name"
+              onSubmit={(event) => {
+                event.preventDefault()
+                saveName(nameDraft)
+              }}
+            >
+              <input
+                ref={nameRef}
+                value={nameDraft}
+                maxLength={NAME_MAX}
+                autoComplete="off"
+                autoCapitalize="words"
+                spellCheck={false}
+                aria-label={t('name.edit')}
+                aria-invalid={nameError}
+                onChange={(event) => {
+                  setNameDraft(event.target.value)
+                  setNameError(false)
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Escape') setEditingName(false)
+                }}
+              />
+              <button type="submit" className="go">
+                {t('name.save')}
+              </button>
+              <button type="button" onClick={() => saveName('')} title={t('name.random')}>
+                ⟳
+              </button>
+              <button type="button" onClick={() => setEditingName(false)}>
+                ×
+              </button>
+              <small className={nameError ? 'err' : ''}>
+                {nameError ? t('name.invalid') : t('name.hint', { n: NAME_MAX })}
+              </small>
+            </form>
+          ) : (
+            <div className="pop-chips">
+              <span className="pop-chip">
+                v<b>{APP_VERSION}</b>
+              </span>
+              <span className="pop-chip">
+                #<b>{shortToken(identity.token)}</b>
+              </span>
+              <button
+                type="button"
+                className="pop-chip name"
+                onClick={startEditName}
+                aria-label={t('name.edit')}
+                title={t('name.edit')}
+              >
+                <b>{identity.name}</b>
+                <svg viewBox="0 0 16 16" width="11" height="11" aria-hidden="true">
+                  <path
+                    d="M11.3 1.7a1 1 0 0 1 1.4 0l1.6 1.6a1 1 0 0 1 0 1.4L5.5 13.5 1.5 14.5l1-4z M9.8 3.2l3 3"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            </div>
+          )}
 
           {/* rozetler sekizinci bölüm olarak buraya gelecek */}
           <div className="pop-future">↓ {t('settings.badgesSoon')} ↓</div>

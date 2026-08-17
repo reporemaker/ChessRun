@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { DEFAULT_COLS, colsOfCorridor, minColsOf } from '../engine/config'
+import { DEFAULT_COLS, minColsOf } from '../engine/config'
 import { type ModeId, MODES, dailyMode, isPlayable, modeInfo } from '../ui/modes'
 import {
   type RunRecord,
@@ -37,7 +37,7 @@ export function Home({ onStart, onOpenSettings }: HomeProps) {
   const t = useT()
   // Koridor genişliği ayarlar penceresinden geliyor: ana sayfa artık
   // yalnızca "hangi oyunu oynayacağım" sorusunu soruyor
-  const { corridor } = useSettings()
+  const { cols } = useSettings()
   const [day, setDay] = useState(() => dayKey())
   const [clock, setClock] = useState(() => clockOf(dayEnd(new Date()).getTime() - Date.now()))
 
@@ -69,7 +69,7 @@ export function Home({ onStart, onOpenSettings }: HomeProps) {
 
     // Üçlü dar koridora sığmıyor; motor zaten genişletiyor ama kayıt da
     // gerçek genişliği yazsın diye burada da düzeltiliyor
-    const width = Math.max(colsOfCorridor(corridor), minColsOf(id))
+    const width = Math.max(cols, minColsOf(id))
 
     onStart(
       daily

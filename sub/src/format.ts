@@ -77,6 +77,7 @@ const VALUE_LABEL: Record<string, string> = {
   fellOff: 'Tahtadan düştü',
   stuckOut: 'Sıkıştı',
   checkmated: 'Mat oldu',
+  abandoned: 'Yarıda bırakıldı',
   other: 'Diğer',
   mobile: 'Telefon',
   tablet: 'Tablet',
