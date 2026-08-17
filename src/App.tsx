@@ -28,7 +28,10 @@ export default function App() {
         }
       : null,
   )
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  // ?dev=settings — ayarlar penceresini açık başlat (yalnızca DEV)
+  const [settingsOpen, setSettingsOpen] = useState(
+    () => import.meta.env.DEV && window.location.search.includes('dev=settings'),
+  )
   // Aynı geliştirme kısayolu bilgi sayfaları için: ?dev=page&page=about
   const [page, setPage] = useState<PageId | null>(() =>
     import.meta.env.DEV && window.location.search.includes('dev=page')

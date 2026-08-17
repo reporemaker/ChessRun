@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CORRIDORS, colsOfCorridor } from '../engine/config'
+import { feedbackHref } from '../ui/feedback'
 import { getIdentity, shortToken } from '../ui/identity'
 import { type Lang, LANGS, hasFullProse, localeOf } from '../ui/i18n'
 import { GLYPH } from '../ui/pieces'
 import { type RankScope, readRanking } from '../ui/ranking'
 import { setCorridor, setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
 import { useT } from '../ui/text'
-import { APP_VERSION } from '../ui/version'
+import { APP_VERSION, CONTACT_MAIL } from '../ui/version'
 
 interface SettingsProps {
   onClose: () => void
@@ -251,6 +252,14 @@ export function Settings({ onClose, onOpenPage, onExitGame }: SettingsProps) {
               {t('settings.about')}
             </button>
           </div>
+
+          {/* Öneri: mailto, form değil (bkz. ui/feedback.ts). Adres metin
+              olarak da duruyor — masaüstünde webmail kullananlarda mailto
+              hiçbir şey açmayabilir, o zaman kopyalar. */}
+          <a className="pop-feedback" href={feedbackHref(settings.lang)}>
+            <span>{t('settings.feedback')}</span>
+            <small>{CONTACT_MAIL}</small>
+          </a>
 
           {/* G · künye */}
           <div className="pop-chips">

@@ -1388,6 +1388,39 @@
   border-color: rgba(255, 255, 255, 0.3);
 }
 
+/* Öneri bağlantısı: pop-links düğmeleriyle aynı dil, altında adres.
+   Adres metin olarak duruyor — mailto açılmazsa oyuncu kopyalayabilsin. */
+.pop-feedback {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--arc-text);
+  text-decoration: none;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+}
+
+.pop-feedback small {
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  color: var(--arc-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pop-feedback:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.pop-feedback:hover small {
+  color: var(--arc-gold);
+}
+
 /* G · künye — rozetler */
 .pop-chips {
   display: flex;
@@ -1733,6 +1766,12 @@
   color: var(--arc-gold);
 }
 
+/* Aynı satırda bir de <a> var (öneri mailto): düğmeyle aynı görünsün */
+a.gv-lk {
+  text-decoration: none;
+  cursor: pointer;
+}
+
 /* Dişli: vektör ikon, dokunma alanı 44×44 */
 .gv-gearbtn {
   display: grid;
@@ -1926,7 +1965,8 @@
 
 .gv-links {
   display: flex;
-  gap: 22px;
+  flex-wrap: wrap;
+  gap: 10px 22px;
 }
 
 /* Reklam yeri: yalnızca gerçekten bir slot tanımlıysa çiziliyor, ve

@@ -36,6 +36,7 @@ import {
 } from '../ui/scores'
 import { setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
 import { shareRun, shareText } from '../ui/share'
+import { feedbackHref } from '../ui/feedback'
 import { endReasonOf, trackRun } from '../ui/stats'
 import { type Translate, useT } from '../ui/text'
 import { playEvents, playSound, unlockSound } from '../ui/sound'
@@ -730,6 +731,9 @@ export function Game({ config, onExit, onOpenSettings, onOpenPage }: GameProps) 
           <button type="button" className="gv-lk" onClick={() => onOpenPage('about')}>
             {t('settings.about')}
           </button>
+          <a className="gv-lk" href={feedbackHref(settings.lang, config.mode)}>
+            {t('settings.feedback')}
+          </a>
         </div>
 
         {AD_SLOT && <div className="gv-ad">REKLAM</div>}
