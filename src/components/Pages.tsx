@@ -3,7 +3,7 @@ import { getIdentity, shortToken } from '../ui/identity'
 import type { StringKey } from '../ui/i18n'
 import { MODES } from '../ui/modes'
 import { useT } from '../ui/text'
-import { APP_VERSION } from '../ui/version'
+import { APP_VERSION, CONTACT_MAIL } from '../ui/version'
 
 export type PageId = 'help' | 'about'
 
@@ -49,7 +49,16 @@ const ABOUT: Section[] = [
     titleKey: 'about.scores.title',
     bodyKeys: ['about.scores.1', 'about.scores.2', 'about.scores.3'],
   },
+  // İstatistik toplamaya başladığımız gün bu bölüm de yayında olmalı:
+  // ne sayıyoruz, neyi bilerek saymıyoruz, ne kadar tutuyoruz.
+  {
+    titleKey: 'about.privacy.title',
+    bodyKeys: ['about.privacy.1', 'about.privacy.2', 'about.privacy.3'],
+  },
   { titleKey: 'about.tech.title', bodyKeys: ['about.tech.1', 'about.tech.2'] },
+  // Künye: kim yaptı + iletişim. Adres i18n metnine {mail} ile giriyor,
+  // böylece beş çeviri de tek kaynaktan (CONTACT_MAIL) besleniyor.
+  { titleKey: 'about.credit.title', bodyKeys: ['about.credit.1', 'about.credit.2'] },
 ]
 
 /**
@@ -90,9 +99,18 @@ export function Page({ page, onClose }: PageProps) {
               {section.soon && <em className="page-soon">{t('common.soon')}</em>}
             </h2>
             <ul>
-              {section.bodyKeys.map((key) => (
-                <li key={key}>{t(key)}</li>
-              ))}
+              {section.bodyKeys.map((key) =>
+                key === 'about.credit.2' ? (
+                  <li key={key}>
+                    {t(key, { mail: '' })}
+                    <a className="page-mail" href={`mailto:${CONTACT_MAIL}`}>
+                      {CONTACT_MAIL}
+                    </a>
+                  </li>
+                ) : (
+                  <li key={key}>{t(key)}</li>
+                ),
+              )}
             </ul>
           </section>
         ))}

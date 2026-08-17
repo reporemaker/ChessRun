@@ -37,7 +37,7 @@ npx wrangler d1 execute chessrun --local --json \
 
 - `database_id` ← `wrangler d1 create chessrun`
 - KV `id` ← `wrangler kv namespace create SALT`
-- `ACCESS_TEAM` / `ACCESS_AUD` ← Access uygulaması kurulunca
+- `ACCESS_TEAM` / `ACCESS_AUD` ← Access uygulaması kurulunca (politika: Allow → Emails → `chessrun@smartkraft.ch`)
 
 
 ## Değişmez kurallar
@@ -57,7 +57,7 @@ npx wrangler d1 execute chessrun --local --json \
 
 ## Kapsam dışı (bilinçli)
 
-Mail — panelde hiç olmayacak; iletişim `chessrun@smartkraft.ch` üstünden.
+Mail — panelde hiç olmayacak; iletişim ve Access girişi `chessrun@smartkraft.ch` üstünden.
 Gerçek zamanlı görünüm, veri dışa aktarma, çoklu yönetici, geçmiş
 `localStorage` verisinin aktarımı (cihaz başına tutulduğu için sunucuya
 taşınamaz).

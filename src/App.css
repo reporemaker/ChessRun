@@ -1504,6 +1504,18 @@
   font-weight: 400;
 }
 
+/* Hakkında → iletişim adresi: tıklanabilir ama sayfanın sessiz diline uyar */
+.page-mail {
+  color: var(--arc-gold);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 210, 63, 0.35);
+}
+
+.page-mail:hover,
+.page-mail:focus-visible {
+  border-bottom-color: var(--arc-gold);
+}
+
 /* ---------------------------------------------------------------- *
  * Üçlü — kadro tahtada
  * ---------------------------------------------------------------- */

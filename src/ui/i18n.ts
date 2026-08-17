@@ -145,12 +145,22 @@ const tr = {
   'about.scores.2':
     'Skorların şu an yalnızca bu cihazda, tarayıcının yerel deposunda duruyor. Depoyu silersen skorlar da gider.',
   'about.scores.3':
-    'Sıralama sunucusu henüz bağlı değil. Bağlandığında aynı imzalı kayıtlar gönderilecek; toplanan tek şey skor, mod ve cihaz jetonu olacak.',
+    'Sıralama sunucusu bağlandığında aynı imzalı kayıtlar gönderilecek; o kanalda toplanan tek şey skor, mod ve cihaz jetonu olacak.',
+  'about.privacy.title': 'NELERİ SAYIYORUZ',
+  'about.privacy.1':
+    'Oyunu geliştirmek için anonim kullanım istatistiği tutuyoruz: hangi mod ne kadar oynanıyor, koşular ne kadar sürüyor, nasıl bitiyor, hangi ülkeden ve hangi dilde oynanıyor.',
+  'about.privacy.2':
+    'Çerez yok, hesap yok, cihaz jetonu bu istatistiğe hiç gönderilmiyor. Ziyaretçi sayımı IP adresinin günlük değişen bir tuzla hash\'lenmesiyle yapılıyor; IP\'nin kendisi hiçbir yere yazılmıyor ve tuz iki günde silindiği için dünkü sayımlar geriye döndürülemiyor.',
+  'about.privacy.3':
+    'Bilerek toplamadıklarımız: şehir, ekran çözünürlüğü, ham tarayıcı kimliği, ziyaret ettiğin başka siteler. Ham kayıtlar 35 gün sonra siliniyor; geriye yalnızca günlük toplamlar kalıyor. Tarayıcın "izleme" (Do Not Track) diyorsa hiçbir şey gönderilmiyor.',
   'about.tech.title': 'TEKNİK',
   'about.tech.1':
     'Ses dosyası yok: bütün efektler WebAudio osilatörüyle anlık üretiliyor. Görsel de aynı dili konuşuyor — 8-bit, sert zarflar, kare dalga.',
   'about.tech.2':
     'Günlük tohum tarihten üretiliyor, rastgelelik tohumlanmış bir üreteçten geliyor: aynı tohum her cihazda aynı tahtayı kuruyor.',
+  'about.credit.title': 'KİM YAPTI',
+  'about.credit.1': 'ChessRun bir SmartKraft projesi.',
+  'about.credit.2': 'Soru, hata, öneri: {mail}',
   'about.device': 'CİHAZ',
   'about.version': 'SÜRÜM',
 
@@ -388,12 +398,22 @@ const en: Partial7 = {
   'about.scores.2':
     "Your scores currently live only on this device, in the browser's local storage. Clear it and they are gone.",
   'about.scores.3':
-    'The ranking server is not connected yet. When it is, the same signed records are sent; the only things collected are score, mode and device token.',
+    'When the ranking server is connected, the same signed records are sent; on that channel the only things collected are score, mode and device token.',
+  'about.privacy.title': 'WHAT WE COUNT',
+  'about.privacy.1':
+    'To improve the game we keep anonymous usage statistics: which mode is played how much, how long runs last, how they end, and from which country and in which language.',
+  'about.privacy.2':
+    "No cookies, no account, and the device token is never sent to these statistics. Visitors are counted by hashing the IP address with a salt that changes daily; the IP itself is never stored, and because the salt is deleted after two days, yesterday's counts cannot be reversed.",
+  'about.privacy.3':
+    'What we deliberately do not collect: city, screen resolution, raw browser identity, other sites you visit. Raw records are deleted after 35 days; only daily totals remain. If your browser says Do Not Track, nothing is sent at all.',
   'about.tech.title': 'TECHNICAL',
   'about.tech.1':
     'There are no audio files: every effect is generated live with a WebAudio oscillator. The visuals speak the same language — 8-bit, hard envelopes, square waves.',
   'about.tech.2':
     'The daily seed is derived from the date and all randomness comes from a seeded generator: the same seed builds the same board on every device.',
+  'about.credit.title': 'WHO MADE IT',
+  'about.credit.1': 'ChessRun is a SmartKraft project.',
+  'about.credit.2': 'Questions, bugs, ideas: {mail}',
   'about.device': 'DEVICE',
   'about.version': 'VERSION',
 
@@ -581,6 +601,9 @@ const de: Partial7 = {
 
   'help.title': 'SPIELANLEITUNG',
   'about.title': 'ÜBER',
+  'about.credit.title': 'WER ES GEMACHT HAT',
+  'about.credit.1': 'ChessRun ist ein SmartKraft-Projekt.',
+  'about.credit.2': 'Fragen, Fehler, Ideen: {mail}',
   'about.device': 'GERÄT',
   'about.version': 'VERSION',
   'help.core.title': 'REGELN FÜR ALLE DREI MODI',
@@ -624,7 +647,14 @@ const de: Partial7 = {
   'about.scores.2':
     'Deine Punkte liegen derzeit nur auf diesem Gerät, im lokalen Speicher des Browsers. Löschst du ihn, sind sie weg.',
   'about.scores.3':
-    'Der Ranglisten-Server ist noch nicht angebunden. Sobald er es ist, werden dieselben signierten Einträge gesendet; erfasst werden nur Punktzahl, Modus und Gerätetoken.',
+    'Sobald der Ranglisten-Server angebunden ist, werden dieselben signierten Einträge gesendet; auf diesem Kanal werden nur Punktzahl, Modus und Gerätetoken erfasst.',
+  'about.privacy.title': 'WAS WIR ZÄHLEN',
+  'about.privacy.1':
+    'Um das Spiel zu verbessern, führen wir anonyme Nutzungsstatistiken: welcher Modus wie oft gespielt wird, wie lange Läufe dauern, wie sie enden, aus welchem Land und in welcher Sprache.',
+  'about.privacy.2':
+    'Keine Cookies, kein Konto, und das Gerätetoken wird nie an diese Statistik gesendet. Besucher werden gezählt, indem die IP-Adresse mit einem täglich wechselnden Salt gehasht wird; die IP selbst wird nirgends gespeichert, und weil der Salt nach zwei Tagen gelöscht wird, lassen sich gestrige Zählungen nicht zurückrechnen.',
+  'about.privacy.3':
+    'Was wir bewusst nicht erfassen: Stadt, Bildschirmauflösung, rohe Browser-Kennung, andere Seiten, die du besuchst. Rohdaten werden nach 35 Tagen gelöscht; es bleiben nur Tagessummen. Sagt dein Browser „Do Not Track“, wird gar nichts gesendet.',
   'about.tech.title': 'TECHNIK',
   'about.tech.1':
     'Es gibt keine Audiodateien: Jeder Effekt entsteht live mit einem WebAudio-Oszillator. Die Optik spricht dieselbe Sprache — 8-Bit, harte Hüllkurven, Rechteckwellen.',
@@ -804,6 +834,9 @@ const es: Partial7 = {
 
   'help.title': 'CÓMO SE JUEGA',
   'about.title': 'ACERCA DE',
+  'about.credit.title': 'QUIÉN LO HIZO',
+  'about.credit.1': 'ChessRun es un proyecto de SmartKraft.',
+  'about.credit.2': 'Preguntas, errores, ideas: {mail}',
   'about.device': 'DISPOSITIVO',
   'about.version': 'VERSIÓN',
   'help.core.title': 'REGLAS COMUNES A LOS TRES MODOS',
@@ -847,7 +880,14 @@ const es: Partial7 = {
   'about.scores.2':
     'Ahora mismo tus puntuaciones solo viven en este dispositivo, en el almacenamiento local del navegador. Si lo borras, desaparecen.',
   'about.scores.3':
-    'El servidor de clasificación aún no está conectado. Cuando lo esté se enviarán esos mismos registros firmados; solo se recogen puntuación, modo y token de dispositivo.',
+    'Cuando el servidor de clasificación esté conectado se enviarán esos mismos registros firmados; por ese canal solo se recogen puntuación, modo y token de dispositivo.',
+  'about.privacy.title': 'QUÉ CONTAMOS',
+  'about.privacy.1':
+    'Para mejorar el juego guardamos estadísticas de uso anónimas: qué modo se juega cuánto, cuánto duran las partidas, cómo terminan, desde qué país y en qué idioma.',
+  'about.privacy.2':
+    'Sin cookies, sin cuenta, y el token de dispositivo nunca se envía a estas estadísticas. Los visitantes se cuentan aplicando un hash a la IP con una sal que cambia cada día; la IP en sí nunca se guarda y, como la sal se borra a los dos días, los recuentos de ayer no pueden revertirse.',
+  'about.privacy.3':
+    'Lo que deliberadamente no recogemos: ciudad, resolución de pantalla, identidad bruta del navegador, otros sitios que visitas. Los registros brutos se borran a los 35 días; solo quedan los totales diarios. Si tu navegador dice «no rastrear», no se envía nada.',
   'about.tech.title': 'TÉCNICA',
   'about.tech.1':
     'No hay archivos de audio: cada efecto se genera en directo con un oscilador WebAudio. Lo visual habla el mismo idioma: 8 bits, envolventes duras, ondas cuadradas.',
@@ -1026,6 +1066,9 @@ const fr: Partial7 = {
 
   'help.title': 'COMMENT JOUER',
   'about.title': 'À PROPOS',
+  'about.credit.title': 'QUI L\'A FAIT',
+  'about.credit.1': 'ChessRun est un projet SmartKraft.',
+  'about.credit.2': 'Questions, bugs, idées : {mail}',
   'about.device': 'APPAREIL',
   'about.version': 'VERSION',
   'help.core.title': 'RÈGLES COMMUNES AUX TROIS MODES',
@@ -1070,7 +1113,14 @@ const fr: Partial7 = {
   'about.scores.2':
     'Tes scores ne vivent pour l\'instant que sur cet appareil, dans le stockage local du navigateur. Si tu l\'effaces, ils disparaissent.',
   'about.scores.3':
-    'Le serveur de classement n\'est pas encore branché. Quand il le sera, ce sont les mêmes enregistrements signés qui partiront ; seuls le score, le mode et le jeton d\'appareil sont collectés.',
+    'Quand le serveur de classement sera branché, ce sont les mêmes enregistrements signés qui partiront ; sur ce canal seuls le score, le mode et le jeton d\'appareil sont collectés.',
+  'about.privacy.title': 'CE QUE NOUS COMPTONS',
+  'about.privacy.1':
+    'Pour améliorer le jeu nous tenons des statistiques d\'usage anonymes : quel mode est joué combien, combien de temps durent les parties, comment elles finissent, depuis quel pays et dans quelle langue.',
+  'about.privacy.2':
+    'Pas de cookies, pas de compte, et le jeton d\'appareil n\'est jamais envoyé à ces statistiques. Les visiteurs sont comptés en hachant l\'adresse IP avec un sel qui change chaque jour ; l\'IP elle-même n\'est jamais stockée et, le sel étant supprimé au bout de deux jours, les comptes d\'hier ne peuvent pas être inversés.',
+  'about.privacy.3':
+    'Ce que nous ne collectons volontairement pas : la ville, la résolution d\'écran, l\'identité brute du navigateur, les autres sites que tu visites. Les données brutes sont supprimées après 35 jours ; seuls les totaux quotidiens restent. Si ton navigateur dit « ne pas me pister », rien n\'est envoyé.',
   'about.tech.title': 'TECHNIQUE',
   'about.tech.1':
     'Aucun fichier audio : chaque effet est généré en direct par un oscillateur WebAudio. Le visuel parle la même langue — 8 bits, enveloppes sèches, ondes carrées.',
