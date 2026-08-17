@@ -200,7 +200,7 @@ export function Board({
                         'piece',
                         skinOf(cell.color),
                         isSquad ? 'player' : '',
-                        isActive && justCaptured ? 'pop' : '',
+                        isActive && justCaptured ? 'captured' : '',
                         cell.type === 'k' ? 'king' : '',
                       ].join(' ')}
                     >

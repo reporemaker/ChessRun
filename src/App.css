@@ -554,7 +554,11 @@
   }
 }
 
-.piece.pop {
+/* Yeme sıçraması. Sınıf adı bilerek `pop` DEĞİL: `.pop` ayarlar penceresinin
+   kartı (koyu zemin, kenarlık, width:100%). Aynı ad taşa da verilince yenen
+   taş 340 ms boyunca o kartın siyah zeminini giyiyordu — "yediğimde üstü
+   siyah kaplanıyor" hatası buydu. */
+.piece.captured {
   animation: capture-pop 340ms cubic-bezier(0.34, 1.6, 0.5, 1);
 }
 
