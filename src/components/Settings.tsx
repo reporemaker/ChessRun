@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { COL_CHOICES } from '../engine/config'
 import { feedbackHref } from '../ui/feedback'
-import { NAME_MAX, getIdentity, renameIdentity, shortToken } from '../ui/identity'
+import { NAME_MAX, getIdentity, refreshRandomName, renameIdentity, shortToken } from '../ui/identity'
 import { type Lang, LANGS, hasFullProse, localeOf } from '../ui/i18n'
 import { GLYPH } from '../ui/pieces'
 import { type RankScope, readRanking } from '../ui/ranking'
 import { setCols, setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
 import { useT } from '../ui/text'
-import { APP_VERSION, CONTACT_MAIL } from '../ui/version'
+import { APP_VERSION } from '../ui/version'
 
 /**
  * Oyun sürerken pencere açıldıysa App bunu geçiriyor: koridor değişimi
@@ -246,7 +246,12 @@ export function Settings({ onClose, onOpenPage, onExitGame, game }: SettingsProp
                   aria-pressed={settings.lang === entry.code}
                   lang={entry.code}
                   title={entry.name}
-                  onClick={() => setLang(entry.code)}
+                  onClick={() => {
+                    setLang(entry.code)
+                    // Rastgele ad yeni dilde yeniden üretiliyor; oyuncunun
+                    // kendi yazdığı ada dokunulmuyor
+                    setIdentity(refreshRandomName(entry.code))
+                  }}
                 >
                   {entry.label}
                 </button>
@@ -259,89 +264,6 @@ export function Settings({ onClose, onOpenPage, onExitGame, game }: SettingsProp
               )}
             </div>
           </div>
-
-          {/* D · ayraç */}
-          <div className="pop-dv">{t('settings.ranking')}</div>
-
-          {/* E · sıralama */}
-          <button
-            type="button"
-            className="pop-trio"
-            aria-expanded={showList}
-            onClick={() => setShowList((open) => !open)}
-          >
-            <span>
-              <span className="v gold num">{ranking.rank == null ? '—' : `#${ranking.rank}`}</span>
-              <span className="l">{t('settings.rankMine')}</span>
-            </span>
-            <span>
-              <span className="v num">{ranking.score}</span>
-              <span className="l">{t('settings.scoreMine')}</span>
-            </span>
-            <span>
-              <span className="v num">{ranking.players ?? '—'}</span>
-              <span className="l">{t('settings.players')}</span>
-            </span>
-          </button>
-
-          <div className="pop-trioft">
-            <span>{showList ? t('settings.closeFull') : t('settings.openFull')}</span>
-            {ranking.pending && <span className="pend">{t('settings.serverPending')}</span>}
-          </div>
-
-          {showList && (
-            <div className="pop-full">
-              <div className="pop-fh">
-                {(['allTime', 'week'] as const).map((key) => (
-                  <button
-                    key={key}
-                    type="button"
-                    className={scope === key ? 'on' : ''}
-                    onClick={() => setScope(key)}
-                  >
-                    {key === 'allTime' ? t('settings.listAllTime') : t('settings.listWeek')}
-                  </button>
-                ))}
-              </div>
-
-              <div className="pop-fl">
-                {ranking.rows.length === 0 && <p className="pop-fempty">{t('settings.empty')}</p>}
-                {ranking.rows.map((row) => (
-                  <div key={row.at} className={`pop-fr ${row.me ? 'me' : ''}`}>
-                    <span className="rk num">{row.place}</span>
-                    {/* Sunucu yokken satırı tarih anlatıyor: liste kendi
-                        koşuların, tekrar eden isim bir şey söylemiyordu */}
-                    <b>
-                      {ranking.pending ? dateLabel(row.at, settings.lang) : row.name}
-                      {row.me && ` (${t('settings.you')})`}
-                    </b>
-                    <span className="num">{row.score}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ayraç */}
-          <div className="pop-dv">{t('settings.info')}</div>
-
-          {/* F · bağlantılar */}
-          <div className="pop-links">
-            <button type="button" onClick={() => onOpenPage('help')}>
-              {t('settings.howTo')}
-            </button>
-            <button type="button" onClick={() => onOpenPage('about')}>
-              {t('settings.about')}
-            </button>
-          </div>
-
-          {/* Öneri: mailto, form değil (bkz. ui/feedback.ts). Adres metin
-              olarak da duruyor — masaüstünde webmail kullananlarda mailto
-              hiçbir şey açmayabilir, o zaman kopyalar. */}
-          <a className="pop-feedback" href={feedbackHref(settings.lang)}>
-            <span>{t('settings.feedback')}</span>
-            <small>{CONTACT_MAIL}</small>
-          </a>
 
           {/* G · künye — ad düzenlenebilir (kalem). Tekillik yok, hijyen var:
               bkz. identity.ts cleanName. */}
@@ -415,6 +337,82 @@ export function Settings({ onClose, onOpenPage, onExitGame, game }: SettingsProp
 
           {/* rozetler sekizinci bölüm olarak buraya gelecek */}
           <div className="pop-future">↓ {t('settings.badgesSoon')} ↓</div>
+          {/* D · ayraç */}
+          <div className="pop-dv">{t('settings.ranking')}</div>
+
+          {/* E · sıralama */}
+          <button
+            type="button"
+            className="pop-trio"
+            aria-expanded={showList}
+            onClick={() => setShowList((open) => !open)}
+          >
+            <span>
+              <span className="v gold num">{ranking.rank == null ? '—' : `#${ranking.rank}`}</span>
+              <span className="l">{t('settings.rankMine')}</span>
+            </span>
+            <span>
+              <span className="v num">{ranking.score}</span>
+              <span className="l">{t('settings.scoreMine')}</span>
+            </span>
+            <span>
+              <span className="v num">{ranking.players ?? '—'}</span>
+              <span className="l">{t('settings.players')}</span>
+            </span>
+          </button>
+
+          <div className="pop-trioft">
+            <span>{showList ? t('settings.closeFull') : t('settings.openFull')}</span>
+            {ranking.pending && <span className="pend">{t('settings.serverPending')}</span>}
+          </div>
+
+          {showList && (
+            <div className="pop-full">
+              <div className="pop-fh">
+                {(['allTime', 'week'] as const).map((key) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className={scope === key ? 'on' : ''}
+                    onClick={() => setScope(key)}
+                  >
+                    {key === 'allTime' ? t('settings.listAllTime') : t('settings.listWeek')}
+                  </button>
+                ))}
+              </div>
+
+              <div className="pop-fl">
+                {ranking.rows.length === 0 && <p className="pop-fempty">{t('settings.empty')}</p>}
+                {ranking.rows.map((row) => (
+                  <div key={row.at} className={`pop-fr ${row.me ? 'me' : ''}`}>
+                    <span className="rk num">{row.place}</span>
+                    {/* Sunucu yokken satırı tarih anlatıyor: liste kendi
+                        koşuların, tekrar eden isim bir şey söylemiyordu */}
+                    <b>
+                      {ranking.pending ? dateLabel(row.at, settings.lang) : row.name}
+                      {row.me && ` (${t('settings.you')})`}
+                    </b>
+                    <span className="num">{row.score}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ayraç */}
+          <div className="pop-dv">{t('settings.info')}</div>
+
+          {/* F · üç düğme: Hakkında · Nasıl oynanır · Öneri (mailto — form değil,
+              bkz. ui/feedback.ts). Adres Hakkında sayfasında yazılı. */}
+          <div className="pop-links three">
+            <button type="button" onClick={() => onOpenPage('about')}>
+              {t('settings.about')}
+            </button>
+            <button type="button" onClick={() => onOpenPage('help')}>
+              {t('settings.howTo')}
+            </button>
+            <a href={feedbackHref(settings.lang)}>{t('settings.feedback')}</a>
+          </div>
         </div>
       </div>
     </div>

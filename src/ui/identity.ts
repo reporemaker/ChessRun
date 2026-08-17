@@ -12,28 +12,46 @@
  * doğrulanmasıyla olur (bkz. README, sıradaki adımlar).
  */
 
+import type { PieceType } from '../engine/types'
+import { type Lang, translate } from './i18n'
+import { PIECE_NAME_KEY } from './pieces'
+import { getSettings } from './settings'
+
 export interface Identity {
   /** Cihazın kalıcı kimliği */
   token: string
   /** Görünen ad — oyuncu değiştirebilir */
   name: string
   createdAt: string
+  /**
+   * Oyuncu adı kendisi mi yazdı? Yazmadıysa (rastgele üretildiyse) dil
+   * değişince ad yeni dilde yeniden üretiliyor — Almanca'ya geçen oyuncunun
+   * künyesinde "Gölge Vezir" kalmasın. Eski kayıtlarda alan yok → rastgele
+   * sayılıyor, ki zaten öyleydiler.
+   */
+  custom?: boolean
 }
 
 const IDENTITY_KEY = 'chessrun:identity'
 const SECRET_KEY = 'chessrun:secret'
 
-const ADJECTIVES = [
-  'Sessiz', 'Hızlı', 'Cesur', 'Kurnaz', 'Soğukkanlı',
-  'Çelik', 'Gölge', 'Yalın', 'Ateşli', 'Sabırlı',
-]
+const PIECES: PieceType[] = ['n', 'b', 'r', 'q', 'p', 'k']
 
-const NOUNS = ['At', 'Fil', 'Kale', 'Vezir', 'Piyon', 'Şah']
-
-function randomName(): string {
-  const adjective = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)]
-  const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)]
-  return `${adjective} ${noun} ${100 + Math.floor(Math.random() * 900)}`
+/**
+ * Rastgele ad, oyuncunun arayüz dilinde. Kalıp ve belirteç listesi
+ * sözlükten (`name.pattern`, `name.mods`) geliyor; taş adı `piece.*`.
+ *
+ * Sıfat değil AD-belirteç kullanılıyor ("Gölge Vezir", "Shadow Queen",
+ * "Schatten-Dame", "Dama Sombra", "Dame Ombre"): sıfat olsaydı DE/ES/FR'de
+ * cinsiyet uyumu gerekirdi ("Schneller Springer" ama "Schnelle Dame").
+ * Ad-belirteç her dilde uyumsuz kalabiliyor.
+ */
+export function randomName(lang: Lang = getSettings().lang): string {
+  const mods = translate(lang, 'name.mods').split('|').filter(Boolean)
+  const mod = mods[Math.floor(Math.random() * mods.length)] ?? ''
+  const piece = translate(lang, PIECE_NAME_KEY[PIECES[Math.floor(Math.random() * PIECES.length)]])
+  const n = 100 + Math.floor(Math.random() * 900)
+  return translate(lang, 'name.pattern', { mod, piece, n })
 }
 
 /** Eski tarayıcılarda ve test ortamında yokluğa dayanıklı erişim */
@@ -79,6 +97,7 @@ export function getIdentity(): Identity {
     token: randomToken(),
     name: randomName(),
     createdAt: new Date().toISOString(),
+    custom: false,
   }
   store(identity)
   cached = identity
@@ -107,10 +126,10 @@ const RESERVED = ['chessrun', 'smartkraft', 'admin', 'sistem', 'system']
  */
 export function cleanName(raw: string): string | null {
   // Kontrol karakterleri kasıtlı olarak eşleniyor (görünmez ad ve yön
-  // hilesi yolu) — lint uyarısı bilinçli olarak susturuluyor.
-  // eslint-disable-next-line no-control-regex
+  // hilesi yolu); `u` bayrağı + \p{Cc}/\p{Cf} lint'in "kontrol karakteri"
+  // uyarısına takılmadan aynı işi görüyor.
   const cleaned = raw
-    .replace(/[#\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g, '')
+    .replace(/[#\p{Cc}\p{Cf}]/gu, '')
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, NAME_MAX)
@@ -128,14 +147,27 @@ export function cleanName(raw: string): string | null {
 export function renameIdentity(name: string): Identity | null {
   const current = getIdentity()
   if (!name.trim()) {
-    const identity = { ...current, name: randomName() }
+    const identity: Identity = { ...current, name: randomName(), custom: false }
     store(identity)
     cached = identity
     return identity
   }
   const cleaned = cleanName(name)
   if (!cleaned) return null
-  const identity = { ...current, name: cleaned }
+  const identity: Identity = { ...current, name: cleaned, custom: true }
+  store(identity)
+  cached = identity
+  return identity
+}
+
+/**
+ * Dil değişince: ad rastgele üretilmişse yeni dilde yeniden üret, oyuncu
+ * kendi yazdıysa dokunma. Settings bileşeni dil düğmesinde çağırıyor.
+ */
+export function refreshRandomName(lang: Lang): Identity {
+  const current = getIdentity()
+  if (current.custom) return current
+  const identity: Identity = { ...current, name: randomName(lang), custom: false }
   store(identity)
   cached = identity
   return identity

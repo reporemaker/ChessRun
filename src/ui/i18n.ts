@@ -18,7 +18,13 @@ export const LANGS = [
 
 export type Lang = (typeof LANGS)[number]['code']
 
-export const DEFAULT_LANG: Lang = 'tr'
+/**
+ * Tarayıcı dili beş dilden biri değilse site İngilizce açılır — altıncı,
+ * yedinci dil eklemek yerine. Sözlüğün referansı Türkçe olmaya devam ediyor
+ * (eksik anahtar en → tr → anahtar zinciriyle düşüyor); bu yalnızca ilk
+ * açılış tercihi.
+ */
+export const DEFAULT_LANG: Lang = 'en'
 
 export function isLang(value: unknown): value is Lang {
   return LANGS.some((entry) => entry.code === value)
@@ -86,6 +92,8 @@ const tr = {
   'name.random': 'RASTGELE',
   'name.hint': 'En çok {n} karakter · sıralamada görünür',
   'name.invalid': 'Bu ad kullanılamıyor',
+  'name.pattern': '{mod} {piece} {n}',
+  'name.mods': 'Gölge|Fırtına|Gece|Demir|Ateş|Buz|Rüzgar|Yıldız|Ay|Gök|Gümüş|Altın|Kuzey|Çelik',
   'settings.lang': 'DİL',
   'settings.langPicked': 'Seçili: {name}',
   'settings.ranking': 'SIRALAMA',
@@ -354,6 +362,8 @@ const en: Partial7 = {
   'name.random': 'RANDOM',
   'name.hint': 'Up to {n} characters · shown in rankings',
   'name.invalid': 'That name can\'t be used',
+  'name.pattern': '{mod} {piece} {n}',
+  'name.mods': 'Shadow|Storm|Night|Iron|Fire|Ice|Wind|Star|Moon|Sky|Silver|Gold|North|Steel',
   'settings.lang': 'LANGUAGE',
   'settings.langPicked': 'Selected: {name}',
   'settings.ranking': 'RANKING',
@@ -611,6 +621,8 @@ const de: Partial7 = {
   'name.random': 'ZUFÄLLIG',
   'name.hint': 'Höchstens {n} Zeichen · in der Rangliste sichtbar',
   'name.invalid': 'Dieser Name geht nicht',
+  'name.pattern': '{mod}-{piece} {n}',
+  'name.mods': 'Schatten|Sturm|Nacht|Eisen|Feuer|Eis|Wind|Stern|Mond|Himmel|Silber|Gold|Nord|Stahl',
   'settings.lang': 'SPRACHE',
   'settings.langPicked': 'Gewählt: {name}',
   'settings.ranking': 'RANGLISTE',
@@ -856,6 +868,8 @@ const es: Partial7 = {
   'name.random': 'ALEATORIO',
   'name.hint': 'Máximo {n} caracteres · visible en la clasificación',
   'name.invalid': 'Ese nombre no se puede usar',
+  'name.pattern': '{piece} {mod} {n}',
+  'name.mods': 'Sombra|Tormenta|Noche|Hierro|Fuego|Hielo|Viento|Estrella|Luna|Cielo|Plata|Oro|Norte|Acero',
   'settings.lang': 'IDIOMA',
   'settings.langPicked': 'Elegido: {name}',
   'settings.ranking': 'CLASIFICACIÓN',
@@ -1100,6 +1114,8 @@ const fr: Partial7 = {
   'name.random': 'ALÉATOIRE',
   'name.hint': '{n} caractères max · visible au classement',
   'name.invalid': 'Ce nom n\'est pas utilisable',
+  'name.pattern': '{piece} {mod} {n}',
+  'name.mods': 'Ombre|Tempête|Nuit|Fer|Feu|Glace|Vent|Étoile|Lune|Ciel|Argent|Or|Nord|Acier',
   'settings.lang': 'LANGUE',
   'settings.langPicked': 'Choisie : {name}',
   'settings.ranking': 'CLASSEMENT',

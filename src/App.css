@@ -1089,21 +1089,35 @@
    iki sütun alt alta düşer — taşma değil sarma. */
 .pop-lin.two {
   align-items: flex-end;
+  flex-wrap: nowrap; /* iki sütun her dilde yan yana; sığmayanı içi sarıyor */
 }
 
+/* grid değil flex-column: grid çocukları sütun genişliğine geriyor ve
+   segmentin sağında boş arka plan şeridi bırakıyordu (EN/DE/ES'te görülen
+   gri kutu). Segment kendi genişliğinde kalsın. */
 .pop-col {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 7px;
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .pop-col.end {
-  justify-items: end;
+  align-items: flex-end;
+  flex: 0 0 auto;
   margin-left: auto;
 }
 
 .pop-col.end .pop-k {
   text-align: right;
+}
+
+/* Ses ipucu uzun dillerde (ES "efectos de 8 bits") sütunu genişletip
+   koridoru alta itiyordu; ipucu bu satırda tek satır ve kırpılabilir */
+.pop-col.end .pop-k small {
+  white-space: nowrap;
 }
 
 /* Sütun sayısı segmenti: beş eşit kutu, sayı içinde */
@@ -1447,52 +1461,33 @@
   gap: 8px;
 }
 
-.pop-links button {
+/* Üç düğme (Hakkında · Nasıl oynanır · Öneri). Uzun dilde (FR) üçü bir
+   satıra sığmaz; sarma değil dikey ızgara: eşit yükseklik, kırpma yok. */
+.pop-links.three {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+}
+
+.pop-links button,
+.pop-links a {
   flex: 1;
+  display: grid;
+  place-items: center;
   padding: 9px 6px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: transparent;
   color: var(--arc-text);
-  font: inherit;
+  font-family: inherit;
   font-size: 10.5px;
   letter-spacing: 0.1em;
-}
-
-.pop-links button:hover {
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-/* Öneri bağlantısı: pop-links düğmeleriyle aynı dil, altında adres.
-   Adres metin olarak duruyor — mailto açılmazsa oyuncu kopyalayabilsin. */
-.pop-feedback {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 6px;
-  padding: 8px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: var(--arc-text);
+  text-align: center;
   text-decoration: none;
-  font-size: 10.5px;
-  letter-spacing: 0.1em;
+  line-height: 1.3;
 }
 
-.pop-feedback small {
-  font-size: 10px;
-  letter-spacing: 0.02em;
-  color: var(--arc-dim);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.pop-feedback:hover {
+.pop-links button:hover,
+.pop-links a:hover {
   border-color: rgba(255, 255, 255, 0.3);
-}
-
-.pop-feedback:hover small {
-  color: var(--arc-gold);
 }
 
 /* G · künye — rozetler */
@@ -1595,7 +1590,7 @@ button.pop-chip {
 
 /* Sekizinci bölüm buraya gelecek */
 .pop-future {
-  margin-top: 10px;
+  margin-top: 8px;
   padding: 9px 12px;
   border: 1px dashed rgba(255, 210, 63, 0.35);
   font-size: 9.5px;

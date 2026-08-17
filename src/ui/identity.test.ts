@@ -55,6 +55,24 @@ describe('cihaz kimliği ve imza', () => {
     expect(getIdentity().name).toBe(before) // reddedilince ad değişmez
   })
 
+  it('rastgele ad arayüz dilinde üretilir, dil değişince yenilenir, özel ad korunur', async () => {
+    const { randomName, refreshRandomName, renameIdentity } = await import('./identity')
+    // Kalıp: DE "Belirteç-Taş 123", ES/FR "Taş Belirteç 123", TR/EN "Belirteç Taş 123"
+    expect(randomName('de')).toMatch(/^[A-ZÄÖÜ][a-zäöüß]+-[A-ZÄÖÜ][a-zäöüß]+ \d{3}$/)
+    expect(randomName('en')).toMatch(/^[A-Z][a-z]+ [A-Z][a-z]+ \d{3}$/)
+    expect(randomName('tr')).toMatch(/ \d{3}$/)
+
+    const rnd = renameIdentity('')
+    expect(rnd?.custom).toBe(false)
+    const refreshed = refreshRandomName('fr')
+    expect(refreshed.custom).toBe(false)
+    expect(refreshed.name).toMatch(/ \d{3}$/)
+
+    const mine = renameIdentity('Kendi Adım')
+    expect(mine?.custom).toBe(true)
+    expect(refreshRandomName('de').name).toBe('Kendi Adım') // dokunulmadı
+  })
+
   it('boş ad verilirse rastgele yeni ad üretir', async () => {
     const { renameIdentity, getIdentity } = await import('./identity')
     const before = getIdentity().name
