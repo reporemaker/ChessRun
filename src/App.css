@@ -1880,10 +1880,12 @@ button.pop-chip {
 }
 /* Parlama yok (kullanıcı kararı). Siyahtaki text-shadow parıltı değil,
    koyu glifin koyu zeminde görünmesini sağlayan 1px kontur. */
-.t-black  { color: #1a1f28; text-shadow: 0 0 1px rgba(255, 255, 255, 0.9), 0 0 1px rgba(255, 255, 255, 0.9); }
-.t-bronze { color: #9c5f2e; text-shadow: none; }
-.t-silver { color: #e8eef5; text-shadow: none; }
-.t-gold   { color: #ffd23f; text-shadow: none; }
+/* İki sınıflı seçici: .bdg-glyph / .rank-badge gibi yer sınıflarının kendi
+   rengi (kazanılmamış gri) kademe rengini ezmesin — özgüllük 0,2,0 */
+.t-black, .bdg-glyph.t-black, .rank-badge.t-black { color: #1a1f28; text-shadow: 0 0 1px rgba(255, 255, 255, 0.9), 0 0 1px rgba(255, 255, 255, 0.9); }
+.t-bronze, .bdg-glyph.t-bronze, .rank-badge.t-bronze { color: #9c5f2e; text-shadow: none; }
+.t-silver, .bdg-glyph.t-silver, .rank-badge.t-silver { color: #e8eef5; text-shadow: none; }
+.t-gold, .bdg-glyph.t-gold, .rank-badge.t-gold { color: #ffd23f; text-shadow: none; }
 
 /* SVG ikonlar: dolgu currentColor, .st konturlu parça; siyah kademede
    1px açık kontur (Unicode'daki text-shadow'un SVG karşılığı) */

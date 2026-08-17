@@ -20,6 +20,13 @@ const sword = (rot: number) =>
 const swordDown = (rot: number, x = 12) =>
   `<g transform="rotate(${rot} ${x} 12)"><circle cx="${x}" cy="3" r="1.4"/><rect x="${x - 1}" y="4" width="2" height="4"/><rect x="${x - 4}" y="8" width="8" height="1.9" rx=".4"/><polygon points="${x - 1.6},10 ${x + 1.6},10 ${x},22"/></g>`
 
+const rays = (n: number, r1: number, r2: number, w: number) =>
+  Array.from(
+    { length: n },
+    (_, i) =>
+      `<rect x="${12 - w / 2}" y="${12 - r2}" width="${w}" height="${r2 - r1}" rx="${w / 2}" transform="rotate(${(360 / n) * i} 12 12)"/>`,
+  ).join('')
+
 const pixelHeart = (() => {
   const cells: Array<[number, number]> = [
     [5, 5], [7, 5], [13, 5], [15, 5],
@@ -38,8 +45,8 @@ export const BADGE_ICONS: Partial<Record<BadgeId, string>> = {
   musketeers: `<g transform="rotate(-26 12 19)">${sword(0)}</g>${sword(0)}<g transform="rotate(26 12 19)">${sword(0)}</g>`,
   // Eğik hançer
   harakiri: swordDown(28),
-  // Nişangâh (⌖ şekli, yazı tipinden bağımsız)
-  hunter: `<circle class="st" cx="12" cy="12" r="5.5" style="stroke-width:1.9"/><rect x="11.1" y="1.5" width="1.8" height="6" rx=".9"/><rect x="11.1" y="16.5" width="1.8" height="6" rx=".9"/><rect x="1.5" y="11.1" width="6" height="1.8" rx=".9"/><rect x="16.5" y="11.1" width="6" height="1.8" rx=".9"/>`,
+  // Nişangâh: çember + dört çentik + ortada nokta
+  hunter: `<circle class="st" cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="1.7"/><rect x="11" y="1.5" width="2" height="4.5" rx="1"/><rect x="11" y="18" width="2" height="4.5" rx="1"/><rect x="1.5" y="11" width="4.5" height="2" rx="1"/><rect x="18" y="11" width="4.5" height="2" rx="1"/>`,
   // Bayrak
   mate: `<rect x="5" y="2.5" width="2" height="19.5" rx=".6"/><path d="M7 3.5h11.5l-3.2 4.2 3.2 4.3H7z"/>`,
   // Üç dalga — nefes
@@ -60,5 +67,6 @@ export const BADGE_ICONS: Partial<Record<BadgeId, string>> = {
   chain: `<polygon points="3,5 8,12 3,19 6.5,19 11.5,12 6.5,5"/><polygon points="9,5 14,12 9,19 12.5,19 17.5,12 12.5,5"/><polygon points="15,5 20,12 15,19 18.5,19 23.5,12 18.5,5" class="dim"/>`,
   // Piksel kalp — 8-bit
   oneUp: pixelHeart,
-  // İmparator: karar bekliyor (rozet.html) — şimdilik Unicode ✪
+  // Güneş tacı: taç, arkasında ışın halesi — en önemli ödül
+  emperor: `${rays(12, 8.4, 11.4, 1.5)}<circle cx="12" cy="12.5" r="7.6" class="ink"/><path d="M6.8 16V10l3 2.3 2.2-4 2.2 4 3-2.3v6z"/><rect x="6.8" y="16.8" width="10.4" height="1.8" rx=".4"/>`,
 }
