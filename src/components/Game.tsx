@@ -20,7 +20,8 @@ import {
 import { key } from '../engine/moves'
 import type { EndReason } from '@shared/events'
 import type { Color, GameEvent, GameMode, GameState, PieceType, Pos, Row } from '../engine/types'
-import { emptyTally, tallyEvents } from '../ui/badges'
+import { emptyTally, tallyEvents, tallyStep } from '../ui/badges'
+import { recordLifetime } from '../ui/lifetime'
 import { type TipId, TIP_KEY, readSeenTips, storeSeenTips } from '../ui/coach'
 import { getIdentity, shortToken } from '../ui/identity'
 import { LANGS } from '../ui/i18n'
@@ -204,7 +205,7 @@ export function Game({
   }
 
   function commit(next: GameState) {
-    tally.current = tallyEvents(tally.current, next.events, prevType.current)
+    tally.current = tallyEvents(tally.current, next.events, prevType.current, next.distance)
     prevType.current = next.playerType
 
     setGame(next)
@@ -257,6 +258,9 @@ export function Game({
       stuckUsed: counts.stuckUsed,
       mated: counts.mated,
     })
+
+    // Ömür boyu sayaçlar: kümülatif rozet aileleri (defter 300 koşuyla sınırlı)
+    recordLifetime(counts, { mode: state.mode, distance: state.distance })
 
     // Sunucu tanımlıysa aynı kayıt imzasıyla haftalık tabloya gider
     void submitRun(run)
@@ -350,6 +354,8 @@ export function Game({
     const pause = (ms: number) => wait(ms * factor)
 
     if (playerMoved) {
+      // Sessiz hamle olay üretmiyor; "hangi taş olarak kaç adım" burada sayılıyor
+      tally.current = tallyStep(tally.current, prevType.current)
       setPhase('playerMove')
       commit(afterPlayerMove)
       await pause(PHASE_MS.playerMove)

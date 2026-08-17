@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { GameEvent } from '../engine/types'
-import { emptyTally, tallyEvents } from './badges'
+import { emptyTally, tallyEvents, tallyStep } from './badges'
 
 /**
  * `tallyEvents` artık canlı yolda: `Game.tsx`'in `commit()` fonksiyonu her
@@ -73,12 +73,71 @@ describe('tallyEvents', () => {
 
   it('ilgisiz olaylar hiçbir sayacı kıpırdatmıyor', () => {
     const before = emptyTally()
+    // scroll kadro bütünken mesafeyi yazar (0 → 0), capture artık sayılıyor;
+    // gerçekten ilgisiz olanlar: boardRefresh, squadGain, threat, gameover
     const after = tallyEvents(
       before,
-      [{ kind: 'scroll' }, { kind: 'capture', piece: 'p', points: 1 }, { kind: 'gameover' }],
+      [
+        { kind: 'boardRefresh' },
+        { kind: 'squadGain', piece: 'r', size: 3 },
+        { kind: 'threat', points: 2, count: 1 },
+        { kind: 'gameover' },
+      ],
       'n',
     )
     expect(after).toEqual(before)
+  })
+
+  /* --- Figür rozet sayaçları (17 Ağustos 2026) --- */
+
+  it('yenen taşları tipe göre sayıyor', () => {
+    let tally = emptyTally()
+    tally = tallyEvents(tally, [{ kind: 'capture', piece: 'r', points: 5 }], 'n')
+    tally = tallyEvents(tally, [{ kind: 'capture', piece: 'r', points: 5 }], 'r')
+    tally = tallyEvents(tally, [{ kind: 'capture', piece: 'b', points: 3 }], 'r')
+    expect(tally.captured.r).toBe(2)
+    expect(tally.captured.b).toBe(1)
+    expect(tally.captured.n).toBe(0)
+  })
+
+  it('vezirle yeme yalnızca hamle öncesi tip vezirse sayılıyor', () => {
+    let tally = emptyTally()
+    tally = tallyEvents(tally, [{ kind: 'capture', piece: 'n', points: 3 }], 'q')
+    tally = tallyEvents(tally, [{ kind: 'capture', piece: 'n', points: 3 }], 'r')
+    expect(tally.queenCaptures).toBe(1)
+  })
+
+  it('harakiri: vezirken piyona düşme — kaleyken değil', () => {
+    const toPawn: GameEvent[] = [{ kind: 'transform', to: 'p' }]
+    expect(tallyEvents(emptyTally(), toPawn, 'q').harakiri).toBe(1)
+    expect(tallyEvents(emptyTally(), toPawn, 'r').harakiri).toBe(0)
+    // ama Düşüş ikisinde de işaretleniyor
+    expect(tallyEvents(emptyTally(), toPawn, 'r').downgraded).toBe(true)
+  })
+
+  it('adımlar hamle öncesi taş tipine yazılıyor', () => {
+    let tally = emptyTally()
+    tally = tallyStep(tally, 'p')
+    tally = tallyStep(tally, 'p')
+    tally = tallyStep(tally, 'q')
+    expect(tally.steps.p).toBe(2)
+    expect(tally.steps.q).toBe(1)
+    expect(tally.steps.n).toBe(0)
+  })
+
+  it('kadro bütünken mesafe kaymada güncelleniyor, kayıptan sonra donuyor', () => {
+    let tally = emptyTally()
+    tally = tallyEvents(tally, [{ kind: 'scroll' }], 'q', 4)
+    expect(tally.noLossDistance).toBe(4)
+    tally = tallyEvents(tally, [{ kind: 'pieceLost', piece: 'b', reason: 'captured', left: 2 }], 'q', 5)
+    tally = tallyEvents(tally, [{ kind: 'scroll' }], 'q', 9)
+    expect(tally.noLossDistance).toBe(4) // dondu
+    expect(tally.squadIntact).toBe(false)
+  })
+
+  it('Av\'da can kaybı da bütünlüğü bozuyor (tek taş = kadro)', () => {
+    const tally = tallyEvents(emptyTally(), [{ kind: 'lifeLost', reason: 'captured' }], 'n', 3)
+    expect(tally.squadIntact).toBe(false)
   })
 
   it('girdiyi değiştirmiyor — yeni nesne döndürüyor', () => {

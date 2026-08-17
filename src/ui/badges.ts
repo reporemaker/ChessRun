@@ -55,7 +55,20 @@ export interface RunTally {
   downgraded: boolean
   /** Üçlü: hiç taş kaybedilmedi mi */
   squadIntact: boolean
+  /* --- Figür rozetleri için (17 Ağustos 2026 ölçümüyle açıldı) --- */
+  /** Yenen rakip taşlar, tipe göre — kale/at/fil kümülatif aileleri buradan */
+  captured: Record<PieceType, number>
+  /** Hangi taş olarak kaç hamle yapıldı — "piyonken 5 adım" buradan */
+  steps: Record<PieceType, number>
+  /** Vezirken yenen taş — Üçlü'nün vezir ailesi (Av'da vezir yeyince dönüşür) */
+  queenCaptures: number
+  /** Vezirken piyon yiyip piyona düşme — Harakiri */
+  harakiri: number
+  /** Üçlü: kadro tam bütünken kat edilen mesafe — Silahşörler */
+  noLossDistance: number
 }
+
+const ZERO: Record<PieceType, number> = { p: 0, n: 0, b: 0, r: 0, q: 0, k: 0 }
 
 export function emptyTally(): RunTally {
   return {
@@ -66,6 +79,11 @@ export function emptyTally(): RunTally {
     transformed: false,
     downgraded: false,
     squadIntact: true,
+    captured: { ...ZERO },
+    steps: { ...ZERO },
+    queenCaptures: 0,
+    harakiri: 0,
+    noLossDistance: 0,
   }
 }
 
@@ -76,13 +94,23 @@ const HEAVY: PieceType[] = ['q', 'r']
  * Bir turun olaylarını sayaçlara işler. `before` dönüşümün *hangi taştan*
  * olduğunu bilmek için gerekiyor — olay yalnızca hedefi taşıyor.
  */
-export function tallyEvents(tally: RunTally, events: GameEvent[], before: PieceType): RunTally {
-  const next = { ...tally }
+export function tallyEvents(
+  tally: RunTally,
+  events: GameEvent[],
+  before: PieceType,
+  /** Kayma anındaki mesafe — kadro bütünken kat edilen yol için */
+  distance = 0,
+): RunTally {
+  const next: RunTally = { ...tally, captured: { ...tally.captured }, steps: { ...tally.steps } }
 
   for (const event of events) {
     switch (event.kind) {
       case 'kingBonus':
         next.kings += 1
+        break
+      case 'capture':
+        next.captured[event.piece] += 1
+        if (before === 'q') next.queenCaptures += 1
         break
       case 'check':
         next.bestStreak = Math.max(next.bestStreak, event.streak)
@@ -96,9 +124,14 @@ export function tallyEvents(tally: RunTally, events: GameEvent[], before: PieceT
       case 'transform':
         next.transformed = true
         if (event.to === 'p' && HEAVY.includes(before)) next.downgraded = true
+        if (event.to === 'p' && before === 'q') next.harakiri += 1
         break
       case 'pieceLost':
+      case 'lifeLost':
         next.squadIntact = false
+        break
+      case 'scroll':
+        if (next.squadIntact) next.noLossDistance = distance
         break
       default:
         break
@@ -106,6 +139,14 @@ export function tallyEvents(tally: RunTally, events: GameEvent[], before: PieceT
   }
 
   return next
+}
+
+/**
+ * Oyuncu hamle yaptı: hangi taş olarak? Sessiz hamle olay üretmediği için
+ * bunu olaylardan çıkaramıyoruz — Game.runTurn hamleden hemen sonra çağırıyor.
+ */
+export function tallyStep(tally: RunTally, as: PieceType): RunTally {
+  return { ...tally, steps: { ...tally.steps, [as]: tally.steps[as] + 1 } }
 }
 
 export interface BadgeContext {
