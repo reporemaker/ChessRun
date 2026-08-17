@@ -1431,11 +1431,19 @@
   gap: 8px;
 }
 
-/* Üç düğme (Hakkında · Nasıl oynanır · Öneri). Uzun dilde (FR) üçü bir
-   satıra sığmaz; sarma değil dikey ızgara: eşit yükseklik, kırpma yok. */
-.pop-links.three {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+/* Üstteki tek sıra: Nasıl oynanır — birincil düğme, altın kenar */
+.pop-links.main {
+  margin-bottom: 8px;
+}
+
+.pop-links.main button {
+  padding: 11px 6px;
+  border-color: rgba(255, 210, 63, 0.45);
+  color: var(--arc-gold);
+}
+
+.pop-links.main button:hover {
+  border-color: var(--arc-gold);
 }
 
 .pop-links button,

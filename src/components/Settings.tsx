@@ -276,14 +276,17 @@ export function Settings({
           {/* ayraç */}
           <div className="pop-dv">{t('settings.info')}</div>
 
-          {/* F · üç düğme: Hakkında · Nasıl oynanır · Öneri (mailto — form değil,
-              bkz. ui/feedback.ts). Adres Hakkında sayfasında yazılı. */}
-          <div className="pop-links three">
-            <button type="button" onClick={() => onOpenPage('about')}>
-              {t('settings.about')}
-            </button>
+          {/* F · üstte tek sıra Nasıl oynanır (birincil), altında yan yana
+              Hakkında · Öneri (mailto — form değil, bkz. ui/feedback.ts).
+              Adres Hakkında sayfasında yazılı. */}
+          <div className="pop-links main">
             <button type="button" onClick={() => onOpenPage('help')}>
               {t('settings.howTo')}
+            </button>
+          </div>
+          <div className="pop-links">
+            <button type="button" onClick={() => onOpenPage('about')}>
+              {t('settings.about')}
             </button>
             <a href={feedbackHref(settings.lang)}>{t('settings.feedback')}</a>
           </div>
