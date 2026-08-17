@@ -2336,6 +2336,216 @@ button.pop-chip {
 }
 
 /* ---------------------------------------------------------------- *
+ * Nasıl oynanır — kural + yanında mini tahta (MiniBoard)
+ * ---------------------------------------------------------------- */
+
+/* Kural maddesi: solda metin, sağda sabit genişlikte tahta. Sütunlar
+   sabit olduğu için tahta her dilde aynı yerde; metin uzarsa yalnızca
+   satır yükselir. Dar ekranda tahta metnin altına iner. */
+.page-sec li.page-rule {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px 24px;
+  align-items: start;
+}
+
+.page-rule p {
+  margin: 0;
+}
+
+.mb {
+  --mb-cell: 44px;
+  width: calc(var(--mb-cols) * var(--mb-cell) + 8px);
+  margin: 0;
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  font-family: var(--mono);
+}
+
+/* Kayma animasyonunda bir satır yukarıdan gelen tahtanın taşan üstü
+   burada kırpılıyor */
+.mb-frame {
+  position: relative;
+  padding: 3px;
+  background: #0d1219;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+
+.mb-board {
+  display: grid;
+  grid-auto-rows: var(--mb-cell);
+}
+
+.mb-sq {
+  position: relative;
+  display: grid;
+  place-items: center;
+  font-size: calc(var(--mb-cell) * 0.78);
+  line-height: 1;
+}
+
+.mb-sq.light { background: var(--sq-light); }
+.mb-sq.dark { background: var(--sq-dark); }
+
+.mb-sq .piece {
+  font-size: inherit;
+}
+
+/* Hayalet: yenen ya da silinen taşın son görüntüsü, animasyonla gidiyor */
+.mb-ghost {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 2;
+}
+
+/* Vurgular — oyundaki karelerle aynı dil; halka geldiği yerde yumuşak açılır */
+.mb-sq.m-ring::after,
+.mb-sq.m-select::after,
+.mb-sq.m-target::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 8px;
+  pointer-events: none;
+  animation: mb-mark-in 220ms ease-out both;
+}
+
+.mb-sq.m-ring::after {
+  box-shadow: 0 0 0 2px var(--accent), 0 0 12px rgba(52, 211, 153, 0.55);
+  animation: mb-mark-in 220ms ease-out both, player-ring 2s ease-in-out infinite;
+}
+
+.mb-sq.m-select::after {
+  box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.45);
+}
+
+.mb-sq.m-target::after {
+  box-shadow: 0 0 0 2px var(--gold), 0 0 12px rgba(251, 191, 36, 0.55);
+}
+
+@keyframes mb-mark-in {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: none; }
+}
+
+.mb-sq.m-danger::before {
+  content: '×';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(244, 63, 94, 0.3);
+  color: rgba(244, 63, 94, 0.9);
+  font-size: calc(var(--mb-cell) * 0.5);
+  line-height: 1;
+  pointer-events: none;
+  animation: mb-fade-in 260ms ease-out both;
+}
+
+.mb-sq.m-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(251, 191, 36, 0.6), transparent 70%);
+  animation: check-glow 1.1s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Hem vurulan hem şah çekilen kare: × yerine parıltı önde kalsın */
+.mb-sq.m-glow.m-danger::before {
+  content: '';
+  background: radial-gradient(circle at center, rgba(251, 191, 36, 0.65), rgba(244, 63, 94, 0.25) 75%);
+}
+
+@keyframes mb-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.mb-dot {
+  width: 24%;
+  height: 24%;
+  border-radius: 50%;
+  background: rgba(16, 20, 28, 0.28);
+  animation: mb-mark-in 220ms ease-out both;
+}
+
+/* Sağ üst rozet: +1, ×2, −♥ … oyundaki flash gibi yukarıdan süzülür */
+.mb-tag {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgba(10, 13, 19, 0.92);
+  border: 1px solid rgba(255, 210, 63, 0.55);
+  color: var(--arc-gold);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  animation: mb-tag-in 320ms ease-out both;
+}
+
+@keyframes mb-tag-in {
+  from { transform: translateY(6px) scale(0.94); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+/* Altyazı üç satır yer ayırıyor: metin uzayınca alt öğeler zıplamasın */
+.mb-cap {
+  width: 100%;
+  min-height: 3.9em;
+  font-size: 10.5px;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  color: #9fb0c6;
+}
+
+.mb-steps {
+  display: flex;
+  gap: 4px;
+}
+
+.mb-steps i {
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.14);
+  transition: background 200ms;
+}
+
+.mb-steps i.on {
+  background: var(--arc-gold);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mb-sq.m-ring::after,
+  .mb-sq.m-select::after,
+  .mb-sq.m-target::after,
+  .mb-sq.m-danger::before,
+  .mb-sq.m-glow::before,
+  .mb-dot,
+  .mb-tag {
+    animation: none;
+  }
+}
+
+/* Dar ekran: tahta metnin altına, biraz küçülerek */
+@media (max-width: 600px) {
+  .page-sec li.page-rule {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mb {
+    --mb-cell: 40px;
+  }
+}
+
+/* ---------------------------------------------------------------- *
  * Üçlü — kadro tahtada
  * ---------------------------------------------------------------- */
 

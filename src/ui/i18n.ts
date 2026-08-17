@@ -139,7 +139,7 @@ const tr = {
   'help.title': 'NASIL OYNANIR',
   'help.core.title': 'ÜÇ OYUNUN ORTAK KURALI',
   'help.core.1':
-    'Her hamlenden sonra tahta bir satır kayar: üstten yeni satır gelir, en alttaki silinir. Alt satırda kalırsan düşersin.',
+    'Tur sırası hep aynı: sen oynarsın, tahta bir satır kayar, rakip oynar. Kaymada üstten yeni satır gelir, en alttaki silinir; alt satırda kalırsan düşersin.',
   'help.core.2':
     'Pas yok. Her turda bir hamle oynamak zorundasın — beklemek bir seçenek değil.',
   'help.core.3':
@@ -147,27 +147,76 @@ const tr = {
   'help.core.4':
     'Hayatta kaldığın her satır 1 puan. Üç mod da bu tabanı paylaşıyor, üstüne kendi puanını ekliyor.',
   'help.core.5':
-    'Günün oyunu herkeste aynı tohumu kullanır: aynı gün, aynı taşlar, aynı yerler. Serbest oyunlar rastgeledir.',
-  'help.classic.1': 'Tek bir atla başlarsın.',
+    'Günün oyunu herkeste aynı tohumu kullanır: aynı gün, aynı taşlar, aynı yerler — hep 8 sütunda. Serbest oyunlar rastgeledir ve koridor genişliğini (4–8 sütun) ayarlardan seçersin.',
+  'help.core.6':
+    'Her 12 satırda seviye atlarsın: rakip taşlar sıklaşır, ağır taşlar çoğalır.',
+  'help.core.7':
+    'Pusu koruması: kaymayla üstten doğan ve kaçınma şansın olmayan bir tehdit silinir. Kendi hamlenle girdiğin tehlike ise kalır — bilerek alınan risk risktir.',
+  'help.classic.1':
+    'Tek bir atla ve üç canla başlarsın. Yenilmek ya da tahtadan düşmek bir can götürür; sıfırda koşu biter.',
   'help.classic.2':
     'Yediğin taşa dönüşürsün — bu iyi de olabilir kötü de. Vezirken piyon yersen piyona düşersin.',
   'help.classic.3':
-    'Rakip şaha şah çekersen rakip sadece şahını kurtaran hamleyi oynar; kurtaracak hamle yoksa başka bir taşını oynar. Üst üste şah çektikçe puan katlanır.',
+    'Rakip şaha şah çekersen rakip sadece şahını kurtaran hamleyi oynar; kurtaracak hamle yoksa mat: +5 puan, rakip başka bir taşını oynar. Her şah 2 puan × zincir — üst üste çektikçe katlanır, en çok 5 kata kadar.',
   'help.classic.4':
-    'Rakip şahı yersen puan ve can kazanırsın, tahta baştan kurulur — kazandığın canı hemen kaybetmeyesin diye.',
+    'Rakip şahı yersen +25 puan ve +1 can kazanırsın, tahta baştan kurulur — kazandığın canı hemen kaybetmeyesin diye.',
+  'help.classic.5':
+    'Yeme puanı taşın değeridir: piyon 1 · at ve fil 3 · kale 5 · vezir 9 · şah 25.',
   'help.kingRun.1': 'Şah sensin. Dönüşüm yok, tek canın var.',
   'help.kingRun.2':
     'Vurulan kareye giremezsin — gerçek satranç kuralı. Korunmasız taşı yersin, korunanı yiyemezsin.',
   'help.kingRun.3':
     'Şah turda bir kare gider, tahta bir satır kayar: hayatta kalmak için her tur yukarı basmalısın.',
-  'help.kingRun.4': 'Gidecek güvenli kare kalmazsa mat olursun ve koşu biter.',
+  'help.kingRun.4':
+    'Tehdit altındayken kaçacak güvenli kare kalmazsa mat olursun ve koşu biter. Tehdit yokken güvenli kare kalmazsa bu sıkışmadır: bir hak yanar, tahta yenilenir.',
   'help.trio.1': 'Vezir, kale ve fil senin. Her tur bunlardan yalnızca birini oynarsın.',
   'help.trio.2':
     'Tahta yine her hamlede kayar; oynamadığın iki taş bir satır aşağı düşer. Üçünü birden ayakta tutmak asıl mesele.',
   'help.trio.3':
-    'Puan mesafeden ve tehditten gelir: rakip taşını tehdit altına almak puan kazandırır, mat etmek büyük ikramiye.',
+    'Puan mesafeden ve tehditten gelir: yeni tehdit altına aldığın her rakip taşı +1 (turda en çok 3), mat +20 — kadroyla kurulan tuzağın karşılığı.',
   'help.trio.4':
-    'Bir taşını kaybedersen koşu bitmez, ama rakip şahı yersen eksik taşın geri gelir; kadron tamsa dördüncü taş katılır.',
+    'Bir taşını kaybedersen koşu bitmez, ama rakip şahı yersen eksik taşın geri gelir; kadron tamsa dördüncü taş katılır. Kadro en çok dört taş.',
+  'help.trio.5':
+    'Dönüşüm yok: vezir vezir kalır. Üçlü dar koridorda oynanmaz — en az 6 sütun.',
+
+  // Nasıl oynanır — mini tahta altyazıları (kısa; tahta ~230px, üç satır yer var)
+  'demo.yourMove': 'Sıra sende: noktalı kareler oynanabilir.',
+  'demo.moved': 'Oynadın.',
+  'demo.scroll': 'Tahta bir satır kaydı: üstten yeni satır geldi. Mesafe +1.',
+  'demo.enemyMoves': 'Rakip oynadı. Sıra yine sende.',
+  'demo.bottomRow': 'Alt satıra indin — burası ölüm satırı!',
+  'demo.fell': 'Tahta kaydı… düştün. Bir can gitti.',
+  'demo.noMove': 'Piyonun önü kapalı, çaprazda yenecek taş yok: hamle yok.',
+  'demo.stuck': 'Sıkıştın: bir hak yandı.',
+  'demo.reshuffle': 'Tahta yenilendi, çıkış açıldı: +5.',
+  'demo.ambush': 'Kaymayla gelen kale seni vuruyor — kaçınma şansın olmadı.',
+  'demo.ambushGone': 'Pusu koruması: o tehdit silindi.',
+  'demo.ownRisk': 'Kendi hamlenle filin menziline girdin: bu tehlike kalır.',
+  'demo.captured': 'Yenildin. Bir can gitti.',
+  'demo.capture': 'Kaleyi yiyorsun…',
+  'demo.becameRook': '…ve kale oldun. Artık düz gidiyorsun.',
+  'demo.capturePawn': 'Piyonu yersen…',
+  'demo.becamePawn': '…piyon olursun. Dönüşüm iki yönlü.',
+  'demo.check': 'Şah! Rakip yalnızca şahını kurtarabilir.',
+  'demo.mustDefend': 'Şah kaçtı — rakip başka bir şey oynayamadı.',
+  'demo.checkAgain': 'Yine şah: zincir katlanıyor.',
+  'demo.kingInReach': 'Rakip şah menzilinde…',
+  'demo.kingTaken': 'Şahı yedin.',
+  'demo.freshBoard': 'Tahta baştan kuruldu — can hemen gitmesin diye.',
+  'demo.attacked': '× kareler vuruluyor; şah oraya giremez.',
+  'demo.stepUp': 'Güvenli kareye bir adım yukarı.',
+  'demo.takeUndefended': 'Korumasız taşı yiyebilirsin.',
+  'demo.treadmill': 'Sen bir yukarı, tahta bir aşağı: durursan düşersin.',
+  'demo.stuckKing': 'Şah çekilmedi ama güvenli kare de yok: sıkışma, bir hak yanar.',
+  'demo.mate': 'Şah çekildi ve güvenli kare yok: mat. Koşu biter.',
+  'demo.pickOne': 'Kadrodan bir taş seç ve oyna.',
+  'demo.movedOne': 'Fil oynadı; ötekiler bekledi.',
+  'demo.nextPick': 'Sonraki turda başka bir taş seçebilirsin.',
+  'demo.othersDrift': 'Tahta kaydı: kadro birlikte aşağı iniyor.',
+  'demo.rescue': 'Kale ölüm satırında — sıra onda.',
+  'demo.rescued': 'Kurtardın. Üçünü birden hayatta tutmak asıl iş.',
+  'demo.squadShort': 'Kadro eksik: fil kaybedildi. Rakip şah menzilde…',
+  'demo.squadBack': 'Şah yenince eksik taş geri döndü.',
 
   /* --- sayfa: hakkında --- */
   'about.title': 'HAKKINDA',
@@ -456,34 +505,83 @@ const en: Partial7 = {
   'help.title': 'HOW TO PLAY',
   'help.core.title': 'RULES ALL THREE MODES SHARE',
   'help.core.1':
-    'After every move the board scrolls one row: a new row arrives on top, the bottom one is deleted. Stay on the bottom row and you fall off.',
+    'The turn order never changes: you move, the board scrolls one row, the enemy moves. On a scroll a new row enters at the top and the bottom one is erased; stay on the bottom row and you fall.',
   'help.core.2': 'No passing. You must move every turn — waiting is not an option.',
   'help.core.3':
     'If you run out of moves you get stuck: the board is rebuilt, your score stays, and you gain +5. You get this twice per run; the third time ends it.',
   'help.core.4':
     'Every row you survive is 1 point. All three modes share this base and add their own scoring on top.',
   'help.core.5':
-    "Today's game uses one seed for everybody: same day, same pieces, same squares. Free games are random.",
-  'help.classic.1': 'You start as a single knight.',
+    'The daily game uses the same seed for everyone: same day, same pieces, same squares — always on 8 columns. Free games are random and you pick the corridor width (4–8 columns) in settings.',
+  'help.core.6':
+    'Every 12 rows you level up: enemy pieces get denser and heavier.',
+  'help.core.7':
+    'Ambush protection: a threat that appears from the top with the scroll, one you had no chance to avoid, is removed. A danger you walked into with your own move stays — a risk taken on purpose is a risk.',
+  'help.classic.1':
+    'You start as a single knight with three lives. Being captured or falling off costs a life; at zero the run ends.',
   'help.classic.2':
     'You become the piece you capture — which can be good or bad. Take a pawn while you are a queen and you drop to a pawn.',
   'help.classic.3':
-    'Give check and the enemy may only play a move that saves its king; if none exists it moves another piece instead. Consecutive checks multiply the reward.',
+    "Give check and the enemy may only play the move that saves its king; if none exists it's mate: +5 points and it plays another piece. Each check scores 2 × chain — consecutive checks multiply, up to 5×.",
   'help.classic.4':
-    'Capture the enemy king for points and an extra life, and the board is rebuilt — so the life you just won is not taken straight back.',
+    "Capture the enemy king and you gain +25 points and +1 life; the board is rebuilt so you don't lose that life right away.",
+  'help.classic.5':
+    'Capture points equal piece value: pawn 1 · knight and bishop 3 · rook 5 · queen 9 · king 25.',
   'help.kingRun.1': 'You are the king. No transformation, a single life.',
   'help.kingRun.2':
     "You cannot step onto an attacked square — the real chess rule. You can take an undefended piece, never a defended one.",
   'help.kingRun.3':
     'The king moves one square per turn and the board scrolls one row: to survive you have to climb every single turn.',
-  'help.kingRun.4': 'With no safe square left you are mated and the run ends.',
+  'help.kingRun.4':
+    "In check with no safe square left you are mated and the run ends. Not in check but no safe square: that's a stuck — one right burns, the board reshuffles.",
   'help.trio.1': 'Queen, rook and bishop are yours. Each turn you move exactly one of them.',
   'help.trio.2':
     'The board still scrolls on every move, so the two pieces you did not move fall one row. Keeping all three alive is the real problem.',
   'help.trio.3':
-    'Points come from distance and from pressure: threatening an enemy piece scores, and mating is the jackpot.',
+    'Points come from distance and threats: each enemy piece you newly threaten is +1 (at most 3 per turn), mate is +20 — the reward for a trap set with the whole squad.',
   'help.trio.4':
-    'Losing a piece does not end the run, and capturing the enemy king brings a lost piece back — with a full roster it adds a fourth.',
+    'Losing a piece does not end the run; capture the enemy king and a missing piece returns — with a full squad a fourth piece joins. Four pieces at most.',
+  'help.trio.5':
+    'No transformation: the queen stays a queen. Trio is not played on a narrow corridor — 6 columns minimum.',
+
+  // Nasıl oynanır — mini tahta altyazıları (kısa; tahta ~230px, üç satır yer var)
+  'demo.yourMove': 'Your move: dotted squares are playable.',
+  'demo.moved': 'You moved.',
+  'demo.scroll': 'The board scrolled: a new row on top. Distance +1.',
+  'demo.enemyMoves': 'The enemy moved. Your turn again.',
+  'demo.bottomRow': 'You went to the bottom row — the death row!',
+  'demo.fell': 'The board scrolled… you fell. One life gone.',
+  'demo.noMove': 'Pawn blocked ahead, nothing to take diagonally: no move.',
+  'demo.stuck': 'Stuck: one right burned.',
+  'demo.reshuffle': 'Board reshuffled, a way out opened: +5.',
+  'demo.ambush': 'The rook that scrolled in attacks you — no chance to avoid it.',
+  'demo.ambushGone': 'Ambush protection: that threat is removed.',
+  'demo.ownRisk': "You walked into the bishop's range yourself: that danger stays.",
+  'demo.captured': 'Captured. One life gone.',
+  'demo.capture': 'You capture the rook…',
+  'demo.becameRook': '…and become a rook. Now you move straight.',
+  'demo.capturePawn': 'Capture the pawn…',
+  'demo.becamePawn': '…and you become a pawn. It goes both ways.',
+  'demo.check': 'Check! The enemy can only save its king.',
+  'demo.mustDefend': 'The king escaped — the enemy could do nothing else.',
+  'demo.checkAgain': 'Check again: the chain multiplies.',
+  'demo.kingInReach': 'The enemy king is in reach…',
+  'demo.kingTaken': 'King captured.',
+  'demo.freshBoard': "Board rebuilt — so that life isn't lost at once.",
+  'demo.attacked': "× squares are attacked; the king can't enter.",
+  'demo.stepUp': 'One step up to a safe square.',
+  'demo.takeUndefended': 'You may capture an undefended piece.',
+  'demo.treadmill': 'You go one up, the board one down: stop and you fall.',
+  'demo.stuckKing': 'Not in check, but no safe square: stuck, one right burns.',
+  'demo.mate': 'In check and no safe square: mate. The run ends.',
+  'demo.pickOne': 'Pick one piece of the squad and play it.',
+  'demo.movedOne': 'The bishop moved; the others waited.',
+  'demo.nextPick': 'Next turn you may pick another piece.',
+  'demo.othersDrift': 'The board scrolled: the squad drifts down together.',
+  'demo.rescue': 'The rook is on the death row — its turn.',
+  'demo.rescued': 'Rescued. Keeping all three alive is the real job.',
+  'demo.squadShort': 'Squad short: the bishop was lost. Enemy king in reach…',
+  'demo.squadBack': 'King captured: the missing piece is back.',
 
   'about.title': 'ABOUT',
   'about.what.title': 'WHAT THIS IS',
@@ -770,34 +868,83 @@ const de: Partial7 = {
   'about.version': 'VERSION',
   'help.core.title': 'REGELN FÜR ALLE DREI MODI',
   'help.core.1':
-    'Nach jedem Zug rückt das Brett eine Reihe vor: oben kommt eine neue Reihe, die unterste verschwindet. Wer unten bleibt, fällt herunter.',
+    'Die Zugfolge ist immer gleich: du ziehst, das Brett rückt eine Reihe, der Gegner zieht. Beim Rücken kommt oben eine neue Reihe, die unterste wird gelöscht; bleibst du unten, fällst du.',
   'help.core.2': 'Kein Passen. Du musst jede Runde ziehen — Warten ist keine Option.',
   'help.core.3':
     'Ohne Zug steckst du fest: Das Brett wird neu aufgebaut, dein Punktestand bleibt und du bekommst +5. Das gilt zweimal pro Lauf; beim dritten Mal ist Schluss.',
   'help.core.4':
     'Jede überlebte Reihe ist 1 Punkt. Alle drei Modi teilen diese Basis und legen ihre eigene Wertung darauf.',
   'help.core.5':
-    'Das Spiel des Tages nutzt für alle denselben Seed: gleicher Tag, gleiche Figuren, gleiche Felder. Freie Spiele sind zufällig.',
-  'help.classic.1': 'Du beginnst als einzelner Springer.',
+    'Das Tagesspiel nutzt für alle denselben Seed: gleicher Tag, gleiche Figuren, gleiche Felder — immer auf 8 Spalten. Freie Spiele sind zufällig, die Korridorbreite (4–8 Spalten) wählst du in den Einstellungen.',
+  'help.core.6':
+    'Alle 12 Reihen steigst du eine Stufe: gegnerische Figuren werden dichter und schwerer.',
+  'help.core.7':
+    'Hinterhalt-Schutz: eine Bedrohung, die mit dem Rücken oben entsteht und der du nicht ausweichen konntest, wird entfernt. Eine Gefahr, in die du mit deinem eigenen Zug gegangen bist, bleibt — bewusstes Risiko ist Risiko.',
+  'help.classic.1':
+    'Du beginnst als einzelner Springer mit drei Leben. Geschlagen werden oder herunterfallen kostet ein Leben; bei null endet der Lauf.',
   'help.classic.2':
     'Du wirst zu der Figur, die du schlägst — mal gut, mal schlecht. Schlägst du als Dame einen Bauern, bist du ein Bauer.',
   'help.classic.3':
-    'Bietest du Schach, darf der Gegner nur einen Zug spielen, der seinen König rettet; gibt es keinen, zieht er eine andere Figur. Schach in Folge vervielfacht die Punkte.',
+    'Bietest du Schach, spielt der Gegner nur den Zug, der seinen König rettet; gibt es keinen, ist es matt: +5 Punkte, er zieht eine andere Figur. Jedes Schach zählt 2 × Kette — Schach in Serie vervielfacht, bis zu 5×.',
   'help.classic.4':
-    'Schlägst du den gegnerischen König, gibt es Punkte und ein Extraleben, und das Brett wird neu aufgebaut — damit dir das gewonnene Leben nicht sofort wieder genommen wird.',
+    'Schlägst du den gegnerischen König, gibt es +25 Punkte und +1 Leben; das Brett wird neu aufgebaut, damit du das Leben nicht sofort wieder verlierst.',
+  'help.classic.5':
+    'Schlagpunkte sind der Figurenwert: Bauer 1 · Springer und Läufer 3 · Turm 5 · Dame 9 · König 25.',
   'help.kingRun.1': 'Du bist der König. Keine Verwandlung, ein einziges Leben.',
   'help.kingRun.2':
     'Du darfst kein angegriffenes Feld betreten — die echte Schachregel. Ungedeckte Figuren kannst du schlagen, gedeckte nie.',
   'help.kingRun.3':
     'Der König zieht ein Feld pro Runde, das Brett rückt eine Reihe vor: Zum Überleben musst du jede Runde steigen.',
-  'help.kingRun.4': 'Bleibt kein sicheres Feld, bist du matt und der Lauf endet.',
+  'help.kingRun.4':
+    'Im Schach ohne sicheres Feld bist du matt und der Lauf endet. Nicht im Schach, aber kein sicheres Feld: das ist Festgefahren — ein Recht verfällt, das Brett wird neu gemischt.',
   'help.trio.1': 'Dame, Turm und Läufer gehören dir. Pro Runde ziehst du genau eine davon.',
   'help.trio.2':
     'Das Brett rückt weiterhin bei jedem Zug vor, also fallen die beiden ungezogenen Figuren eine Reihe. Alle drei am Leben zu halten ist die eigentliche Aufgabe.',
   'help.trio.3':
-    'Punkte kommen aus Distanz und Druck: Eine gegnerische Figur neu zu bedrohen zählt, Mattsetzen ist der Hauptgewinn.',
+    'Punkte kommen aus Distanz und Drohungen: jede neu bedrohte gegnerische Figur +1 (höchstens 3 pro Zug), Matt +20 — der Lohn für eine Falle mit dem ganzen Trupp.',
   'help.trio.4':
-    'Eine Figur zu verlieren beendet den Lauf nicht, und wer den gegnerischen König schlägt, bekommt eine verlorene Figur zurück — bei vollem Kader kommt eine vierte dazu.',
+    'Eine Figur zu verlieren beendet den Lauf nicht; schlägst du den gegnerischen König, kehrt eine fehlende Figur zurück — bei vollem Trupp kommt eine vierte dazu. Höchstens vier Figuren.',
+  'help.trio.5':
+    'Keine Verwandlung: die Dame bleibt Dame. Trio wird nicht im engen Korridor gespielt — mindestens 6 Spalten.',
+
+  // Nasıl oynanır — mini tahta altyazıları (kısa; tahta ~230px, üç satır yer var)
+  'demo.yourMove': 'Du bist dran: gepunktete Felder sind spielbar.',
+  'demo.moved': 'Du hast gezogen.',
+  'demo.scroll': 'Das Brett ist gerückt: neue Reihe oben. Distanz +1.',
+  'demo.enemyMoves': 'Der Gegner hat gezogen. Wieder du.',
+  'demo.bottomRow': 'Du bist in die unterste Reihe gegangen — die Todesreihe!',
+  'demo.fell': 'Das Brett ist gerückt… du bist gefallen. Ein Leben weg.',
+  'demo.noMove': 'Bauer vorne blockiert, diagonal nichts zu schlagen: kein Zug.',
+  'demo.stuck': 'Festgefahren: ein Recht verfällt.',
+  'demo.reshuffle': 'Brett neu gemischt, ein Ausweg offen: +5.',
+  'demo.ambush': 'Der hereingerückte Turm greift dich an — keine Chance auszuweichen.',
+  'demo.ambushGone': 'Hinterhalt-Schutz: diese Bedrohung wird entfernt.',
+  'demo.ownRisk': 'Du bist selbst in die Reichweite des Läufers gezogen: diese Gefahr bleibt.',
+  'demo.captured': 'Geschlagen. Ein Leben weg.',
+  'demo.capture': 'Du schlägst den Turm…',
+  'demo.becameRook': '…und wirst zum Turm. Jetzt ziehst du gerade.',
+  'demo.capturePawn': 'Schlägst du den Bauern…',
+  'demo.becamePawn': '…wirst du zum Bauern. Es geht in beide Richtungen.',
+  'demo.check': 'Schach! Der Gegner kann nur seinen König retten.',
+  'demo.mustDefend': 'Der König ist entkommen — der Gegner konnte nichts anderes tun.',
+  'demo.checkAgain': 'Wieder Schach: die Kette vervielfacht.',
+  'demo.kingInReach': 'Der gegnerische König ist in Reichweite…',
+  'demo.kingTaken': 'König geschlagen.',
+  'demo.freshBoard': 'Brett neu aufgebaut — damit das Leben nicht sofort weg ist.',
+  'demo.attacked': '×-Felder sind angegriffen; der König darf nicht hin.',
+  'demo.stepUp': 'Ein Schritt hoch auf ein sicheres Feld.',
+  'demo.takeUndefended': 'Eine ungedeckte Figur darfst du schlagen.',
+  'demo.treadmill': 'Du eins hoch, das Brett eins runter: bleibst du stehen, fällst du.',
+  'demo.stuckKing': 'Kein Schach, aber kein sicheres Feld: festgefahren, ein Recht verfällt.',
+  'demo.mate': 'Im Schach und kein sicheres Feld: matt. Der Lauf endet.',
+  'demo.pickOne': 'Wähle eine Figur des Trupps und ziehe sie.',
+  'demo.movedOne': 'Der Läufer zog; die anderen warteten.',
+  'demo.nextPick': 'Nächste Runde kannst du eine andere Figur wählen.',
+  'demo.othersDrift': 'Das Brett ist gerückt: der Trupp sinkt gemeinsam.',
+  'demo.rescue': 'Der Turm steht in der Todesreihe — er ist dran.',
+  'demo.rescued': 'Gerettet. Alle drei am Leben zu halten ist die eigentliche Arbeit.',
+  'demo.squadShort': 'Trupp unvollständig: der Läufer ist verloren. Gegnerischer König in Reichweite…',
+  'demo.squadBack': 'König geschlagen: die fehlende Figur ist zurück.',
   'about.what.title': 'WAS DAS IST',
   'about.what.1':
     'ChessRun kreuzt einen Endless Runner mit Schach: Das Brett rückt bei jedem Zug vor, und du überlebst mit echten Schachzügen.',
@@ -1066,34 +1213,83 @@ const es: Partial7 = {
   'about.version': 'VERSIÓN',
   'help.core.title': 'REGLAS COMUNES A LOS TRES MODOS',
   'help.core.1':
-    'Tras cada movimiento el tablero avanza una fila: entra una fila nueva por arriba y desaparece la de abajo. Si te quedas abajo, te caes.',
+    'El orden del turno nunca cambia: mueves tú, el tablero se desplaza una fila, mueve el rival. Al desplazarse entra una fila nueva arriba y se borra la de abajo; si te quedas en la última fila, caes.',
   'help.core.2': 'No se puede pasar. Tienes que mover cada turno: esperar no es una opción.',
   'help.core.3':
     'Si te quedas sin movimientos te atascas: el tablero se rehace, conservas tu puntuación y ganas +5. Ocurre dos veces por partida; a la tercera, se acabó.',
   'help.core.4':
     'Cada fila que sobrevives vale 1 punto. Los tres modos comparten esa base y suman su propia puntuación encima.',
   'help.core.5':
-    'La partida de hoy usa la misma semilla para todos: mismo día, mismas piezas, mismas casillas. Las partidas libres son aleatorias.',
-  'help.classic.1': 'Empiezas como un solo caballo.',
+    'El juego del día usa la misma semilla para todos: mismo día, mismas piezas, mismas casillas — siempre en 8 columnas. Las partidas libres son aleatorias y el ancho del pasillo (4–8 columnas) lo eliges en ajustes.',
+  'help.core.6':
+    'Cada 12 filas subes de nivel: las piezas rivales se vuelven más densas y más pesadas.',
+  'help.core.7':
+    'Protección contra emboscadas: una amenaza que nace arriba con el desplazamiento y que no pudiste evitar se elimina. El peligro en el que entraste con tu propio movimiento se queda — el riesgo asumido es riesgo.',
+  'help.classic.1':
+    'Empiezas como un solo caballo con tres vidas. Ser capturado o caer cuesta una vida; a cero termina la partida.',
   'help.classic.2':
     'Te conviertes en la pieza que capturas, para bien o para mal. Si comes un peón siendo dama, bajas a peón.',
   'help.classic.3':
-    'Si das jaque, el rival solo puede jugar un movimiento que salve a su rey; si no existe, mueve otra pieza. Los jaques seguidos multiplican la recompensa.',
+    'Si das jaque, el rival solo juega la jugada que salva a su rey; si no existe, es mate: +5 puntos y mueve otra pieza. Cada jaque vale 2 × cadena — los jaques seguidos se multiplican, hasta 5×.',
   'help.classic.4':
-    'Capturar al rey enemigo da puntos y una vida extra, y el tablero se rehace para que no te quiten enseguida lo que acabas de ganar.',
+    'Si capturas al rey rival ganas +25 puntos y +1 vida; el tablero se reconstruye para que no pierdas esa vida enseguida.',
+  'help.classic.5':
+    'Los puntos por captura son el valor de la pieza: peón 1 · caballo y alfil 3 · torre 5 · dama 9 · rey 25.',
   'help.kingRun.1': 'Eres el rey. Sin transformaciones y con una sola vida.',
   'help.kingRun.2':
     'No puedes pisar una casilla atacada: es la regla real del ajedrez. Puedes comer una pieza sin defensa, nunca una defendida.',
   'help.kingRun.3':
     'El rey avanza una casilla por turno y el tablero una fila: para sobrevivir tienes que subir cada turno.',
-  'help.kingRun.4': 'Si no queda ninguna casilla segura, te dan mate y la partida termina.',
+  'help.kingRun.4':
+    'En jaque sin casilla segura te dan mate y la partida termina. Sin jaque pero sin casilla segura: eso es un bloqueo — se gasta un derecho y el tablero se recoloca.',
   'help.trio.1': 'La dama, la torre y el alfil son tuyos. Cada turno mueves exactamente una.',
   'help.trio.2':
     'El tablero sigue avanzando con cada movimiento, así que las dos piezas que no mueves bajan una fila. Mantener vivas a las tres es el verdadero problema.',
   'help.trio.3':
-    'Los puntos vienen de la distancia y de la presión: amenazar una pieza enemiga suma, y dar mate es el premio gordo.',
+    'Los puntos vienen de la distancia y las amenazas: cada pieza rival que amenazas por primera vez +1 (máximo 3 por turno), el mate +20 — la recompensa por una trampa tendida con toda la escuadra.',
   'help.trio.4':
-    'Perder una pieza no termina la partida, y capturar al rey enemigo devuelve la que falta; con la plantilla completa se une una cuarta.',
+    'Perder una pieza no termina la partida; si capturas al rey rival vuelve una pieza perdida — con la escuadra completa se suma una cuarta. Cuatro piezas como máximo.',
+  'help.trio.5':
+    'Sin transformación: la dama sigue siendo dama. Trío no se juega en pasillo estrecho — 6 columnas como mínimo.',
+
+  // Nasıl oynanır — mini tahta altyazıları (kısa; tahta ~230px, üç satır yer var)
+  'demo.yourMove': 'Te toca: las casillas con punto se pueden jugar.',
+  'demo.moved': 'Has movido.',
+  'demo.scroll': 'El tablero se desplazó: fila nueva arriba. Distancia +1.',
+  'demo.enemyMoves': 'El rival movió. Te toca otra vez.',
+  'demo.bottomRow': 'Bajaste a la última fila — ¡la fila de la muerte!',
+  'demo.fell': 'El tablero se desplazó… caíste. Una vida menos.',
+  'demo.noMove': 'Peón bloqueado, nada que capturar en diagonal: sin jugada.',
+  'demo.stuck': 'Bloqueado: se gasta un derecho.',
+  'demo.reshuffle': 'Tablero recolocado, se abre una salida: +5.',
+  'demo.ambush': 'La torre que entró con el desplazamiento te ataca — no pudiste evitarlo.',
+  'demo.ambushGone': 'Protección contra emboscadas: esa amenaza se elimina.',
+  'demo.ownRisk': 'Entraste tú mismo en el alcance del alfil: ese peligro se queda.',
+  'demo.captured': 'Capturado. Una vida menos.',
+  'demo.capture': 'Capturas la torre…',
+  'demo.becameRook': '…y te conviertes en torre. Ahora vas en línea recta.',
+  'demo.capturePawn': 'Si capturas el peón…',
+  'demo.becamePawn': '…te conviertes en peón. Va en ambos sentidos.',
+  'demo.check': '¡Jaque! El rival solo puede salvar a su rey.',
+  'demo.mustDefend': 'El rey escapó — el rival no pudo hacer otra cosa.',
+  'demo.checkAgain': 'Jaque otra vez: la cadena se multiplica.',
+  'demo.kingInReach': 'El rey rival está a tu alcance…',
+  'demo.kingTaken': 'Rey capturado.',
+  'demo.freshBoard': 'Tablero reconstruido — para no perder esa vida enseguida.',
+  'demo.attacked': 'Las casillas × están atacadas; el rey no puede entrar.',
+  'demo.stepUp': 'Un paso arriba a una casilla segura.',
+  'demo.takeUndefended': 'Puedes capturar una pieza no defendida.',
+  'demo.treadmill': 'Tú una arriba, el tablero una abajo: si te paras, caes.',
+  'demo.stuckKing': 'Sin jaque, pero sin casilla segura: bloqueo, se gasta un derecho.',
+  'demo.mate': 'En jaque y sin casilla segura: mate. La partida termina.',
+  'demo.pickOne': 'Elige una pieza de la escuadra y juégala.',
+  'demo.movedOne': 'Movió el alfil; las otras esperaron.',
+  'demo.nextPick': 'El próximo turno puedes elegir otra pieza.',
+  'demo.othersDrift': 'El tablero se desplazó: la escuadra baja junta.',
+  'demo.rescue': 'La torre está en la fila de la muerte — le toca a ella.',
+  'demo.rescued': 'Rescatada. Mantener viva a las tres es el verdadero trabajo.',
+  'demo.squadShort': 'Escuadra incompleta: se perdió el alfil. Rey rival al alcance…',
+  'demo.squadBack': 'Rey capturado: la pieza perdida ha vuelto.',
   'about.what.title': 'QUÉ ES ESTO',
   'about.what.1':
     'ChessRun cruza un endless runner con el ajedrez: el tablero avanza con cada movimiento y sobrevives usando jugadas de ajedrez reales.',
@@ -1361,35 +1557,84 @@ const fr: Partial7 = {
   'about.version': 'VERSION',
   'help.core.title': 'RÈGLES COMMUNES AUX TROIS MODES',
   'help.core.1':
-    'Après chaque coup, l\'échiquier avance d\'une rangée : une nouvelle rangée arrive en haut, celle du bas disparaît. Rester en bas, c\'est tomber.',
+    "L'ordre du tour ne change jamais : tu joues, l'échiquier défile d'une rangée, l'adversaire joue. Au défilement une nouvelle rangée arrive en haut et celle du bas est effacée ; reste en bas et tu tombes.",
   'help.core.2': 'Pas de passe. Tu dois jouer à chaque tour — attendre n\'est pas une option.',
   'help.core.3':
     'Sans coup possible, tu es bloqué : l\'échiquier est reconstruit, ton score reste et tu gagnes +5. C\'est valable deux fois par partie ; la troisième, c\'est fini.',
   'help.core.4':
     'Chaque rangée survécue vaut 1 point. Les trois modes partagent cette base et ajoutent leur propre score.',
   'help.core.5':
-    'La partie du jour utilise la même graine pour tout le monde : même jour, mêmes pièces, mêmes cases. Les parties libres sont aléatoires.',
-  'help.classic.1': 'Tu commences avec un seul cavalier.',
+    'La partie du jour utilise la même graine pour tous : même jour, mêmes pièces, mêmes cases — toujours sur 8 colonnes. Les parties libres sont aléatoires et tu choisis la largeur du couloir (4–8 colonnes) dans les réglages.',
+  'help.core.6':
+    "Toutes les 12 rangées tu montes d'un niveau : les pièces adverses deviennent plus denses et plus lourdes.",
+  'help.core.7':
+    'Protection anti-embuscade : une menace née en haut avec le défilement, que tu ne pouvais pas éviter, est retirée. Un danger où tu es entré par ton propre coup reste — un risque pris exprès est un risque.',
+  'help.classic.1':
+    "Tu commences avec un seul cavalier et trois vies. Être capturé ou tomber coûte une vie ; à zéro la partie s'arrête.",
   'help.classic.2':
     'Tu deviens la pièce que tu prends — pour le meilleur ou pour le pire. Prendre un pion en étant dame te fait tomber au rang de pion.',
   'help.classic.3':
-    'En donnant échec, l\'adversaire ne peut jouer qu\'un coup qui sauve son roi ; s\'il n\'y en a pas, il joue une autre pièce. Les échecs consécutifs multiplient les points.',
+    "Si tu fais échec, l'adversaire ne joue que le coup qui sauve son roi ; s'il n'en existe pas, c'est mat : +5 points et il joue une autre pièce. Chaque échec vaut 2 × chaîne — les échecs enchaînés se multiplient, jusqu'à 5×.",
   'help.classic.4':
-    'Prendre le roi adverse rapporte des points et une vie, et l\'échiquier est reconstruit — pour que la vie gagnée ne reparte pas aussitôt.',
+    "Capture le roi adverse et tu gagnes +25 points et +1 vie ; l'échiquier est reconstruit pour que tu ne perdes pas cette vie aussitôt.",
+  'help.classic.5':
+    'Les points de capture valent la pièce : pion 1 · cavalier et fou 3 · tour 5 · dame 9 · roi 25.',
   'help.kingRun.1': 'Tu es le roi. Aucune transformation, une seule vie.',
   'help.kingRun.2':
     'Interdit d\'aller sur une case attaquée : c\'est la vraie règle des échecs. Tu peux prendre une pièce non défendue, jamais une pièce défendue.',
   'help.kingRun.3':
     'Le roi avance d\'une case par tour et l\'échiquier d\'une rangée : pour survivre, il faut monter à chaque tour.',
-  'help.kingRun.4': 'S\'il ne reste aucune case sûre, tu es mat et la partie s\'arrête.',
+  'help.kingRun.4':
+    "En échec sans case sûre, tu es mat et la partie s'arrête. Pas en échec mais aucune case sûre : c'est un blocage — un droit brûle, l'échiquier se remélange.",
   'help.trio.1':
     'La dame, la tour et le fou sont à toi. À chaque tour tu en joues exactement une.',
   'help.trio.2':
     'L\'échiquier avance toujours à chaque coup : les deux pièces que tu n\'as pas jouées descendent d\'une rangée. Garder les trois en vie, voilà le vrai problème.',
   'help.trio.3':
-    'Les points viennent de la distance et de la pression : menacer une pièce adverse rapporte, et le mat est le gros lot.',
+    "Les points viennent de la distance et des menaces : chaque pièce adverse que tu menaces pour la première fois +1 (au plus 3 par tour), le mat +20 — la récompense d'un piège tendu avec toute l'escouade.",
   'help.trio.4':
-    'Perdre une pièce ne termine pas la partie, et prendre le roi adverse ramène la pièce manquante ; avec un effectif complet, une quatrième s\'ajoute.',
+    "Perdre une pièce n'arrête pas la partie ; capture le roi adverse et une pièce manquante revient — escouade complète, une quatrième s'ajoute. Quatre pièces au maximum.",
+  'help.trio.5':
+    'Pas de transformation : la dame reste dame. Le Trio ne se joue pas en couloir étroit — 6 colonnes minimum.',
+
+  // Nasıl oynanır — mini tahta altyazıları (kısa; tahta ~230px, üç satır yer var)
+  'demo.yourMove': 'À toi : les cases pointées sont jouables.',
+  'demo.moved': 'Tu as joué.',
+  'demo.scroll': "L'échiquier a défilé : nouvelle rangée en haut. Distance +1.",
+  'demo.enemyMoves': "L'adversaire a joué. À toi de nouveau.",
+  'demo.bottomRow': 'Tu es descendu sur la rangée du bas — la rangée de la mort !',
+  'demo.fell': "L'échiquier a défilé… tu es tombé. Une vie en moins.",
+  'demo.noMove': 'Pion bloqué devant, rien à prendre en diagonale : aucun coup.',
+  'demo.stuck': 'Bloqué : un droit brûle.',
+  'demo.reshuffle': "Échiquier remélangé, une issue s'ouvre : +5.",
+  'demo.ambush': "La tour arrivée avec le défilement t'attaque — impossible de l'éviter.",
+  'demo.ambushGone': 'Protection anti-embuscade : cette menace est retirée.',
+  'demo.ownRisk': 'Tu es entré toi-même dans la portée du fou : ce danger reste.',
+  'demo.captured': 'Capturé. Une vie en moins.',
+  'demo.capture': 'Tu prends la tour…',
+  'demo.becameRook': '…et tu deviens tour. Tu vas droit désormais.',
+  'demo.capturePawn': 'Prends le pion…',
+  'demo.becamePawn': '…et tu deviens pion. Ça marche dans les deux sens.',
+  'demo.check': "Échec ! L'adversaire ne peut que sauver son roi.",
+  'demo.mustDefend': "Le roi s'est échappé — l'adversaire ne pouvait rien faire d'autre.",
+  'demo.checkAgain': 'Encore échec : la chaîne se multiplie.',
+  'demo.kingInReach': 'Le roi adverse est à portée…',
+  'demo.kingTaken': 'Roi pris.',
+  'demo.freshBoard': 'Échiquier reconstruit — pour ne pas perdre cette vie aussitôt.',
+  'demo.attacked': 'Les cases × sont attaquées ; le roi ne peut pas y aller.',
+  'demo.stepUp': 'Un pas vers le haut, sur une case sûre.',
+  'demo.takeUndefended': 'Tu peux prendre une pièce non défendue.',
+  'demo.treadmill': "Toi une case en haut, l'échiquier une en bas : arrête-toi et tu tombes.",
+  'demo.stuckKing': "Pas d'échec, mais aucune case sûre : blocage, un droit brûle.",
+  'demo.mate': "En échec et aucune case sûre : mat. La partie s'arrête.",
+  'demo.pickOne': "Choisis une pièce de l'escouade et joue-la.",
+  'demo.movedOne': 'Le fou a joué ; les autres ont attendu.',
+  'demo.nextPick': 'Au tour suivant tu peux choisir une autre pièce.',
+  'demo.othersDrift': "L'échiquier a défilé : l'escouade descend ensemble.",
+  'demo.rescue': "La tour est sur la rangée de la mort — c'est son tour.",
+  'demo.rescued': 'Sauvée. Garder les trois en vie, voilà le vrai travail.',
+  'demo.squadShort': 'Escouade incomplète : le fou est perdu. Roi adverse à portée…',
+  'demo.squadBack': 'Roi pris : la pièce manquante est revenue.',
   'about.what.title': 'DE QUOI IL S\'AGIT',
   'about.what.1':
     'ChessRun croise un endless runner et les échecs : l\'échiquier avance à chaque coup et tu survis avec de vrais coups d\'échecs.',

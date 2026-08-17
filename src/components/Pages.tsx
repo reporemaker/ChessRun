@@ -1,7 +1,9 @@
 import { useEffect } from 'react'
 import { getIdentity, shortToken } from '../ui/identity'
 import type { StringKey } from '../ui/i18n'
+import type { DemoId } from '../ui/demos'
 import { MODES } from '../ui/modes'
+import { MiniBoard } from './MiniBoard'
 import { useT } from '../ui/text'
 import { APP_VERSION, CONTACT_MAIL } from '../ui/version'
 
@@ -15,30 +17,58 @@ interface PageProps {
 interface Section {
   titleKey: StringKey
   glyph?: string
-  bodyKeys: StringKey[]
+  /** Madde anahtarı ya da [madde, yanında oynayan mini tahta] çifti */
+  bodyKeys: Array<StringKey | [StringKey, DemoId]>
   /** Motorda henüz olmayan mod — bölüm "yakında" damgasıyla çiziliyor */
   soon?: boolean
 }
 
+// Animasyon anlattığı maddenin YANINDA duruyor (ui/demos.ts): önce kural,
+// hemen sağında o kuralın tahtası. Yer sabit — dil değişince kaymaz.
 const HELP: Section[] = [
   {
     titleKey: 'help.core.title',
-    bodyKeys: ['help.core.1', 'help.core.2', 'help.core.3', 'help.core.4', 'help.core.5'],
+    bodyKeys: [
+      ['help.core.1', 'scroll'],
+      'help.core.2',
+      ['help.core.3', 'stuck'],
+      'help.core.4',
+      'help.core.6',
+      ['help.core.7', 'ambush'],
+      'help.core.5',
+    ],
   },
   {
     titleKey: 'mode.classic.name',
     glyph: '♞',
-    bodyKeys: ['help.classic.1', 'help.classic.2', 'help.classic.3', 'help.classic.4'],
+    bodyKeys: [
+      'help.classic.1',
+      ['help.classic.2', 'transform'],
+      'help.classic.5',
+      ['help.classic.3', 'chain'],
+      ['help.classic.4', 'kingBonus'],
+    ],
   },
   {
     titleKey: 'mode.kingRun.name',
     glyph: '♚',
-    bodyKeys: ['help.kingRun.1', 'help.kingRun.2', 'help.kingRun.3', 'help.kingRun.4'],
+    bodyKeys: [
+      'help.kingRun.1',
+      ['help.kingRun.2', 'kingSafe'],
+      ['help.kingRun.3', 'kingClimb'],
+      ['help.kingRun.4', 'kingEnd'],
+    ],
   },
   {
     titleKey: 'mode.trio.name',
     glyph: '♛',
-    bodyKeys: ['help.trio.1', 'help.trio.2', 'help.trio.3', 'help.trio.4'],
+    bodyKeys: [
+      ['help.trio.1', 'trioPick'],
+      ['help.trio.2', 'trioDrift'],
+      'help.trio.5',
+      'help.trio.3',
+      ['help.trio.4', 'trioBack'],
+    ],
     soon: !MODES.find((entry) => entry.id === 'trio')?.ready,
   },
 ]
@@ -99,18 +129,28 @@ export function Page({ page, onClose }: PageProps) {
               {section.soon && <em className="page-soon">{t('common.soon')}</em>}
             </h2>
             <ul>
-              {section.bodyKeys.map((key) =>
-                key === 'about.credit.2' ? (
-                  <li key={key}>
-                    {t(key, { mail: '' })}
-                    <a className="page-mail" href={`mailto:${CONTACT_MAIL}`}>
-                      {CONTACT_MAIL}
-                    </a>
-                  </li>
-                ) : (
-                  <li key={key}>{t(key)}</li>
-                ),
-              )}
+              {section.bodyKeys.map((entry) => {
+                const [key, demo] = Array.isArray(entry) ? entry : [entry, undefined]
+                if (key === 'about.credit.2') {
+                  return (
+                    <li key={key}>
+                      {t(key, { mail: '' })}
+                      <a className="page-mail" href={`mailto:${CONTACT_MAIL}`}>
+                        {CONTACT_MAIL}
+                      </a>
+                    </li>
+                  )
+                }
+                if (demo) {
+                  return (
+                    <li key={key} className="page-rule">
+                      <p>{t(key)}</p>
+                      <MiniBoard id={demo} />
+                    </li>
+                  )
+                }
+                return <li key={key}>{t(key)}</li>
+              })}
             </ul>
           </section>
         ))}
