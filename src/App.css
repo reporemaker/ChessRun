@@ -1693,15 +1693,15 @@ button.pop-chip {
   background: var(--arc-gold);
 }
 
-/* Rozet glifi: adın önünde küçük, sessiz — seçili rozet burada görünecek */
+/* Rozet glifi: adın önünde, 15px + kademe rengi (12px silik kalıyordu) */
 .rank-badge {
   flex: 0 0 auto;
-  width: 16px;
+  width: 18px;
   font-style: normal;
-  font-size: 12px;
+  font-size: 15px;
+  line-height: 1;
   text-align: center;
   color: var(--arc-gold);
-  opacity: 0.85;
 }
 
 .rank-dist {
@@ -1864,16 +1864,290 @@ button.pop-chip {
   letter-spacing: 0.16em;
 }
 
-/* Sekizinci bölüm buraya gelecek */
-.pop-future {
-  margin-top: 8px;
-  padding: 9px 12px;
-  border: 1px dashed rgba(255, 210, 63, 0.35);
+/* ---------------------------------------------------------------- *
+ * Rozetler — pencere ve kademe renkleri
+ * ---------------------------------------------------------------- */
+
+/* Kademe renkleri: glif, etiket ve nokta aynı dört tonu paylaşıyor */
+.t-black  { color: #9aa7b8; }
+.t-bronze { color: #d39a5c; }
+.t-silver { color: #d6dde6; }
+.t-gold   { color: var(--arc-gold); }
+
+.pop.badges {
+  max-width: 420px;
+}
+
+.bdg-bd {
+  display: grid;
+  gap: 12px;
+  max-height: min(70vh, 640px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.bdg-sec {
+  display: grid;
+  gap: 4px;
+}
+
+.bdg-h {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 4px 0 2px;
   font-size: 9.5px;
-  letter-spacing: 0.08em;
-  color: #8a7a4a;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  color: var(--arc-dim);
+}
+
+.bdg-h small {
+  font-size: 8.5px;
+  letter-spacing: 0.06em;
+  color: var(--arc-amber);
+}
+
+.bdg-h::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.bdg-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 2px;
+}
+
+/* Satır: glif · ad+koşul · noktalar · değer · seç */
+.bdg-row {
+  display: grid;
+  /* Sabit sütunlar: kademesiz rozette noktalar ve değer boş kalınca
+     düğme sıkışmasın */
+  grid-template-columns: 30px 1fr 40px 74px 58px;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  color: var(--arc-dim);
+}
+
+.bdg-row:nth-child(even) {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.bdg-row.got {
+  color: var(--arc-text);
+}
+
+.bdg-row.sel {
+  background: rgba(255, 210, 63, 0.1);
+  box-shadow: inset 2px 0 0 var(--arc-gold);
+}
+
+.bdg-row.srv {
+  opacity: 0.6;
+}
+
+.bdg-glyph {
+  font-size: 20px;
+  line-height: 1;
+  text-align: center;
+  color: #4e6076;
+}
+
+.bdg-row.got .bdg-glyph {
+  text-shadow: 0 0 8px rgba(255, 210, 63, 0.25);
+}
+
+.bdg-main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.bdg-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.bdg-tier {
+  font-style: normal;
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  padding: 1px 5px;
+  border: 1px solid currentColor;
+}
+
+.bdg-how {
+  font-size: 9.5px;
+  letter-spacing: 0.02em;
+  color: var(--arc-dim);
+  line-height: 1.35;
+}
+
+/* Kademe noktaları: kazanılan kademenin rengiyle dolu, kalanlar boş */
+.bdg-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.bdg-dots i {
+  width: 7px;
+  height: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: transparent;
+}
+
+.bdg-dots i.on {
+  background: currentColor;
+  border-color: currentColor;
+}
+
+.bdg-val {
+  display: grid;
+  justify-items: end;
+  gap: 1px;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.bdg-val small {
+  font-size: 8.5px;
+  color: var(--arc-dim);
+}
+
+.bdg-pick {
+  padding: 5px 0;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: transparent;
+  color: var(--arc-text);
+  font-family: inherit;
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
   text-align: center;
 }
+
+.bdg-pick.on {
+  border-color: var(--arc-gold);
+  background: var(--arc-gold);
+  color: var(--arc-ink);
+}
+
+.bdg-pick.ghost {
+  border-color: transparent;
+}
+
+/* Kapanış özeti: bu koşuda kazanılan rozetler, arcade sırasıyla düşer */
+.outro-badges {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.outro-badges li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border: 1px solid currentColor;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  animation: row-drop 260ms steps(3, end) both;
+}
+
+.outro-badges li b {
+  font-weight: 400;
+  color: var(--arc-text);
+}
+
+.outro-badges li small {
+  font-size: 8px;
+  letter-spacing: 0.16em;
+}
+
+.outro-badges .bdg-glyph {
+  font-size: 14px;
+  color: currentColor;
+}
+
+/* Rozet çubuğu: seçili fiş solda, "Rozetler" düğmesi sağda */
+.pop-badgebar,
+.gv-badgebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pop-badgebar {
+  margin-top: 8px;
+}
+
+.pop-badgebtn,
+.gv-badgebtn {
+  flex: 0 0 auto;
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: transparent;
+  color: var(--arc-text);
+  font-family: inherit;
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.pop-badgebtn:hover,
+.gv-badgebtn:hover {
+  border-color: var(--arc-gold);
+  color: var(--arc-gold);
+}
+
+.gv-badgebar .bdg-chip {
+  color: #dbe4f0;
+  font-size: 10px;
+  min-width: 0;
+}
+
+.gv-badgebar .bdg-chip b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 400;
+}
+
+/* Seçili rozet fişi — ayarlar penceresi ve oyun sütununda */
+.bdg-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--arc-text);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+}
+
+.bdg-chip .bdg-glyph {
+  font-size: 16px;
+}
+
+.bdg-chip.none {
+  color: var(--arc-dim);
+}
+
 
 .num {
   font-variant-numeric: tabular-nums;
@@ -2530,17 +2804,6 @@ button.gv-chip {
   color: #dbe4f0;
 }
 
-.gv-bdg {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-}
-
-.gv-bdg u {
-  text-decoration: none;
-  font-size: 15px;
-  color: #5a6b80;
-}
 
 /* Sütunun altındaki düğmeler: Nasıl oynanır (tek, tam genişlik), altında
    Hakkında · Öneri gönder yan yana */

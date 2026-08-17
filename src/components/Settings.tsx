@@ -8,6 +8,7 @@ import { readRanking } from '../ui/ranking'
 import { setCols, setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
 import { useT } from '../ui/text'
 import { APP_VERSION } from '../ui/version'
+import { BadgeChip } from './BadgeChip'
 import { NameChip } from './NameChip'
 
 /**
@@ -29,6 +30,9 @@ interface SettingsProps {
   /** Oyun sürüyorsa menüye dönüş bağlantısı — mobilde tek çıkış yolu */
   onExitGame?: () => void
   onOpenRanking: () => void
+  onOpenBadges: () => void
+  /** Seçili rozet değişince artar — fiş yeniden okusun */
+  badgeVersion: number
   game?: LiveGame
 }
 
@@ -43,7 +47,15 @@ interface SettingsProps {
  *
  * Rozetler son bölüm olarak gelecek; yeri altta kesik çizgiyle duruyor.
  */
-export function Settings({ onClose, onOpenPage, onExitGame, onOpenRanking, game }: SettingsProps) {
+export function Settings({
+  onClose,
+  onOpenPage,
+  onExitGame,
+  onOpenRanking,
+  onOpenBadges,
+  badgeVersion,
+  game,
+}: SettingsProps) {
   const settings = useSettings()
   const t = useT()
   const closeRef = useRef<HTMLButtonElement>(null)
@@ -235,8 +247,8 @@ export function Settings({ onClose, onOpenPage, onExitGame, onOpenRanking, game 
             <NameChip identity={identity} onChange={setIdentity} skin="pop" />
           </div>
 
-          {/* rozetler sekizinci bölüm olarak buraya gelecek */}
-          <div className="pop-future">↓ {t('settings.badgesSoon')} ↓</div>
+          {/* Rozet: yalnızca seçili olan + pencereyi açan düğme */}
+          <BadgeChip version={badgeVersion} onOpen={onOpenBadges} skin="pop" />
           {/* D · ayraç */}
           <div className="pop-dv">{t('settings.ranking')}</div>
 

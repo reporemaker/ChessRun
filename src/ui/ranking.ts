@@ -1,4 +1,5 @@
 import type { GameMode } from '../engine/types'
+import { badgeOf, readBadges, readSelectedBadge } from './badges'
 import { getIdentity } from './identity'
 import { leaderboardEnabled } from './leaderboard'
 import { type RunRecord, bestOf, isoWeekKey, readRuns, runsOfMode, runsOfWeek } from './scores'
@@ -21,8 +22,18 @@ export interface RankRow {
   me: boolean
   /** ISO zaman damgası, React anahtarı olarak da kullanılıyor */
   at: string
-  /** Oyuncunun seçtiği rozet glifi — rozet sistemi gelince dolacak (yapilacaklar.md) */
+  /** Oyuncunun seçtiği rozet glifi (adın önünde) */
   badge?: string
+  /** Kademe rengi için */
+  badgeTier?: 'black' | 'bronze' | 'silver' | 'gold'
+}
+
+function selectedBadgeGlyph(): { glyph: string; tier: 'black' | 'bronze' | 'silver' | 'gold' } | null {
+  const id = readSelectedBadge()
+  if (!id) return null
+  const badge = badgeOf(id)
+  const idx = readBadges()[id]?.tier ?? 0
+  return { glyph: badge.glyph, tier: badge.tiers[Math.min(idx, badge.tiers.length - 1)] }
 }
 
 export interface RankingView {
@@ -58,6 +69,8 @@ export function readRanking(mode?: GameMode, now: Date = new Date()): RankingVie
   const identity = getIdentity()
 
   const pending = !leaderboardEnabled
+  // Seçili rozet adın önünde — sunucu gelince diğer oyuncularınki de gelecek
+  const myBadge = selectedBadgeGlyph()
 
   // Sunucu yokken listedeki herkes zaten sensin: her satırı "sen" diye
   // işaretlemek tabloyu baştan sona altın yapıyor ve hiçbir şey söylemiyor.
@@ -74,6 +87,8 @@ export function readRanking(mode?: GameMode, now: Date = new Date()): RankingVie
       distance: run.distance,
       me: !pending,
       at: run.at,
+      badge: myBadge?.glyph,
+      badgeTier: myBadge?.tier,
     }))
 
   return {

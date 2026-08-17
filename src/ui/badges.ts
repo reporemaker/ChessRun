@@ -1,7 +1,8 @@
 import { COL_CHOICES } from '../engine/config'
-import type { GameEvent, GameState, PieceType } from '../engine/types'
+import { colsOf } from '../engine/game'
+import type { GameEvent, GameMode, GameState, PieceType } from '../engine/types'
 import type { StringKey } from './i18n'
-import type { RunRecord } from './scores'
+import type { Lifetime } from './lifetime'
 
 /**
  * Rozetler — görev listesi değil, **keşif haritası**.
@@ -17,20 +18,46 @@ import type { RunRecord } from './scores'
  */
 
 export type BadgeId =
-  | 'transform'
-  | 'downgrade'
+  // figür aileleri — kümülatif
+  | 'rook'
+  | 'knight'
+  | 'bishop'
+  // figür aileleri — tek koşu
+  | 'pawn'
+  | 'queen'
+  | 'king'
+  | 'musketeers'
+  // kümülatif ustalık
+  | 'harakiri'
+  | 'oneUp'
+  // tek koşu ustalık (kademesiz)
   | 'chain'
-  | 'throne'
-  | 'breath'
   | 'hunter'
-  | 'fugitive'
-  | 'squad'
   | 'mate'
+  | 'breath'
+  | 'transform'
+  // süreklilik
   | 'sevenDays'
-  | 'allModes'
+  | 'thirtyDays'
   | 'narrow'
+  // haftalık lig — sunucu (Faz 9)
+  | 'weekFirst'
+  | 'weekKing'
+  | 'emperor'
 
-export type BadgeFamily = 'learn' | 'skill' | 'loyal'
+export type BadgeSection = 'pieces' | 'skill' | 'loyal' | 'league'
+
+/** Kademe: kümülatif ailelerde 4 (siyah ilk kez), tek-koşuda 3, kademesizde 1 */
+export type Tier = 'black' | 'bronze' | 'silver' | 'gold'
+
+/**
+ * Görünürlük politikası (rozetler.md kararı):
+ * - `open`: her şey baştan görünür
+ * - `firstOpen`: ilk kademe koşuluyla görünür, üst kademeler kazanılana kadar gizli
+ * - `afterFirst`: ilk kademe kazanılana kadar aile hiç GÖRÜNMEZ; sonra hep açık
+ * - `hidden`: kazanılana kadar "?"
+ */
+export type Reveal = 'open' | 'firstOpen' | 'afterFirst' | 'hidden'
 
 /**
  * Bir koşu boyunca biriken sayaçlar.
@@ -151,144 +178,273 @@ export function tallyStep(tally: RunTally, as: PieceType): RunTally {
 
 export interface BadgeContext {
   state: GameState
+  /** Bu koşunun sayaçları */
   tally: RunTally
-  /** Geçmiş koşular — süreklilik rozetleri buradan hesaplanıyor */
-  runs: RunRecord[]
-  /** Gün serisi */
+  /** Bu koşudan ÖNCEKİ ömür boyu toplamlar — kümülatif = life + tally */
+  life: Lifetime
+  /** Günlük seri (defter ve ömür boyu deponun büyüğü) */
   streak: number
 }
 
 export interface Badge {
   id: BadgeId
   glyph: string
-  family: BadgeFamily
-  /** Gizli rozetin adı ve koşulu kazanılana kadar saklanıyor */
-  secret: boolean
+  section: BadgeSection
+  reveal: Reveal
   nameKey: StringKey
   howKey: StringKey
-  earned: (context: BadgeContext) => boolean
+  /** Kademe eşikleri; kademesiz rozette tek eleman [1] */
+  thresholds: number[]
+  tiers: Tier[]
+  /** Şu anki değer (kümülatif ya da bu koşu / en iyi). Sunucu rozetinde null. */
+  value: (context: BadgeContext) => number | null
+  /** Sunucu gerektiriyor — Faz 9'a kadar kilitli */
+  server?: boolean
 }
+
+const CUMULATIVE: Tier[] = ['black', 'bronze', 'silver', 'gold']
+const SINGLE: Tier[] = ['bronze', 'silver', 'gold']
+const ONCE: Tier[] = ['gold']
 
 const NARROW_COLS = COL_CHOICES[0]
 
+/** Bu koşunun modu için mesafe; sayaç yalnızca ilgili modda anlamlı */
+const inMode = (context: BadgeContext, mode: GameMode) => context.state.mode === mode
+
 export const BADGES: Badge[] = [
-  /* --- Mekanik keşfi: koşulu baştan açık, oyunu öğretiyor --- */
+  /* --- Figür aileleri — kümülatif (siyah 1 · bronz 50 · gümüş 250 · altın 1000) --- */
   {
-    id: 'transform',
+    id: 'rook',
+    glyph: '♜',
+    section: 'pieces',
+    reveal: 'afterFirst',
+    nameKey: 'badge.rook',
+    howKey: 'badge.rook.how',
+    thresholds: [1, 50, 250, 1000],
+    tiers: CUMULATIVE,
+    value: (c) => c.life.total.captured.r + c.tally.captured.r,
+  },
+  {
+    id: 'knight',
     glyph: '♞',
-    family: 'learn',
-    secret: false,
-    nameKey: 'badge.transform',
-    howKey: 'badge.transform.how',
-    earned: (c) => c.tally.transformed,
+    section: 'pieces',
+    reveal: 'afterFirst',
+    nameKey: 'badge.knight',
+    howKey: 'badge.knight.how',
+    thresholds: [1, 50, 250, 1000],
+    tiers: CUMULATIVE,
+    value: (c) => c.life.total.captured.n + c.tally.captured.n,
   },
   {
-    id: 'downgrade',
-    glyph: '♟',
-    family: 'learn',
-    secret: false,
-    nameKey: 'badge.downgrade',
-    howKey: 'badge.downgrade.how',
-    earned: (c) => c.tally.downgraded,
+    id: 'bishop',
+    glyph: '♝',
+    section: 'pieces',
+    reveal: 'afterFirst',
+    nameKey: 'badge.bishop',
+    howKey: 'badge.bishop.how',
+    thresholds: [1, 50, 250, 1000],
+    tiers: CUMULATIVE,
+    value: (c) => c.life.total.captured.b + c.tally.captured.b,
   },
+
+  /* --- Figür aileleri — tek koşu (en iyi koşun) --- */
+  {
+    id: 'pawn',
+    glyph: '♟',
+    section: 'pieces',
+    reveal: 'firstOpen',
+    nameKey: 'badge.pawn',
+    howKey: 'badge.pawn.how',
+    thresholds: [5, 10, 15],
+    tiers: SINGLE,
+    value: (c) => Math.max(c.life.best.pawnSteps, inMode(c, 'classic') ? c.tally.steps.p : 0),
+  },
+  {
+    id: 'queen',
+    glyph: '♛',
+    section: 'pieces',
+    reveal: 'firstOpen',
+    nameKey: 'badge.queen',
+    howKey: 'badge.queen.how',
+    thresholds: [10, 40, 80],
+    tiers: SINGLE,
+    value: (c) => Math.max(c.life.best.queenCaptures, inMode(c, 'trio') ? c.tally.queenCaptures : 0),
+  },
+  {
+    id: 'king',
+    glyph: '♚',
+    section: 'pieces',
+    reveal: 'firstOpen',
+    nameKey: 'badge.king',
+    howKey: 'badge.king.how',
+    thresholds: [20, 45, 75],
+    tiers: SINGLE,
+    value: (c) => Math.max(c.life.best.kingDistance, inMode(c, 'kingRun') ? c.state.distance : 0),
+  },
+  {
+    id: 'musketeers',
+    glyph: '⚔',
+    section: 'pieces',
+    reveal: 'firstOpen',
+    nameKey: 'badge.musketeers',
+    howKey: 'badge.musketeers.how',
+    thresholds: [6, 12, 18],
+    tiers: SINGLE,
+    value: (c) => Math.max(c.life.best.trioNoLoss, inMode(c, 'trio') ? c.tally.noLossDistance : 0),
+  },
+
+  /* --- Kümülatif ustalık --- */
+  {
+    id: 'harakiri',
+    glyph: '♟',
+    section: 'skill',
+    reveal: 'firstOpen',
+    nameKey: 'badge.harakiri',
+    howKey: 'badge.harakiri.how',
+    thresholds: [1, 15, 50, 100],
+    tiers: CUMULATIVE,
+    value: (c) => c.life.total.harakiri + c.tally.harakiri,
+  },
+  {
+    id: 'oneUp',
+    glyph: '♥',
+    section: 'skill',
+    reveal: 'firstOpen',
+    nameKey: 'badge.oneUp',
+    howKey: 'badge.oneUp.how',
+    thresholds: [1, 5, 25, 50],
+    tiers: CUMULATIVE,
+    value: (c) => c.life.total.kings + c.tally.kings,
+  },
+
+  /* --- Tek koşu ustalık — kademesiz, hepsi açık --- */
   {
     id: 'chain',
     glyph: '⚡',
-    family: 'learn',
-    secret: false,
+    section: 'skill',
+    reveal: 'open',
     nameKey: 'badge.chain',
     howKey: 'badge.chain.how',
-    earned: (c) => c.tally.bestStreak >= 3,
+    thresholds: [1],
+    tiers: ONCE,
+    value: (c) => (Math.max(c.life.best.streak, c.tally.bestStreak) >= 3 ? 1 : 0),
   },
-  {
-    id: 'throne',
-    glyph: '♚',
-    family: 'learn',
-    secret: false,
-    nameKey: 'badge.throne',
-    howKey: 'badge.throne.how',
-    earned: (c) => c.tally.kings >= 1,
-  },
-  {
-    id: 'breath',
-    glyph: '○',
-    family: 'learn',
-    secret: false,
-    nameKey: 'badge.breath',
-    howKey: 'badge.breath.how',
-    earned: (c) => c.tally.stuckUsed >= 1,
-  },
-
-  /* --- Ustalık: her modun kendi rozeti, koşulu gizli --- */
   {
     id: 'hunter',
     glyph: '♛',
-    family: 'skill',
-    secret: true,
+    section: 'skill',
+    reveal: 'open',
     nameKey: 'badge.hunter',
     howKey: 'badge.hunter.how',
-    earned: (c) => c.state.mode === 'classic' && c.tally.kings >= 2,
-  },
-  {
-    id: 'fugitive',
-    glyph: '♚',
-    family: 'skill',
-    secret: true,
-    nameKey: 'badge.fugitive',
-    howKey: 'badge.fugitive.how',
-    earned: (c) => c.state.mode === 'kingRun' && c.state.distance >= 30,
-  },
-  {
-    id: 'squad',
-    glyph: '♜',
-    family: 'skill',
-    secret: true,
-    nameKey: 'badge.squad',
-    howKey: 'badge.squad.how',
-    earned: (c) => c.state.mode === 'trio' && c.tally.squadIntact && c.state.distance >= 20,
+    thresholds: [1],
+    tiers: ONCE,
+    value: (c) => (inMode(c, 'classic') && c.tally.kings >= 2 ? 1 : 0),
   },
   {
     id: 'mate',
     glyph: '✕',
-    family: 'skill',
-    secret: true,
+    section: 'skill',
+    reveal: 'open',
     nameKey: 'badge.mate',
     howKey: 'badge.mate.how',
-    earned: (c) => c.tally.mated,
+    thresholds: [1],
+    tiers: ONCE,
+    value: (c) => (c.life.total.mated > 0 || c.tally.mated ? 1 : 0),
+  },
+  {
+    id: 'breath',
+    glyph: '○',
+    section: 'skill',
+    reveal: 'open',
+    nameKey: 'badge.breath',
+    howKey: 'badge.breath.how',
+    thresholds: [1],
+    tiers: ONCE,
+    value: (c) => (c.life.total.stuckUsed + c.tally.stuckUsed >= 1 ? 1 : 0),
+  },
+  {
+    id: 'transform',
+    glyph: '♞',
+    section: 'skill',
+    reveal: 'open',
+    nameKey: 'badge.transform',
+    howKey: 'badge.transform.how',
+    thresholds: [1],
+    tiers: ONCE,
+    value: (c) => (c.tally.transformed ? 1 : 0),
   },
 
-  /* --- Süreklilik: zaten var olan sinyallerden, koşulu gizli --- */
+  /* --- Süreklilik — hepsi açık --- */
   {
     id: 'sevenDays',
     glyph: '▲',
-    family: 'loyal',
-    secret: true,
+    section: 'loyal',
+    reveal: 'open',
     nameKey: 'badge.sevenDays',
     howKey: 'badge.sevenDays.how',
-    earned: (c) => c.streak >= 7,
+    thresholds: [7],
+    tiers: ONCE,
+    value: (c) => c.streak,
   },
   {
-    id: 'allModes',
+    id: 'thirtyDays',
     glyph: '◆',
-    family: 'loyal',
-    secret: true,
-    nameKey: 'badge.allModes',
-    howKey: 'badge.allModes.how',
-    earned: (c) => {
-      const played = new Set(c.runs.map((run) => run.mode))
-      played.add(c.state.mode)
-      return played.size >= 3
-    },
+    section: 'loyal',
+    reveal: 'open',
+    nameKey: 'badge.thirtyDays',
+    howKey: 'badge.thirtyDays.how',
+    thresholds: [30],
+    tiers: ONCE,
+    value: (c) => c.streak,
   },
   {
     id: 'narrow',
     glyph: '▬',
-    family: 'loyal',
-    secret: true,
+    section: 'loyal',
+    reveal: 'open',
     nameKey: 'badge.narrow',
     howKey: 'badge.narrow.how',
-    earned: (c) =>
-      c.state.board[0].cells.length <= NARROW_COLS && c.state.distance >= 15,
+    thresholds: [15],
+    tiers: ONCE,
+    value: (c) => (colsOf(c.state.board) <= NARROW_COLS ? c.state.distance : 0),
+  },
+
+  /* --- Haftalık lig — sunucu (Faz 9) --- */
+  {
+    id: 'weekFirst',
+    glyph: '①',
+    section: 'league',
+    reveal: 'open',
+    nameKey: 'badge.weekFirst',
+    howKey: 'badge.weekFirst.how',
+    thresholds: [1],
+    tiers: ONCE,
+    value: () => null,
+    server: true,
+  },
+  {
+    id: 'weekKing',
+    glyph: '♚',
+    section: 'league',
+    reveal: 'hidden',
+    nameKey: 'badge.weekKing',
+    howKey: 'badge.weekKing.how',
+    thresholds: [1],
+    tiers: ONCE,
+    value: () => null,
+    server: true,
+  },
+  {
+    id: 'emperor',
+    glyph: '♛',
+    section: 'league',
+    reveal: 'hidden',
+    nameKey: 'badge.emperor',
+    howKey: 'badge.emperor.how',
+    thresholds: [1],
+    tiers: ONCE,
+    value: () => null,
+    server: true,
   },
 ]
 
@@ -296,20 +452,47 @@ export function badgeOf(id: BadgeId): Badge {
   return BADGES.find((badge) => badge.id === id) ?? BADGES[0]
 }
 
+/** Değere göre ulaşılan en yüksek kademe indeksi (-1 = hiç) */
+export function tierIndex(badge: Badge, value: number | null): number {
+  if (value == null) return -1
+  let index = -1
+  badge.thresholds.forEach((limit, i) => {
+    if (value >= limit) index = i
+  })
+  return index
+}
+
 /* ------------------------------------------------------------------ *
- * Depolama — kazanılan rozet ve kazanıldığı an
+ * Depolama — kazanılan kademe ve kazanıldığı an; seçili rozet
  * ------------------------------------------------------------------ */
 
 const STORAGE_KEY = 'chessrun:badges'
+const SELECTED_KEY = 'chessrun:badge'
 
-export type EarnedBadges = Partial<Record<BadgeId, string>>
+export interface EarnedTier {
+  /** Kazanılmış en yüksek kademe indeksi */
+  tier: number
+  /** İlk kazanma ve son kademe atlama zamanı */
+  at: string
+}
+
+export type EarnedBadges = Partial<Record<BadgeId, EarnedTier>>
 
 export function readBadges(): EarnedBadges {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return {}
-    const parsed = JSON.parse(raw) as EarnedBadges
-    return parsed && typeof parsed === 'object' ? parsed : {}
+    const parsed = JSON.parse(raw) as Record<string, unknown>
+    if (!parsed || typeof parsed !== 'object') return {}
+    const out: EarnedBadges = {}
+    for (const [id, v] of Object.entries(parsed)) {
+      if (!BADGES.some((b) => b.id === id)) continue
+      // Eski biçim (ISO string) → kademe 0
+      if (typeof v === 'string') out[id as BadgeId] = { tier: 0, at: v }
+      else if (v && typeof v === 'object' && typeof (v as EarnedTier).tier === 'number')
+        out[id as BadgeId] = v as EarnedTier
+    }
+    return out
   } catch {
     return {}
   }
@@ -323,61 +506,60 @@ function writeBadges(earned: EarnedBadges): void {
   }
 }
 
+/** Yeni kazanılan kademe: hangi rozet, hangi kademe */
+export interface BadgeAward {
+  id: BadgeId
+  tier: number
+}
+
 /**
- * Yeni kazanılan rozetleri döndürür ve deftere yazar.
- * Zaten kazanılmış rozet bir daha tetiklenmiyor.
+ * Bağlamı değerlendirir, yeni kazanılan kademeleri depoya yazar ve döndürür.
+ * Koşu ortasında her commit'te çağrılabilir: değişmeyen kademeler boş döner,
+ * yani ucuz. Zaten kazanılmış kademe bir daha tetiklenmiyor.
  */
-export function claimBadges(context: BadgeContext, now = new Date()): BadgeId[] {
+export function claimBadges(context: BadgeContext, now = new Date()): BadgeAward[] {
   const earned = readBadges()
-  const fresh: BadgeId[] = []
+  const fresh: BadgeAward[] = []
 
   for (const badge of BADGES) {
-    if (earned[badge.id]) continue
-    if (!badge.earned(context)) continue
-    earned[badge.id] = now.toISOString()
-    fresh.push(badge.id)
+    if (badge.server) continue
+    const reached = tierIndex(badge, badge.value(context))
+    const have = earned[badge.id]?.tier ?? -1
+    if (reached <= have) continue
+    earned[badge.id] = { tier: reached, at: now.toISOString() }
+    fresh.push({ id: badge.id, tier: reached })
   }
 
   if (fresh.length > 0) writeBadges(earned)
   return fresh
 }
 
-/**
- * Geçmiş koşulardan geriye dönük hesap.
- *
- * Yalnızca deftere yazılan alanlardan türetilebilenler kazanılıyor: eski
- * kayıtlarda sayaç alanları yoksa o rozetler atlanıyor — uydurma yapmıyoruz.
- */
-export function claimFromHistory(runs: RunRecord[], streak: number, now = new Date()): BadgeId[] {
-  const earned = readBadges()
-  const fresh: BadgeId[] = []
-  const give = (id: BadgeId) => {
-    if (earned[id]) return
-    earned[id] = now.toISOString()
-    fresh.push(id)
+/** Oyuncunun sıralamada gösterdiği rozet — yalnızca kazanılmış olan seçilebilir */
+export function readSelectedBadge(): BadgeId | null {
+  try {
+    const id = localStorage.getItem(SELECTED_KEY) as BadgeId | null
+    if (!id || !BADGES.some((b) => b.id === id)) return null
+    return readBadges()[id] ? id : null
+  } catch {
+    return null
   }
+}
 
-  const modes = new Set(runs.map((run) => run.mode))
-  if (modes.size >= 3) give('allModes')
-  if (streak >= 7) give('sevenDays')
-
-  for (const run of runs) {
-    if (run.chain) {
-      const chain = run.chain.split('>') as PieceType[]
-      if (chain.length > 1) give('transform')
-      for (let i = 1; i < chain.length; i++) {
-        if (chain[i] === 'p' && HEAVY.includes(chain[i - 1])) give('downgrade')
-      }
-    }
-    if ((run.kings ?? 0) >= 1) give('throne')
-    if ((run.kings ?? 0) >= 2 && run.mode === 'classic') give('hunter')
-    if ((run.bestStreak ?? 0) >= 3) give('chain')
-    if ((run.stuckUsed ?? 0) >= 1) give('breath')
-    if (run.mated) give('mate')
-    if (run.mode === 'kingRun' && run.distance >= 30) give('fugitive')
-    if (run.cols <= NARROW_COLS && run.distance >= 15) give('narrow')
+export function selectBadge(id: BadgeId | null): void {
+  try {
+    if (id && !readBadges()[id]) return // kazanılmamış rozet seçilemez
+    if (id) localStorage.setItem(SELECTED_KEY, id)
+    else localStorage.removeItem(SELECTED_KEY)
+  } catch {
+    // yok sayılıyor
   }
+}
 
-  if (fresh.length > 0) writeBadges(earned)
-  return fresh
+/** Seçili rozetin glifi ve kademesi — sıralama satırı ve künye için */
+export function selectedBadgeView(): { id: BadgeId; glyph: string; tier: Tier } | null {
+  const id = readSelectedBadge()
+  if (!id) return null
+  const badge = badgeOf(id)
+  const tierIdx = readBadges()[id]?.tier ?? 0
+  return { id, glyph: badge.glyph, tier: badge.tiers[Math.min(tierIdx, badge.tiers.length - 1)] }
 }

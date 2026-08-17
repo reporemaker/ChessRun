@@ -4,6 +4,7 @@ import { Game, type GameConfig, type GameHandle } from './components/Game'
 import { Home } from './components/Home'
 import { Page, type PageId } from './components/Pages'
 import { RankingPopup } from './components/RankingPopup'
+import { BadgesPopup } from './components/BadgesPopup'
 import { Settings } from './components/Settings'
 import { useSettings } from './ui/settings'
 import { unlockSound } from './ui/sound'
@@ -45,6 +46,12 @@ export default function App() {
   // Sıralama kendi penceresi. ?dev=rank örnek veriyle açıyor (yalnızca DEV).
   const demoRank = import.meta.env.DEV && window.location.search.includes('dev=rank')
   const [rankOpen, setRankOpen] = useState<boolean>(demoRank)
+  // Rozet penceresi; ?dev=badges açık başlatır (yalnızca DEV)
+  const [badgesOpen, setBadgesOpen] = useState<boolean>(
+    import.meta.env.DEV && window.location.search.includes('dev=badges'),
+  )
+  // Seçili rozet değişince fişler yeniden okusun
+  const [badgeVersion, setBadgeVersion] = useState(0)
 
   // Ekran okuyucular ve tarayıcı tireleme kuralları için
   useEffect(() => {
@@ -100,6 +107,8 @@ export default function App() {
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPage={setPage}
           onOpenRanking={() => setRankOpen(true)}
+          onOpenBadges={() => setBadgesOpen(true)}
+          badgeVersion={badgeVersion}
           onRestartWithCols={restartWithCols}
         />
       ) : (
@@ -128,6 +137,8 @@ export default function App() {
             setPage(next)
           }}
           onOpenRanking={() => setRankOpen(true)}
+          onOpenBadges={() => setBadgesOpen(true)}
+          badgeVersion={badgeVersion}
           game={
             config
               ? {
@@ -137,6 +148,13 @@ export default function App() {
                 }
               : undefined
           }
+        />
+      )}
+
+      {badgesOpen && (
+        <BadgesPopup
+          onClose={() => setBadgesOpen(false)}
+          onSelect={() => setBadgeVersion((v) => v + 1)}
         />
       )}
 

@@ -117,7 +117,9 @@ export function RankingPopup({ onClose, mode: initialMode, demo = false }: Props
                 <span className="rank-pos">{row.place}</span>
                 <span className="rank-name">
                   {/* Rozet yeri her satırda sabit: glif yoksa boş kalır, adlar hizada durur */}
-                  <i className="rank-badge" aria-hidden="true">{row.badge ?? ''}</i>
+                  <i className={`rank-badge${row.badgeTier ? ` t-${row.badgeTier}` : ''}`} aria-hidden="true">
+                    {row.badge ?? ''}
+                  </i>
                   <b>{row.name}</b>
                   {row.me && <em>{t('settings.you')}</em>}
                 </span>

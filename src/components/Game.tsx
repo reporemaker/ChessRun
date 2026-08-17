@@ -20,8 +20,8 @@ import {
 import { key } from '../engine/moves'
 import type { EndReason } from '@shared/events'
 import type { Color, GameEvent, GameMode, GameState, PieceType, Pos, Row } from '../engine/types'
-import { emptyTally, tallyEvents, tallyStep } from '../ui/badges'
-import { lifetimeStreak, recordLifetime } from '../ui/lifetime'
+import { type BadgeAward, badgeOf, claimBadges, emptyTally, tallyEvents, tallyStep } from '../ui/badges'
+import { type Lifetime, lifetimeStreak, readLifetime, recordLifetime } from '../ui/lifetime'
 import { type TipId, TIP_KEY, readSeenTips, storeSeenTips } from '../ui/coach'
 import { getIdentity, shortToken } from '../ui/identity'
 import { LANGS } from '../ui/i18n'
@@ -56,6 +56,7 @@ import {
   wait,
 } from '../ui/timing'
 import { ArcadeOutro } from './ArcadeOutro'
+import { BadgeChip } from './BadgeChip'
 import { NameChip } from './NameChip'
 import { Board } from './Board'
 
@@ -87,6 +88,8 @@ interface GameProps {
   onOpenSettings: () => void
   onOpenPage: (page: 'help' | 'about') => void
   onOpenRanking: () => void
+  onOpenBadges: () => void
+  badgeVersion: number
   /** Sağ sütundaki koridor seçimi onaylanınca: App koşuyu kapatıp yeni genişlikte kurar */
   onRestartWithCols: (cols: number) => void
   ref?: Ref<GameHandle>
@@ -108,6 +111,8 @@ interface RunResult {
   /** Arcade tablosu ve sıra — Şah Kaçışı kapanışında gösteriliyor */
   table: RunRecord[]
   rank: number
+  /** Bu koşuda kazanılan rozet kademeleri — kapanış özeti */
+  badges: BadgeAward[]
 }
 
 const TIP_MS = 7000
@@ -118,6 +123,8 @@ export function Game({
   onOpenSettings,
   onOpenPage,
   onOpenRanking,
+  onOpenBadges,
+  badgeVersion,
   onRestartWithCols,
   ref,
 }: GameProps) {
@@ -180,6 +187,10 @@ export function Game({
   // Motor gameover'ı bir kez yayıyor (cloneState events'i sıfırlıyor) ama o
   // garanti üç dosya ötede yaşıyor — tek satırlık sigorta.
   const finished = useRef(false)
+  // Kümülatif rozetler = koşu öncesi ömür boyu + bu koşunun sayaçları.
+  // Ömür boyu koşu başında bir kez okunuyor; koşu bitince kendisi güncelleniyor.
+  const lifeRef = useRef<Lifetime>(readLifetime())
+  const awards = useRef<BadgeAward[]>([])
 
   const moves = useMemo(() => legalMoves(game), [game])
   const safe = useMemo(() => new Set(safeMoves(game).map(key)), [game])
@@ -208,11 +219,35 @@ export function Game({
     tally.current = tallyEvents(tally.current, next.events, prevType.current, next.distance)
     prevType.current = next.playerType
 
+
     setGame(next)
     playEvents(next.events)
 
     const nextFlash = describeEvents(next.events, t)
     if (nextFlash) setFlash(nextFlash)
+
+    // Rozet: koşu ortasında kademe geçilince HEMEN altın flash (karar:
+    // "oyun anında hemen ve kapanışta"). Olay flash'ından SONRA: aynı
+    // commit'te "Yedin!" ile çakışırsa rozet kazanır. Değişmeyen kademeler
+    // boş döner, ucuz.
+    const fresh = claimBadges({
+      state: next,
+      tally: tally.current,
+      life: lifeRef.current,
+      streak: Math.max(currentStreak(readRuns()), lifetimeStreak()),
+    })
+    if (fresh.length > 0) {
+      awards.current = [...awards.current, ...fresh]
+      const award = fresh[fresh.length - 1]
+      const badge = badgeOf(award.id)
+      const tierName = t(`tier.${badge.tiers[Math.min(award.tier, badge.tiers.length - 1)]}`)
+      setFlash({
+        id: Date.now(),
+        text: t('badges.earned', { name: t(badge.nameKey), tier: tierName }),
+        tone: 'great',
+      })
+      playSound('kingBonus')
+    }
 
     for (const event of next.events) {
       if (event.kind === 'transform') offerTip('transform')
@@ -260,7 +295,7 @@ export function Game({
     })
 
     // Ömür boyu sayaçlar: kümülatif rozet aileleri (defter 300 koşuyla sınırlı)
-    recordLifetime(counts, { mode: state.mode, distance: state.distance, daily: config.daily })
+    lifeRef.current = recordLifetime(counts, { mode: state.mode, distance: state.distance, daily: config.daily })
 
     // Sunucu tanımlıysa aynı kayıt imzasıyla haftalık tabloya gider
     void submitRun(run)
@@ -302,6 +337,7 @@ export function Game({
       weekBest: after.thisWeek?.score ?? run.score,
       table: topRuns(runs, state.mode),
       rank: rankOf(runs, run),
+      badges: awards.current,
     })
 
     if (isBest) buzz([40, 60, 40, 60, 90])
@@ -335,6 +371,8 @@ export function Game({
     tally.current = emptyTally()
     prevType.current = next.playerType
     finished.current = false
+    awards.current = []
+    lifeRef.current = readLifetime()
     setGame(next)
     setPhase('input')
     setGhostRow(null)
@@ -618,6 +656,7 @@ export function Game({
             isRecord={result?.isBest ?? false}
             isWeekRecord={result?.isWeekBest ?? false}
             chain={game.mode === 'classic' ? game.chain : undefined}
+            badges={result?.badges}
             daily={config.daily}
             shareLabel={shareLabel}
             onShare={() => void onShare()}
@@ -843,19 +882,8 @@ export function Game({
 
         <div className="gv-hr" />
 
-        {/* Rozet sistemi henüz yok: yeri ayrıldı, sahte ilerleme gösterilmiyor */}
-        <div className="gv-cell">
-          <span className="gv-lb">
-            {t('game.badges')} · {t('common.soon')}
-          </span>
-          <span className="gv-bdg">
-            <u>♛</u>
-            <u>♚</u>
-            <u>♜</u>
-            <u>♝</u>
-            <u>♞</u>
-          </span>
-        </div>
+        {/* Rozet: yalnızca seçili olan + pencereyi açan düğme */}
+        <BadgeChip version={badgeVersion} onOpen={onOpenBadges} skin="gv" />
 
         <div className="gv-hr" />
 

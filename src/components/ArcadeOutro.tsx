@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getIdentity } from '../ui/identity'
 import { useT } from '../ui/text'
 import type { PieceType } from '../engine/types'
+import { type BadgeAward, badgeOf } from '../ui/badges'
 import { GLYPH } from '../ui/pieces'
 import type { RunRecord } from '../ui/scores'
 
@@ -39,6 +40,8 @@ interface ArcadeOutroProps {
   isWeekRecord?: boolean
   /** Av'ın dönüşüm zinciri: koşunun hikâyesi (♞→♟→♛) */
   chain?: PieceType[]
+  /** Bu koşuda kazanılan rozet kademeleri — kapanış özeti */
+  badges?: BadgeAward[]
   daily?: string
   shareLabel?: string
   onShare?: () => void
@@ -56,6 +59,7 @@ export function ArcadeOutro({
   isRecord,
   isWeekRecord,
   chain,
+  badges,
   daily,
   shareLabel,
   onShare,
@@ -127,6 +131,22 @@ export function ArcadeOutro({
           )}
           {chain && chain.length > 1 && (
             <p className="outro-chain">{chain.map((type) => GLYPH[type]).join(' → ')}</p>
+          )}
+          {/* Bu koşuda kazanılan rozetler — koşu ortasındaki flash'ın kalıcı özeti */}
+          {badges && badges.length > 0 && (
+            <ul className="outro-badges" aria-label={t('badges.inRun')}>
+              {badges.map((award) => {
+                const badge = badgeOf(award.id)
+                const tier = badge.tiers[Math.min(award.tier, badge.tiers.length - 1)]
+                return (
+                  <li key={`${award.id}-${award.tier}`} className={`t-${tier}`}>
+                    <span className="bdg-glyph" aria-hidden="true">{badge.glyph}</span>
+                    <b>{t(badge.nameKey)}</b>
+                    {badge.tiers.length > 1 && <small>{t(`tier.${tier}`)}</small>}
+                  </li>
+                )
+              })}
+            </ul>
           )}
         </div>
       )}
