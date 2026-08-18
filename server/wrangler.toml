@@ -15,13 +15,13 @@ enabled = true
 binding = "DB"
 database_name = "chessrun"
 # wrangler d1 create chessrun → çıkan id buraya
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "b9a2a08a-ee26-48d1-828c-69c70d6228fc"
 migrations_dir = "migrations"
 
 [[kv_namespaces]]
 binding = "SALT"
 # wrangler kv namespace create SALT → çıkan id buraya
-id = "00000000000000000000000000000000"
+id = "f69b4bdcf4f14393a33b2f429ea5f73e"
 
 [triggers]
 # 00:05 UTC: tuzu döndür, dünü topla, 35 günü aşan ham satırları sil
@@ -38,9 +38,11 @@ crons = ["5 0 * * *"]
 pattern = "chessrun.app/collect/*"
 zone_name = "chessrun.app"
 
+# Custom Domain (rota değil): Cloudflare DNS kaydını ve sertifikayı kendisi
+# açıyor — elle AAAA 100:: kaydı gerekmiyor. Access hâlâ bu hostname'in önünde.
 [[routes]]
-pattern = "1403.chessrun.app/*"
-zone_name = "chessrun.app"
+pattern = "1403.chessrun.app"
+custom_domain = true
 
 # Panel derlemesi Worker ile birlikte yayınlanıyor — ayrı hosting yok.
 # `cd sub && npm run build` sonrası wrangler deploy ikisini birden yollar.
@@ -51,5 +53,5 @@ not_found_handling = "single-page-application"
 
 [vars]
 STATS_HOST = "1403.chessrun.app"
-ACCESS_TEAM = "PLACEHOLDER"
-ACCESS_AUD = "PLACEHOLDER"
+ACCESS_TEAM = "round-bird-570f"
+ACCESS_AUD = "2709e20e855156d8d8ec62453763ee9346ade2377147123663a8e523e6fa0ade"
