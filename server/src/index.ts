@@ -1,4 +1,4 @@
-import { dayKeyUtc } from '../../shared/events'
+import { dayKeyUtc, type Device } from '../../shared/events'
 import { verifyAccess } from './access'
 import { breakdown, pruneRaw, rollupDay, series, summary } from './api'
 import { addDays } from './period'
@@ -11,6 +11,7 @@ import {
   cleanVisit,
   countryCode,
   isBot,
+  looksAutomated,
   parseAgent,
   str,
 } from './validate'
@@ -69,7 +70,7 @@ interface RequestFacts {
   ua: string
   browser: string
   os: string
-  device: string
+  device: Device
   ip: string
 }
 
@@ -101,6 +102,7 @@ async function collectVisit(request: Request, env: Env, host: string): Promise<R
   const clean = cleanVisit(body, host)
   const facts = factsOf(request)
   if (!clean || isBot(facts.ua)) return noContent()
+  if (looksAutomated({ ...facts, touch: clean.touch })) return noContent()
 
   const now = Date.now()
   const day = dayKeyUtc(now)
@@ -145,7 +147,7 @@ async function collectRun(request: Request, env: Env): Promise<Response> {
   const body = await readBody(request)
   const clean = cleanRun(body)
   const facts = factsOf(request)
-  if (!clean || isBot(facts.ua)) return noContent()
+  if (!clean || isBot(facts.ua) || looksAutomated(facts)) return noContent()
 
   const now = Date.now()
   await env.DB.prepare(
@@ -185,7 +187,7 @@ async function collectSession(request: Request, env: Env): Promise<Response> {
   const body = await readBody(request)
   const clean = cleanSession(body)
   const facts = factsOf(request)
-  if (!clean || isBot(facts.ua)) return noContent()
+  if (!clean || isBot(facts.ua) || looksAutomated(facts)) return noContent()
 
   const now = Date.now()
   // Aynı oturum için son beacon kazanıyor: sekme birkaç kez gizlenip

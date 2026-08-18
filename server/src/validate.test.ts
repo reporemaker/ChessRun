@@ -8,6 +8,7 @@ import {
   cleanVisit,
   countryCode,
   isBot,
+  looksAutomated,
   langCode,
   parseAgent,
   referrerHost,
@@ -223,5 +224,26 @@ describe('isBot', () => {
         'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1',
       ),
     ).toBe(false)
+  })
+})
+
+describe('looksAutomated', () => {
+  const phone = { device: 'mobile' as const, os: 'android', acceptLang: 'tr' }
+
+  it('Accept-Language boşsa makine sayıyor', () => {
+    expect(looksAutomated({ ...phone, acceptLang: '' })).toBe(true)
+    expect(looksAutomated({ device: 'desktop', os: 'windows', acceptLang: '' })).toBe(true)
+  })
+
+  it('telefon UA + dokunmatik yok = emülasyon', () => {
+    expect(looksAutomated({ ...phone, touch: false })).toBe(true)
+    expect(looksAutomated({ ...phone, os: 'ios', touch: false })).toBe(true)
+  })
+
+  it('gerçek telefonu ve masaüstünü elemiyor', () => {
+    expect(looksAutomated({ ...phone, touch: true })).toBe(false)
+    expect(looksAutomated({ device: 'desktop', os: 'macos', acceptLang: 'en', touch: false })).toBe(false)
+    // touch bilinmiyorsa (koşu/oturum uçları) yalnızca başlık sayılır
+    expect(looksAutomated(phone)).toBe(false)
   })
 })

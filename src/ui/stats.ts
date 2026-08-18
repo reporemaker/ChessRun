@@ -38,11 +38,19 @@ const ENDPOINT = import.meta.env.VITE_STATS_URL as string | undefined
 const _modesAgree: import('@shared/events').Mode = null as unknown as GameMode
 void _modesAgree
 
-/** Kullanıcı izlenmek istemediğini söylediyse hiç göndermiyoruz */
+/**
+ * Kullanıcı izlenmek istemediğini söylediyse hiç göndermiyoruz.
+ *
+ * `navigator.webdriver` de aynı kapıdan geçiyor: headless/otomasyon
+ * tarayıcıları (yeni alan adını CT loglarından bulan tarayıcılar, link
+ * önizleyiciler) bunu `true` verir ve JS çalıştırdıkları için normalde
+ * ziyaret sayılırlardı. Makine ziyaretçi değildir; sunucudaki
+ * `looksAutomated` bunun ikinci katmanı.
+ */
 function optedOut(): boolean {
   try {
-    const nav = navigator as Navigator & { globalPrivacyControl?: boolean }
-    return nav.doNotTrack === '1' || nav.globalPrivacyControl === true
+    const nav = navigator as Navigator & { globalPrivacyControl?: boolean; webdriver?: boolean }
+    return nav.doNotTrack === '1' || nav.globalPrivacyControl === true || nav.webdriver === true
   } catch {
     return false
   }

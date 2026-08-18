@@ -210,6 +210,30 @@ export function isBot(ua: string): boolean {
   return BOTS.some((needle) => low.includes(needle))
 }
 
+/**
+ * UA temizken bile makineyi ele veren iki ucuz işaret. Yeni alan adı
+ * Certificate Transparency loglarına düştüğü an headless Chrome'lu
+ * tarayıcılar geliyor ve JS çalıştırdıkları için `sendBeacon` ateşleniyor
+ * (18 Ağustos: ilk 4 "ziyaretçi"nin 3'ü buydu — IS/FI/US).
+ *
+ * - `Accept-Language` boş: gerçek tarayıcı istisnasız gönderir.
+ * - Telefon UA'sı ama `maxTouchPoints === 0`: cihaz emülasyonu.
+ *
+ * Yanlış pozitif riski bilinçli olarak sıfıra yakın tutuldu; masaüstü UA'lı
+ * dokunmatiksiz makineler ve dokunmatik ekranlı dizüstüler etkilenmiyor.
+ */
+export function looksAutomated(input: {
+  acceptLang: string
+  device: Device
+  os: string
+  touch?: boolean
+}): boolean {
+  if (input.acceptLang === '') return true
+  const phoneUa = input.device === 'mobile' && (input.os === 'android' || input.os === 'ios')
+  if (phoneUa && input.touch === false) return true
+  return false
+}
+
 export function parseAgent(uaRaw: string | null): Agent {
   const ua = uaRaw ?? ''
 
