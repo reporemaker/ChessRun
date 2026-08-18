@@ -1,5 +1,7 @@
 import { dayKeyUtc, type Device } from '../../shared/events'
 import { verifyAccess } from './access'
+import { bannedWords, cleanSubmit, pulse, submitRun, weekly } from './lb'
+import { actOnName, getWords, listNames, setWords } from './moderation'
 import { breakdown, pruneRaw, rollupDay, series, summary } from './api'
 import { addDays } from './period'
 import { currentSalt, hashVisitor, rotateSalt } from './salt'
@@ -21,6 +23,7 @@ import {
  *
  * Tek betik, iki alan adı:
  *   apex/collect/*        herkese açık toplama — oyunla AYNI ORIGIN
+ *   apex/lb/*             haftalık sıralama — herkese açık, Access'in ARKASINDA DEĞİL
  *   stats.<alan>/*        panel + /api/* — Cloudflare Access arkasında
  *
  * Aynı origin olması tesadüf değil, planın en önemli yönlendirme kararı:
@@ -49,12 +52,12 @@ function noContent(): Response {
 }
 
 /** Gövde ayrıştırmadan ÖNCE boyut kapısı — en ucuz koruma */
-async function readBody(request: Request): Promise<unknown> {
+async function readBody(request: Request, max = MAX_BODY_BYTES): Promise<unknown> {
   const declared = Number(request.headers.get('content-length') ?? '0')
-  if (declared > MAX_BODY_BYTES) return null
+  if (declared > max) return null
 
   const text = await request.text()
-  if (text.length > MAX_BODY_BYTES) return null
+  if (text.length > max) return null
 
   try {
     return JSON.parse(text) as unknown
@@ -238,6 +241,27 @@ export default {
       return noContent()
     }
 
+    if (path.startsWith('/lb/')) {
+      // Sıralama apex'te ve herkese açık — Access'in arkasına GİRMEMELİ.
+      // Yazma ucu istatistikle aynı kuralı taşıyor: her durumda 204.
+      const now = Date.now()
+      try {
+        if (path === '/lb/runs') {
+          if (request.method !== 'POST') return noContent()
+          const clean = cleanSubmit(await readBody(request), now, await bannedWords(env.DB, now))
+          if (clean) await submitRun(env.DB, clean, now)
+          return noContent()
+        }
+        if (request.method !== 'GET') return new Response('method', { status: 405 })
+        if (path === '/lb/weekly') return await weekly(env.DB, url, request.headers.get('x-chessrun-token'), now)
+        if (path === '/lb/pulse') return await pulse(env.DB, url, now)
+      } catch {
+        if (path === '/lb/runs') return noContent()
+        return new Response('unavailable', { status: 503 })
+      }
+      return new Response('not found', { status: 404 })
+    }
+
     if (path.startsWith('/api/')) {
       // Çift kilit: Access rotanın önünde, ama Worker da doğruluyor —
       // yanlış bir rota ya da workers.dev sızıntısı veriyi açmasın.
@@ -248,8 +272,16 @@ export default {
         if (!who) return new Response('forbidden', { status: 403 })
       }
 
+      // Moderasyon uçları yazıyor; geri kalan her şey salt okunur
+      if (request.method === 'POST') {
+        if (path === '/api/names/act') return await actOnName(env.DB, await readBody(request))
+        if (path === '/api/words') return await setWords(env.DB, await readBody(request, 32_768), Date.now())
+        return new Response('method', { status: 405 })
+      }
       if (request.method !== 'GET') return new Response('method', { status: 405 })
 
+      if (path === '/api/names') return await listNames(env.DB, url)
+      if (path === '/api/words') return await getWords(env.DB)
       if (path === '/api/health') return Response.json(await health(env))
       // Yalnızca yerel: geçmiş günleri elle topla (tohum verisi için).
       // SKIP_ACCESS üretimde asla 1 olmayacağı için orada yok sayılır.

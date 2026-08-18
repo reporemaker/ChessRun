@@ -321,9 +321,8 @@ Kapsam sabit bir listeden değil sözlüğün kendisinden hesaplanıyor ([`missi
 
 ## Sıradaki adımlar
 
-- [ ] Haftalık/günlük tablonun sunucu ucu (küçük bir KV + imza doğrulama yeter) — tekrarlanabilirlik hazır
+- [x] Haftalık tablonun sunucu ucu — `server/src/lb.ts`, D1 (`lb_*` tabloları), panelde "Adlar" moderasyonu (18 Ağustos 2026)
 - [ ] Koşu tekrarını izleme (tohum + hamle dizisi kaydı; motor zaten deterministik)
 - [ ] Klavye ile oynama
 - [ ] iOS için PNG ikonlar
-- [ ] Rozetler — hem ayarlar penceresinde (`.pop-future`) hem oyun sütununda yeri ayrıldı; şu an "yakında" durumunda, sahte ilerleme gösterilmiyor
 - [ ] Yenen taş için ayrı patlama animasyonu

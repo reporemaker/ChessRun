@@ -5,7 +5,8 @@ Cloudflare Worker + D1. Tek betik, iki alan adı:
 | Yol | Erişim |
 |---|---|
 | `chessrun.app/collect/*` | herkese açık toplama — **oyunla aynı origin** |
-| `1403.chessrun.app/*` | panel + `/api/*` — **Cloudflare Access arkasında** |
+| `chessrun.app/lb/*` | haftalık sıralama (`POST /runs` · `GET /weekly` · `GET /pulse`) — herkese açık |
+| `1403.chessrun.app/*` | panel + `/api/*` (istatistik + ad moderasyonu) — **Cloudflare Access arkasında** |
 
 Toplamanın apex'te olması tesadüf değil. `sendBeacon` preflight yapamaz;
 çapraz origin'de oturum olayları iOS'ta sessizce kaybolur. Aynı origin'de
@@ -44,8 +45,14 @@ npx wrangler d1 execute chessrun --local --json \
 
 - **IP hiçbir yere yazılmıyor.** Yalnızca istek işleyicisinde yerel değişken
   olarak var, günlük dönen tuzla hash'leniyor, tuz 48 saatte siliniyor.
-- **Cihaz jetonu buraya hiç gelmiyor.** Sıralama tablosu jetona ihtiyaç
-  duyuyor çünkü o bir kimlik iddiası; istatistik duymuyor.
+- **Cihaz jetonu istatistiğe hiç gelmiyor.** Sıralama tablosu jetona ihtiyaç
+  duyuyor çünkü o bir kimlik iddiası; istatistik duymuyor. Sıralama tarafında
+  da ham jeton **yazılmıyor**: `lb_player` anahtarı SHA-256 hash, gösterim
+  kısa hâl (`a1b2…9f`), cevaplar ve panel tam jetonu hiç görmüyor.
+- **Sıralama sunucusu imzayı doğrulayamıyor** (anahtar cihazda) — jeton
+  taşıyıcı sırdır. Savunma: hafta başına oyuncu×mod tek satır (upsert),
+  beyaz-liste kelepçesi (`shared/leaderboard.ts` LB_LIMITS), hafta penceresi
+  (dün/bugün/yarın), WAF hız sınırı `/lb/*`, panelden gölgeleme/yasak.
 - **Ham User-Agent saklanmıyor** — üç kovaya ayrıştırılıyor.
 - **Şehir alınmıyor.** Şehir + tarayıcı + işletim sistemi + saat dilimi bir
   haneyi tekilleştirir ve hiçbir ürün sorusunu cevaplamaz.

@@ -38,6 +38,12 @@ crons = ["5 0 * * *"]
 pattern = "chessrun.app/collect/*"
 zone_name = "chessrun.app"
 
+# Haftalık sıralama — apex'te, herkese açık, Access'in arkasında DEĞİL.
+# Panel alan adına taşınsaydı oyuncular Access duvarına çarpardı.
+[[routes]]
+pattern = "chessrun.app/lb/*"
+zone_name = "chessrun.app"
+
 # Custom Domain (rota değil): Cloudflare DNS kaydını ve sertifikayı kendisi
 # açıyor — elle AAAA 100:: kaydı gerekmiyor. Access hâlâ bu hostname'in önünde.
 [[routes]]

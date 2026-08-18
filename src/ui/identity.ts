@@ -12,6 +12,7 @@
  * doğrulanmasıyla olur (bkz. README, sıradaki adımlar).
  */
 
+import { hasBannedWord } from '@shared/names'
 import type { PieceType } from '../engine/types'
 import { type Lang, translate } from './i18n'
 import { PIECE_NAME_KEY } from './pieces'
@@ -117,6 +118,8 @@ const RESERVED = ['chessrun', 'smartkraft', 'admin', 'sistem', 'system']
  *   görünmez ad ve görsel taklit yolu
  * - ardışık boşluk teke iniyor, kırpılıyor, NAME_MAX'a kesiliyor
  * - rezerve adlar reddediliyor
+ * - yasaklı kökler (shared/names: normalize + l33t) reddediliyor — sunucu
+ *   aynı listeyi bir kez daha çalıştırıyor, panelden büyütülmüş hâliyle
  *
  * Boş ya da geçersiz sonuç `null`: çağıran ya eski adı korur ya rastgele üretir.
  */
@@ -133,6 +136,7 @@ export function cleanName(raw: string): string | null {
   if (!cleaned) return null
   const flat = cleaned.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
   if (RESERVED.some((word) => flat === word || flat.startsWith(word))) return null
+  if (hasBannedWord(cleaned)) return null
   return cleaned
 }
 

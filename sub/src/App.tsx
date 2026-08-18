@@ -5,6 +5,7 @@ import { api } from './api'
 import { PERIOD_LABEL, fmtRange } from './format'
 import { type Route, isFuture, parseHash, shift, toHash, todayUtc } from './period'
 import { Dashboard } from './pages/Dashboard'
+import { Names } from './pages/Names'
 import { Stats } from './pages/Stats'
 import { useQuery } from './useQuery'
 import './theme.css'
@@ -12,7 +13,7 @@ import './theme.css'
 /**
  * Kabuk: başlık, sayfa sekmeleri, dönem seçici, gezinme.
  *
- * Router kütüphanesi yok — iki sayfa için `location.hash`; oyunun
+ * Router kütüphanesi yok — üç sayfa için `location.hash`; oyunun
  * `App.tsx`'i de sayfaları aynı şekilde `useState` ile tutuyor. Hash'te
  * dönem ve tarih de var: sekme yenilenince görünüm kaybolmuyor, geri tuşu
  * çalışıyor, bir görünüm başkasına gönderilebiliyor.
@@ -20,6 +21,7 @@ import './theme.css'
 const NAV: Array<{ id: Route['page']; label: string }> = [
   { id: 'dashboard', label: 'Özet' },
   { id: 'stats', label: 'İstatistik' },
+  { id: 'names', label: 'Adlar' },
 ]
 const PERIODS: Period[] = ['day', 'week', 'month', 'year']
 
@@ -62,6 +64,7 @@ export default function App() {
         </div>
       </header>
 
+      {route.page !== 'names' && (
       <div className="controls">
         <div className="seg" role="tablist" aria-label="Dönem">
           {PERIODS.map((p) => (
@@ -85,9 +88,16 @@ export default function App() {
           </button>
         </div>
       </div>
+      )}
 
       <main>
-        {route.page === 'dashboard' ? <Dashboard period={route.period} at={route.at} /> : <Stats period={route.period} at={route.at} />}
+        {route.page === 'dashboard' ? (
+          <Dashboard period={route.period} at={route.at} />
+        ) : route.page === 'stats' ? (
+          <Stats period={route.period} at={route.at} />
+        ) : (
+          <Names />
+        )}
       </main>
 
       <footer className="foot-bar muted">

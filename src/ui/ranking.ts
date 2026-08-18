@@ -1,7 +1,8 @@
+import type { WeeklyEntry } from '@shared/leaderboard'
 import type { GameMode } from '../engine/types'
-import { type BadgeId, badgeOf, readBadges, readSelectedBadge } from './badges'
-import { getIdentity } from './identity'
-import { leaderboardEnabled } from './leaderboard'
+import { type BadgeId, badgeOf, isBadgeId, readBadges, readSelectedBadge } from './badges'
+import { getIdentity, shortToken } from './identity'
+import { fetchWeekly, leaderboardEnabled } from './leaderboard'
 import { type RunRecord, bestOf, isoWeekKey, readRuns, runsOfMode, runsOfWeek } from './scores'
 
 /**
@@ -43,7 +44,7 @@ export interface RankingView {
   score: number
   /** Sunucu yoksa null */
   players: number | null
-  /** Sunucu bağlı değil — arayüz "SUNUCU BEKLEMEDE" yazıyor */
+  /** Bu görünüm yerel (sunucu cevabı değil): sıra ve oyuncu sayısı bilinmiyor */
   pending: boolean
   rows: RankRow[]
   /**
@@ -68,14 +69,13 @@ export function readRanking(mode?: GameMode, now: Date = new Date()): RankingVie
   const best = bestOf(runs)
   const identity = getIdentity()
 
-  const pending = !leaderboardEnabled
-  // Seçili rozet adın önünde — sunucu gelince diğer oyuncularınki de gelecek
+  // Seçili rozet adın önünde — sunucu görünümünde diğer oyuncularınki de var
   const myBadge = selectedBadgeGlyph()
 
-  // Sunucu yokken listedeki herkes zaten sensin: her satırı "sen" diye
-  // işaretlemek tabloyu baştan sona altın yapıyor ve hiçbir şey söylemiyor.
-  // O yüzden vurgu kapalı ve satırlar tarihle etiketleniyor — bu hâliyle
-  // liste "kendi en iyi koşuların" oluyor.
+  // Yerel listede herkes zaten sensin: her satırı "sen" diye işaretlemek
+  // tabloyu baştan sona altın yapıyor ve hiçbir şey söylemiyor. O yüzden
+  // vurgu kapalı ve satırlar tarihle etiketleniyor — bu hâliyle liste
+  // "kendi en iyi koşuların" oluyor. Sunucu görünümü `fetchRanking`'te.
   const rows: RankRow[] = runs
     .slice()
     .sort((a, b) => b.score - a.score || b.distance - a.distance)
@@ -85,7 +85,7 @@ export function readRanking(mode?: GameMode, now: Date = new Date()): RankingVie
       name: identity.name,
       score: run.score,
       distance: run.distance,
-      me: !pending,
+      me: false,
       at: run.at,
       badge: myBadge?.id,
       badgeTier: myBadge?.tier,
@@ -95,8 +95,56 @@ export function readRanking(mode?: GameMode, now: Date = new Date()): RankingVie
     rank: null,
     score: best?.score ?? 0,
     players: null,
-    pending,
+    pending: true,
     rows,
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Sunucu görünümü
+ * ------------------------------------------------------------------ */
+
+function entryToRow(entry: WeeklyEntry, me: boolean): RankRow {
+  return {
+    place: entry.place,
+    name: entry.name,
+    score: entry.score,
+    distance: entry.distance,
+    me,
+    at: `${entry.token}-${entry.place}`,
+    badge: entry.badge && isBadgeId(entry.badge) ? entry.badge : undefined,
+    badgeTier: entry.badgeTier,
+  }
+}
+
+/**
+ * Sunucudan haftanın tablosu. Yerel görünüm (`readRanking`) anında çiziliyor,
+ * bu cevap gelince yerini alıyor. Sunucu yoksa ya da ulaşılamazsa `null` —
+ * çağıran yerel görünümde kalıyor ve "sunucu bağlanana kadar" notu duruyor.
+ *
+ * "Sen" satırı kısa jetonla eşleşiyor: ad tekil değil, jeton tekil.
+ */
+export async function fetchRanking(mode: GameMode, now: Date = new Date()): Promise<RankingView | null> {
+  if (!leaderboardEnabled) return null
+  const week = isoWeekKey(now)
+  const data = await fetchWeekly(mode, week)
+  if (!data) return null
+
+  const mine = shortToken(getIdentity().token)
+  const rows = data.entries.map((entry) => entryToRow(entry, entry.token === mine))
+  const local = readRanking(mode, now)
+
+  return {
+    rank: data.me?.place ?? null,
+    // Sunucu bu hafta için bir skor biliyorsa o; bilmiyorsa (henüz
+    // gönderilmedi / ağ yoktu) yerel en iyi — sıfır göstermek yalan olur.
+    score: data.me?.score ?? local.score,
+    players: data.players,
+    pending: false,
+    rows,
+    lastWeek: data.lastWeek
+      ? { week: data.lastWeek.week, rows: data.lastWeek.entries.map((entry) => entryToRow(entry, entry.token === mine)) }
+      : undefined,
   }
 }
 

@@ -63,6 +63,7 @@ export default defineConfig({
        Bu yüzden yerelde de aynı origin: VITE_STATS_URL=/collect */
     proxy: {
       '/collect': { target: 'http://127.0.0.1:8787', changeOrigin: false },
+      '/lb': { target: 'http://127.0.0.1:8787', changeOrigin: false },
     },
   },
   resolve: {

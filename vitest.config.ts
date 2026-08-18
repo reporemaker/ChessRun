@@ -1,3 +1,4 @@
+import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vitest/config'
 
 /**
@@ -10,6 +11,11 @@ import { defineConfig } from 'vitest/config'
  * Her paket kendi test koşusunu kendi taşıyor.
  */
 export default defineConfig({
+  // vite.config.ts'teki takma adın test karşılığı: `@shared/*` bugüne kadar
+  // yalnızca tip taşıyordu, `shared/names` ile ilk kez çalışma zamanına girdi.
+  resolve: {
+    alias: { '@shared': fileURLToPath(new URL('./shared', import.meta.url)) },
+  },
   test: {
     include: ['src/**/*.test.ts', 'shared/**/*.test.ts'],
   },

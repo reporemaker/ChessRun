@@ -38,7 +38,7 @@ export function isFuture(at: string, now = new Date()): boolean {
 
 /** URL hash ↔ durum: #/stats?period=week&at=2026-08-17 — derin bağlantı, tarayıcı geri tuşu */
 export interface Route {
-  page: 'dashboard' | 'stats'
+  page: 'dashboard' | 'stats' | 'names'
   period: Period
   at: string
 }
@@ -51,7 +51,7 @@ export function parseHash(hash: string, now = new Date()): Route {
   const period = params.get('period') as Period | null
   const at = params.get('at')
   return {
-    page: path === 'stats' ? 'stats' : 'dashboard',
+    page: path === 'stats' ? 'stats' : path === 'names' ? 'names' : 'dashboard',
     period: period && PERIODS.includes(period) ? period : 'week',
     at: at && /^\d{4}-\d{2}-\d{2}$/.test(at) ? at : todayUtc(now),
   }

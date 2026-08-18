@@ -112,6 +112,38 @@ main { display: grid; gap: var(--gap); }
 .defs dt { color: var(--gold); font-family: var(--mono); font-size: 12px; }
 .defs dd { margin: 0; color: var(--text-dim); }
 
+/* ---- adlar (moderasyon) ---- */
+.names-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.names-search { padding: 6px 10px; min-width: 220px; font: inherit; font-size: 13px; color: var(--text); background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; }
+.names-search::placeholder { color: var(--text-dim); }
+.names-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.names-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.names-table td { padding: 7px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.names-table tr:last-child td { border-bottom: 0; }
+.names-table .num { text-align: right; }
+.names-table .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.names-table .name { font-weight: 550; }
+.names-table .rejected { font-weight: 400; font-size: 12px; }
+.names-table tr.st-shadow .name { color: var(--text-dim); }
+.names-table tr.st-banned .name { color: var(--text-dim); text-decoration: line-through; }
+.names-table .acts { text-align: right; white-space: nowrap; }
+.names-table .acts button { padding: 4px 9px; margin-left: 4px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-dim); }
+.names-table .acts button:hover:not(:disabled) { color: var(--text); border-color: var(--text-dim); }
+.names-table .acts button.danger:hover:not(:disabled) { color: var(--danger); border-color: var(--danger); }
+.names-table .acts button.undo { color: var(--accent); }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; background: var(--surface-2); color: var(--text-dim); }
+.pill.ok { color: var(--accent); }
+.pill.shadow { color: var(--amber); }
+.pill.banned { color: var(--danger); }
+.words-box { width: 100%; padding: 8px 10px; font-family: var(--mono); font-size: 13px; line-height: 1.5; color: var(--text); background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; resize: vertical; }
+button.primary { padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--bg); background: var(--gold); }
+.bad-text { color: var(--danger); font-size: 12px; }
+.card + .card { margin-top: var(--gap); }
+@media (max-width: 720px) {
+  .names-table th:nth-child(3), .names-table td:nth-child(3),
+  .names-table th:nth-child(5), .names-table td:nth-child(5) { display: none; }
+}
+
 /* ---- duyarlı ---- */
 @media (max-width: 1000px) {
   .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }

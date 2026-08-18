@@ -452,6 +452,11 @@ export function badgeOf(id: BadgeId): Badge {
   return BADGES.find((badge) => badge.id === id) ?? BADGES[0]
 }
 
+/** Sunucudan gelen serbest metin bir rozet kimliği mi — bilinmeyen glif çizilmesin */
+export function isBadgeId(value: string): value is BadgeId {
+  return BADGES.some((badge) => badge.id === value)
+}
+
 /** Değere göre ulaşılan en yüksek kademe indeksi (-1 = hiç) */
 export function tierIndex(badge: Badge, value: number | null): number {
   if (value == null) return -1

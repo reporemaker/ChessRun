@@ -1,3 +1,6 @@
+import type { PulseResponse, SubmitBody, WeeklyResponse } from '@shared/leaderboard'
+import type { GameMode } from '../engine/types'
+import { badgeOf, readBadges, readSelectedBadge } from './badges'
 import { getIdentity } from './identity'
 import type { RunRecord } from './scores'
 
@@ -9,28 +12,24 @@ import type { RunRecord } from './scores'
  * kayıtlar imzasıyla birlikte gönderilmeye ve global tablo çekilmeye
  * başlıyor — arayüzde başka hiçbir şey değişmiyor.
  *
- * Sunucu sözleşmesi:
- *   POST {url}/runs      gövde: SubmitBody           → 204
- *   GET  {url}/weekly?week=2026-W33                  → { entries: WeeklyEntry[] }
- *   GET  {url}/pulse?day=2026-08-18                  → { players: number }
+ * Sözleşme `shared/leaderboard.ts`'te; Worker aynı tipleri kullanıyor.
+ * Kimlik jetonu yalnızca gövdede (POST) ve `x-chessrun-token` başlığında
+ * (GET, kendi sıran için) gidiyor — hiçbir zaman URL'de: sorgu dizgileri
+ * loglara düşer, başlıklar düşmez.
  */
 const ENDPOINT = import.meta.env.VITE_LEADERBOARD_URL as string | undefined
 
 export const leaderboardEnabled = Boolean(ENDPOINT)
 
-export interface WeeklyEntry {
-  name: string
-  /** Jetonun kısa hâli — sunucu tam jetonu asla geri yaymamalı */
-  token: string
-  score: number
-  distance: number
-}
+export type { WeeklyEntry, WeeklyResponse } from '@shared/leaderboard'
 
-interface SubmitBody extends RunRecord {
-  token: string
-  name: string
-  /** İmza algoritması — sunucu doğrulama yolunu buradan seçer */
-  alg: 'HMAC-SHA256'
+/** Oyuncunun o an seçili rozeti — sunucu tabloda adın önünde gösterecek */
+function selectedBadge(): Pick<SubmitBody, 'badge' | 'badgeTier'> {
+  const id = readSelectedBadge()
+  if (!id) return {}
+  const badge = badgeOf(id)
+  const idx = readBadges()[id]?.tier ?? 0
+  return { badge: id, badgeTier: badge.tiers[Math.min(idx, badge.tiers.length - 1)] }
 }
 
 export async function submitRun(run: RunRecord): Promise<boolean> {
@@ -38,10 +37,19 @@ export async function submitRun(run: RunRecord): Promise<boolean> {
 
   const identity = getIdentity()
   const body: SubmitBody = {
-    ...run,
     token: identity.token,
     name: identity.name,
     alg: 'HMAC-SHA256',
+    mode: run.mode,
+    score: run.score,
+    distance: run.distance,
+    cols: run.cols,
+    level: run.level,
+    at: run.at,
+    week: run.week,
+    daily: run.daily,
+    sig: run.sig,
+    ...selectedBadge(),
   }
 
   try {
@@ -49,6 +57,7 @@ export async function submitRun(run: RunRecord): Promise<boolean> {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(body),
+      keepalive: true,
     })
     return response.ok
   } catch {
@@ -57,14 +66,21 @@ export async function submitRun(run: RunRecord): Promise<boolean> {
   }
 }
 
-export async function fetchWeekly(week: string): Promise<WeeklyEntry[] | null> {
+/**
+ * Haftanın tablosu. Jeton başlıkta gidiyor ki sunucu listede olmasan da
+ * kendi sıranı hesaplasın. Sunucu ulaşılamazsa `null` — arayüz yerel
+ * görünüme düşüyor.
+ */
+export async function fetchWeekly(mode: GameMode, week: string): Promise<WeeklyResponse | null> {
   if (!ENDPOINT) return null
 
   try {
-    const response = await fetch(`${ENDPOINT}/weekly?week=${encodeURIComponent(week)}`)
+    const params = new URLSearchParams({ mode, week })
+    const response = await fetch(`${ENDPOINT}/weekly?${params}`, {
+      headers: { 'x-chessrun-token': getIdentity().token },
+    })
     if (!response.ok) return null
-    const data = (await response.json()) as { entries?: WeeklyEntry[] }
-    return data.entries ?? null
+    return (await response.json()) as WeeklyResponse
   } catch {
     return null
   }
@@ -73,7 +89,7 @@ export async function fetchWeekly(week: string): Promise<WeeklyEntry[] | null> {
 /**
  * Bugünün nabzı: günlük tahtayı kaç kişi oynadı. Ana sayfanın alt satırı
  * bunu bazen ipucu yerine gösteriyor — günlük yarışmayı bir cümleden çok
- * daha iyi anlatıyor. Sunucu (Faz 9) yokken null.
+ * daha iyi anlatıyor. Sunucu yokken null.
  */
 export async function fetchPulse(day: string): Promise<number | null> {
   if (!ENDPOINT) return null
@@ -81,7 +97,7 @@ export async function fetchPulse(day: string): Promise<number | null> {
   try {
     const response = await fetch(`${ENDPOINT}/pulse?day=${encodeURIComponent(day)}`)
     if (!response.ok) return null
-    const data = (await response.json()) as { players?: number }
+    const data = (await response.json()) as PulseResponse
     return typeof data.players === 'number' ? data.players : null
   } catch {
     return null
