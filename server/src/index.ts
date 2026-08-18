@@ -1,6 +1,6 @@
 import { dayKeyUtc, type Device } from '../../shared/events'
 import { verifyAccess } from './access'
-import { bannedWords, cleanSubmit, pulse, submitRun, weekly } from './lb'
+import { awards, bannedWords, cleanSubmit, pulse, submitRun, weekly } from './lb'
 import { actOnName, getWords, listNames, setWords } from './moderation'
 import { breakdown, pruneRaw, rollupDay, series, summary } from './api'
 import { addDays } from './period'
@@ -255,6 +255,7 @@ export default {
         if (request.method !== 'GET') return new Response('method', { status: 405 })
         if (path === '/lb/weekly') return await weekly(env.DB, url, request.headers.get('x-chessrun-token'), now)
         if (path === '/lb/pulse') return await pulse(env.DB, url, now)
+        if (path === '/lb/awards') return await awards(env.DB, request.headers.get('x-chessrun-token'), now)
       } catch {
         if (path === '/lb/runs') return noContent()
         return new Response('unavailable', { status: 503 })

@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { COL_CHOICES } from '../engine/config'
 import { feedbackHref } from '../ui/feedback'
 import { getIdentity, shortToken } from '../ui/identity'
 import { LANGS, hasFullProse } from '../ui/i18n'
 import { GLYPH } from '../ui/pieces'
-import { readRanking } from '../ui/ranking'
+import { useRanking } from '../ui/useRanking'
 import { setCols, setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
 import { useT } from '../ui/text'
 import { APP_VERSION } from '../ui/version'
@@ -60,7 +60,8 @@ export function Settings({
   const t = useT()
   const closeRef = useRef<HTMLButtonElement>(null)
 
-  const ranking = useMemo(() => readRanking(), [])
+  // Sıralama özeti — bu haftanın ligi, sunucu görünümü gelince yerini alıyor
+  const { view: ranking, status: rankStatus } = useRanking()
 
   const [identity, setIdentity] = useState(() => getIdentity())
 
@@ -270,7 +271,8 @@ export function Settings({
 
           <div className="pop-trioft">
             <span>{t('settings.openFull')}</span>
-            {ranking.pending && <span className="pend">{t('settings.serverPending')}</span>}
+            {rankStatus === 'local' && <span className="pend">{t('settings.serverPending')}</span>}
+            {rankStatus === 'offline' && <span className="pend">{t('rank.offline')}</span>}
           </div>
 
           {/* ayraç */}

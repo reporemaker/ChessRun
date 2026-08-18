@@ -100,6 +100,16 @@ export function readRanking(mode?: GameMode, now: Date = new Date()): RankingVie
   }
 }
 
+/**
+ * Mod verilmeden sorulduğunda (ayarlar, ana sayfa) hangi ligin sırası?
+ * Bu hafta en iyi koşunun modu — oyuncunun bu hafta "yarıştığı" lig.
+ * Hiç koşu yoksa Av.
+ */
+export function weekMode(now: Date = new Date()): GameMode {
+  const best = bestOf(runsOfWeek(readRuns(), isoWeekKey(now)))
+  return best?.mode ?? 'classic'
+}
+
 /* ------------------------------------------------------------------ *
  * Sunucu görünümü
  * ------------------------------------------------------------------ */

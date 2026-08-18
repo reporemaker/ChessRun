@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { GameMode } from '../engine/types'
 import { MODES } from '../ui/modes'
-import { leaderboardEnabled } from '../ui/leaderboard'
-import { type RankingView, demoRanking, fetchRanking, readRanking } from '../ui/ranking'
+import { type RankingView, demoRanking } from '../ui/ranking'
+import { useRanking } from '../ui/useRanking'
 import { formatRemaining, isoWeekKey, weekEnd } from '../ui/scores'
 import { useSettings } from '../ui/settings'
 import { useT } from '../ui/text'
@@ -34,29 +34,9 @@ export function RankingPopup({ onClose, mode: initialMode, demo = false }: Props
   const closeRef = useRef<HTMLButtonElement>(null)
   const [mode, setMode] = useState<GameMode>(initialMode ?? 'classic')
 
-  const local: RankingView = useMemo(() => (demo ? demoRanking(mode) : readRanking(mode)), [demo, mode])
-  const [remote, setRemote] = useState<RankingView | null>(null)
-  const [offline, setOffline] = useState(false)
-
-  /* Sunucu görünümü: yerel liste anında çiziliyor, cevap gelince yerini
-     alıyor. Mod değişince eski cevap kalmasın diye sıfırlanıyor; geç gelen
-     cevap `alive` bayrağıyla düşüyor. Sunucu yoksa hiç istek yok. */
-  useEffect(() => {
-    setRemote(null)
-    setOffline(false)
-    if (demo || !leaderboardEnabled) return
-    let alive = true
-    void fetchRanking(mode).then((v) => {
-      if (!alive) return
-      if (v) setRemote(v)
-      else setOffline(true)
-    })
-    return () => {
-      alive = false
-    }
-  }, [demo, mode])
-
-  const view = remote ?? local
+  const live = useRanking(mode)
+  const view: RankingView = useMemo(() => (demo ? demoRanking(mode) : live.view), [demo, mode, live.view])
+  const status = live.status
 
   useEffect(() => {
     closeRef.current?.focus()
@@ -207,13 +187,13 @@ export function RankingPopup({ onClose, mode: initialMode, demo = false }: Props
             <span className="rank-ends">{t('rank.endsIn', { t: endsIn })}</span>
             {demo ? (
               <span className="rank-note demo">{t('rank.demo')}</span>
-            ) : !view.pending ? null : !leaderboardEnabled ? (
+            ) : status === 'local' ? (
               <span className="rank-note">{t('rank.local')}</span>
-            ) : offline ? (
+            ) : status === 'offline' ? (
               <span className="rank-note">{t('rank.offline')}</span>
-            ) : (
+            ) : status === 'loading' ? (
               <span className="rank-note">{t('rank.loading')}</span>
-            )}
+            ) : null}
           </div>
         </div>
       </div>

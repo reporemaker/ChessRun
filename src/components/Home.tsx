@@ -10,6 +10,7 @@ import {
   readRuns,
 } from '../ui/scores'
 import { fetchPulse } from '../ui/leaderboard'
+import { useRanking } from '../ui/useRanking'
 import { lifetimeStreak } from '../ui/lifetime'
 import { useSettings } from '../ui/settings'
 import { useT } from '../ui/text'
@@ -82,6 +83,8 @@ export function Home({ onStart, onOpenSettings }: HomeProps) {
   }, [])
 
   const [pulse, setPulse] = useState<number | null>(null)
+  // Bu haftanın ligindeki sıran — sunucu varsa; yoksa "SUNUCU BEKLEMEDE"
+  const { view: ranking, status: rankStatus } = useRanking()
   useEffect(() => {
     let alive = true
     void fetchPulse(day).then((n) => alive && setPulse(n))
@@ -136,7 +139,14 @@ export function Home({ onStart, onOpenSettings }: HomeProps) {
             )}
           </span>
           <span className="bi-rank">
-            {t('home.rank')} <em>{t('home.rankPending')}</em>
+            {t('home.rank')}{' '}
+            <em>
+              {rankStatus === 'local'
+                ? t('home.rankPending')
+                : ranking.rank != null
+                  ? `#${ranking.rank}`
+                  : '—'}
+            </em>
           </span>
           <button type="button" className="bi-gear" onClick={onOpenSettings}>
             ⚙ {t('home.settings')}

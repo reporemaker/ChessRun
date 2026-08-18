@@ -1,4 +1,4 @@
-import type { PulseResponse, SubmitBody, WeeklyResponse } from '@shared/leaderboard'
+import type { AwardsResponse, PulseResponse, SubmitBody, WeeklyResponse } from '@shared/leaderboard'
 import type { GameMode } from '../engine/types'
 import { badgeOf, readBadges, readSelectedBadge } from './badges'
 import { getIdentity } from './identity'
@@ -99,6 +99,26 @@ export async function fetchPulse(day: string): Promise<number | null> {
     if (!response.ok) return null
     const data = (await response.json()) as PulseResponse
     return typeof data.players === 'number' ? data.players : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Bitmiş haftalardaki birinciliklerin — lig rozetleri bundan türetiliyor
+ * (bkz. badges.ts `leagueAwards`). Sunucu yok/ulaşılamıyorsa null: rozet
+ * verilmez ama alınmış rozet de geri alınmaz.
+ */
+export async function fetchAwards(): Promise<AwardsResponse['firsts'] | null> {
+  if (!ENDPOINT) return null
+
+  try {
+    const response = await fetch(`${ENDPOINT}/awards`, {
+      headers: { 'x-chessrun-token': getIdentity().token },
+    })
+    if (!response.ok) return null
+    const data = (await response.json()) as AwardsResponse
+    return Array.isArray(data.firsts) ? data.firsts : null
   } catch {
     return null
   }

@@ -37,7 +37,7 @@ import {
   recordRun,
   topRuns,
 } from '../ui/scores'
-import { readRanking } from '../ui/ranking'
+import { useRanking } from '../ui/useRanking'
 import { setCols, setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
 import { shareRun, shareText } from '../ui/share'
 import { feedbackHref } from '../ui/feedback'
@@ -143,7 +143,7 @@ export function Game({
   const [pendingCols, setPendingCols] = useState<number | null>(null)
   const [identity, setIdentity] = useState(() => getIdentity())
   // Sıralama özeti — koşu bitince (result değişince) tazeleniyor
-  const ranking = useMemo(() => readRanking(config.mode), [result, config.mode]) // eslint-disable-line react-hooks/exhaustive-deps
+  const { view: ranking, status: rankStatus } = useRanking(config.mode, result)
 
   /* Reklam yalnızca gerçek bir slot tanımlıysa çiziliyor — tanımsızken
      yer tutucu kutu göstermiyoruz. */
@@ -906,7 +906,8 @@ export function Game({
           </span>
           <span className="gv-rank-ft">
             <span>{t('settings.openFull')}</span>
-            {ranking.pending && <i>{t('settings.serverPending')}</i>}
+            {rankStatus === 'local' && <i>{t('settings.serverPending')}</i>}
+            {rankStatus === 'offline' && <i>{t('rank.offline')}</i>}
           </span>
         </button>
 

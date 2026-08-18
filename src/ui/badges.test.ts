@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { GameEvent } from '../engine/types'
-import { emptyTally, tallyEvents, tallyStep } from './badges'
+import { emptyTally, leagueAwards, tallyEvents, tallyStep } from './badges'
 
 /**
  * `tallyEvents` artık canlı yolda: `Game.tsx`'in `commit()` fonksiyonu her
@@ -145,5 +145,46 @@ describe('tallyEvents', () => {
     const after = tallyEvents(before, [{ kind: 'kingBonus', points: 50, lives: 3 }], 'n')
     expect(before.kings).toBe(0)
     expect(after).not.toBe(before)
+  })
+})
+
+describe('leagueAwards', () => {
+  it('birincilik yoksa rozet yok', () => {
+    expect(leagueAwards([])).toEqual([])
+  })
+
+  it('bir birincilik → weekFirst', () => {
+    expect(leagueAwards([{ week: '2026-W33', mode: 'classic' }])).toEqual(['weekFirst'])
+  })
+
+  it('aynı hafta üç lig → weekKing', () => {
+    const w = '2026-W33'
+    expect(
+      leagueAwards([
+        { week: w, mode: 'classic' },
+        { week: w, mode: 'kingRun' },
+        { week: w, mode: 'trio' },
+      ]),
+    ).toEqual(['weekFirst', 'weekKing'])
+  })
+
+  it('aynı ligde 4 ardışık hafta → emperor; araya boşluk girerse değil', () => {
+    const run = ['2026-W31', '2026-W32', '2026-W33', '2026-W34'].map((week) => ({ week, mode: 'trio' as const }))
+    expect(leagueAwards(run)).toContain('emperor')
+    const gap = ['2026-W30', '2026-W31', '2026-W33', '2026-W34'].map((week) => ({ week, mode: 'trio' as const }))
+    expect(leagueAwards(gap)).not.toContain('emperor')
+    // farklı liglerdeki ardışıklık sayılmaz
+    const mixed = [
+      { week: '2026-W31', mode: 'trio' as const },
+      { week: '2026-W32', mode: 'classic' as const },
+      { week: '2026-W33', mode: 'trio' as const },
+      { week: '2026-W34', mode: 'trio' as const },
+    ]
+    expect(leagueAwards(mixed)).not.toContain('emperor')
+  })
+
+  it('yıl sınırında ardışıklık takvimle çözülüyor', () => {
+    const run = ['2026-W51', '2026-W52', '2026-W53', '2027-W01'].map((week) => ({ week, mode: 'classic' as const }))
+    expect(leagueAwards(run)).toContain('emperor')
   })
 })

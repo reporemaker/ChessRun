@@ -6,6 +6,8 @@ import { Page, type PageId } from './components/Pages'
 import { RankingPopup } from './components/RankingPopup'
 import { BadgesPopup } from './components/BadgesPopup'
 import { Settings } from './components/Settings'
+import { claimLeague } from './ui/badges'
+import { fetchAwards } from './ui/leaderboard'
 import { useSettings } from './ui/settings'
 import { unlockSound } from './ui/sound'
 import { trackSessionEnd, trackVisit } from './ui/stats'
@@ -62,6 +64,15 @@ export default function App() {
      oynamayan da ziyaretçidir. Oturum sonu için `visibilitychange` +
      `pagehide` çifti kullanılıyor: `beforeunload`/`unload` mobil
      Safari'de güvenilir tetiklenmiyor. Uç tanımsızken hepsi sessiz. */
+  /* Lig rozetleri: bitmiş haftaların birincilikleri sunucudan; kazanılan
+     varsa depoya işlenir ve fişler yeniden okur. Haftada bir değişen veri —
+     açılışta bir kez yeter. */
+  useEffect(() => {
+    void fetchAwards().then((firsts) => {
+      if (firsts && claimLeague(firsts).length > 0) setBadgeVersion((v) => v + 1)
+    })
+  }, [])
+
   useEffect(() => {
     trackVisit()
     const onHide = () => {

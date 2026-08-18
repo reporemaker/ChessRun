@@ -1,7 +1,9 @@
 import { MODES, type Mode, dayKeyUtc, isMode } from '../../shared/events'
 import {
+  AWARD_MIN_PLAYERS,
   BADGE_TIERS,
   LB_LIMITS,
+  type AwardsResponse,
   type BadgeTier,
   type PulseResponse,
   type SubmitBody,
@@ -9,7 +11,10 @@ import {
   type WeeklyResponse,
 } from '../../shared/leaderboard'
 import { hasBannedWord } from '../../shared/names'
+import { isoWeekUtc, previousWeek } from '../../shared/week'
 import { clampInt, str } from './validate'
+
+export { isoWeekUtc, previousWeek, weekStartUtc } from '../../shared/week'
 
 /**
  * Haftalık sıralama — sunucu tarafı.
@@ -33,16 +38,6 @@ const WEEK_RE = /^\d{4}-W\d{2}$/
 const DAY_RE = /^\d{4}-\d{2}-\d{2}$/
 const BADGE_RE = /^[a-zA-Z]{2,24}$/
 
-/** ISO hafta anahtarı, UTC: 2026-W33 */
-export function isoWeekUtc(ms: number): string {
-  const d = new Date(ms)
-  const day = d.getUTCDay() || 7
-  d.setUTCDate(d.getUTCDate() + 4 - day)
-  const yearStart = Date.UTC(d.getUTCFullYear(), 0, 1)
-  const week = Math.ceil(((d.getTime() - yearStart) / 86_400_000 + 1) / 7)
-  return `${d.getUTCFullYear()}-W${String(week).padStart(2, '0')}`
-}
-
 /**
  * Kabul edilen haftalar: dünkü, bugünkü, yarınki UTC haftası. İstemci
  * haftayı yerel takvime göre yazıyor; Pazartesi gece yarısının iki
@@ -52,20 +47,6 @@ export function isoWeekUtc(ms: number): string {
 export function acceptedWeeks(nowMs: number): string[] {
   const day = 86_400_000
   return [...new Set([isoWeekUtc(nowMs - day), isoWeekUtc(nowMs), isoWeekUtc(nowMs + day)])]
-}
-
-/** ISO haftanın Pazartesi 00:00 UTC'si. 4 Ocak her zaman 1. haftadadır. */
-export function weekStartUtc(week: string): number {
-  const year = Number(week.slice(0, 4))
-  const n = Number(week.slice(6))
-  const jan4 = Date.UTC(year, 0, 4)
-  const jan4Day = new Date(jan4).getUTCDay() || 7
-  return jan4 - (jan4Day - 1) * 86_400_000 + (n - 1) * 7 * 86_400_000
-}
-
-/** Önceki ISO hafta — "geçen haftanın ilk üçü" için; yıl sınırını takvim çözüyor */
-export function previousWeek(week: string): string {
-  return isoWeekUtc(weekStartUtc(week) - 86_400_000)
 }
 
 export function shortOf(token: string): string {
@@ -380,4 +361,39 @@ export async function pulse(db: D1Database, url: URL, nowMs: number): Promise<Re
   const row = await db.prepare(`SELECT COUNT(*) AS n FROM lb_daily WHERE daily = ?1`).bind(day).first<{ n: number }>()
   const body: PulseResponse = { day, players: row?.n ?? 0 }
   return Response.json(body, { headers: { 'cache-control': 'public, max-age=60' } })
+}
+
+/**
+ * Bitmiş haftalardaki birincilikler. Hafta anahtarı dizgi olarak
+ * karşılaştırılıyor (`YYYY-Www` takvim sırasıyla aynı). "Birinci" =
+ * aynı hafta×modda kendisinden iyi (skor, mesafe, erkenlik) 'ok' oyuncu
+ * yok VE o hafta×modda en az AWARD_MIN_PLAYERS oyuncu var. Gölgelenmiş ya
+ * da yasaklı oyuncu birincilik alamaz — listede yoksa kürsüde de yok.
+ */
+export async function awards(db: D1Database, token: string | null, nowMs: number): Promise<Response> {
+  const body: AwardsResponse = { firsts: [] }
+  if (!token || token.length < 16 || token.length > 64) return Response.json(body, { status: 400 })
+  const hash = await hashToken(token)
+  const currentWeek = isoWeekUtc(nowMs)
+
+  const rows = await db
+    .prepare(
+      `SELECT w.week, w.mode FROM lb_weekly w
+       JOIN lb_player me ON me.token_hash = w.token_hash AND me.status = 'ok'
+       WHERE w.token_hash = ?1 AND w.week < ?2
+         AND NOT EXISTS (
+           SELECT 1 FROM lb_weekly o JOIN lb_player p ON p.token_hash = o.token_hash
+           WHERE o.week = w.week AND o.mode = w.mode AND o.token_hash != w.token_hash AND p.status = 'ok'
+             AND (o.score > w.score
+                  OR (o.score = w.score AND o.distance > w.distance)
+                  OR (o.score = w.score AND o.distance = w.distance AND o.ts < w.ts)))
+         AND (SELECT COUNT(*) FROM lb_weekly c JOIN lb_player q ON q.token_hash = c.token_hash
+              WHERE c.week = w.week AND c.mode = w.mode AND q.status = 'ok') >= ?3
+       ORDER BY w.week, w.mode`,
+    )
+    .bind(hash, currentWeek, AWARD_MIN_PLAYERS)
+    .all<{ week: string; mode: Mode }>()
+
+  body.firsts = rows.results
+  return Response.json(body, { headers: { 'cache-control': 'private, max-age=300' } })
 }

@@ -1,3 +1,4 @@
+import { nextWeek } from '@shared/week'
 import { COL_CHOICES } from '../engine/config'
 import { colsOf } from '../engine/game'
 import type { GameEvent, GameMode, GameState, PieceType } from '../engine/types'
@@ -535,6 +536,67 @@ export function claimBadges(context: BadgeContext, now = new Date()): BadgeAward
     fresh.push({ id: badge.id, tier: reached })
   }
 
+  if (fresh.length > 0) writeBadges(earned)
+  return fresh
+}
+
+/* ------------------------------------------------------------------ *
+ * Lig rozetleri — sunucunun "birincilik" listesinden türetiliyor
+ * ------------------------------------------------------------------ */
+
+export interface WeekFirst {
+  week: string
+  mode: GameMode
+}
+
+/**
+ * Sunucudan gelen birinciliklerden hangi lig rozetlerinin kazanıldığı.
+ * Saf: depoya dokunmuyor, test edilebilir.
+ *
+ * - weekFirst: en az bir hafta×modda birinci
+ * - weekKing:  aynı hafta üç ligde de birinci
+ * - emperor:   aynı ligde 4 ardışık hafta birinci
+ */
+export function leagueAwards(firsts: WeekFirst[]): BadgeId[] {
+  if (firsts.length === 0) return []
+  const out: BadgeId[] = ['weekFirst']
+
+  const byWeek = new Map<string, Set<GameMode>>()
+  const byMode = new Map<GameMode, Set<string>>()
+  for (const f of firsts) {
+    if (!byWeek.has(f.week)) byWeek.set(f.week, new Set())
+    byWeek.get(f.week)!.add(f.mode)
+    if (!byMode.has(f.mode)) byMode.set(f.mode, new Set())
+    byMode.get(f.mode)!.add(f.week)
+  }
+
+  if ([...byWeek.values()].some((modes) => modes.size >= 3)) out.push('weekKing')
+
+  const emperor = [...byMode.values()].some((weeks) =>
+    [...weeks].some((week) => {
+      let run = 1
+      let cursor = week
+      while (run < 4 && weeks.has((cursor = nextWeek(cursor)))) run++
+      return run >= 4
+    }),
+  )
+  if (emperor) out.push('emperor')
+  return out
+}
+
+/**
+ * Sunucudan gelen birincilikleri depoya işler; yeni kazanılanları döndürür.
+ * Sunucu rozetleri tek kademeli — kazanıldıysa kademe 0. Alınmış rozet geri
+ * alınmıyor: sunucu bir hafta ulaşılamasa da oyuncu kürsüsünü kaybetmez.
+ */
+export function claimLeague(firsts: WeekFirst[], now = new Date()): BadgeAward[] {
+  const earned = readBadges()
+  const fresh: BadgeAward[] = []
+  for (const id of leagueAwards(firsts)) {
+    if (earned[id]) continue
+    earned[id] = { tier: 0, at: now.toISOString() }
+    fresh.push({ id, tier: 0 })
+  }
   if (fresh.length > 0) writeBadges(earned)
   return fresh
 }

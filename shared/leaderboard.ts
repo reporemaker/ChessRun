@@ -82,6 +82,21 @@ export interface PulseResponse {
   players: number
 }
 
+/**
+ * GET /lb/awards  başlık: x-chessrun-token  → AwardsResponse
+ *
+ * Bitmiş haftalarda (bu hafta hariç) oyuncunun birinci bitirdiği
+ * hafta×mod çiftleri. Lig rozetleri (weekFirst · weekKing · emperor)
+ * istemcide bundan türetiliyor; sunucu rozet bilmiyor, yalnızca sonucu
+ * biliyor. Yalnız başına oynanan hafta birincilik sayılmıyor
+ * (`AWARD_MIN_PLAYERS`).
+ */
+export const AWARD_MIN_PLAYERS = 2
+
+export interface AwardsResponse {
+  firsts: Array<{ week: string; mode: Mode }>
+}
+
 /* ------------------------------------------------------------------ *
  * Panel — /api/names, /api/words (Access arkasında)
  * ------------------------------------------------------------------ */

@@ -11,6 +11,7 @@ import {
   selectBadge,
 } from '../ui/badges'
 import { readLifetime } from '../ui/lifetime'
+import { leaderboardEnabled } from '../ui/leaderboard'
 import { useT } from '../ui/text'
 import { BadgeGlyph } from './BadgeGlyph'
 
@@ -34,7 +35,8 @@ const SECTIONS: Array<{ id: BadgeSection; key: 'badges.pieces' | 'badges.skill' 
  * (kademe rengi) · ad · kademe noktaları · ilerleme · seç. Görünürlük
  * politikaları rozetler.md'den: `afterFirst` aileler ilk kademe kazanılana
  * kadar hiç listelenmiyor; `firstOpen` ilk eşiği gösterip üst kademeleri
- * saklıyor; `hidden` "?" — kazanılınca açılıyor. Sunucu rozetleri Faz 9'a
+ * saklıyor; `hidden` "?" — kazanılınca açılıyor. Lig rozetleri sunucudan
+ * (`claimLeague`); sunucu tanımlı değilse "yakında" ve sayım dışı. Eski not:
  * kadar kilitli.
  *
  * Değerler `chessrun:lifetime`'dan (kümülatif toplamlar ve tek-koşu en
@@ -83,7 +85,8 @@ export function BadgesPopup({ onClose, onSelect }: Props) {
   }
 
   const earnedCount = BADGES.filter((b) => earned[b.id]).length
-  const total = BADGES.filter((b) => !b.server).length
+  // Lig rozetleri sunucu varsa sayıma dahil; yokken "yakında" olarak dışarıda
+  const total = BADGES.filter((b) => !b.server || leaderboardEnabled).length
 
   function pick(id: BadgeId) {
     const next = selected === id ? null : id
@@ -130,7 +133,7 @@ export function BadgesPopup({ onClose, onSelect }: Props) {
               <section key={section.id} className="bdg-sec">
                 <h3 className="bdg-h">
                   {t(section.key)}
-                  {section.id === 'league' && <small>{t('badges.server')}</small>}
+                  {section.id === 'league' && !leaderboardEnabled && <small>{t('badges.server')}</small>}
                 </h3>
                 <ol className="bdg-list">
                   {rows.map((badge) => (
@@ -183,7 +186,7 @@ function BadgeRow({
   const showNext = !badge.server && !maxed && !fullyHidden && !nextHidden
 
   return (
-    <li className={`bdg-row${earned ? ' got' : ''}${selected ? ' sel' : ''}${badge.server ? ' srv' : ''}`}>
+    <li className={`bdg-row${earned ? ' got' : ''}${selected ? ' sel' : ''}${badge.server && !leaderboardEnabled ? ' srv' : ''}`}>
       {fullyHidden ? (
         <span className="bdg-glyph" aria-hidden="true">?</span>
       ) : (
