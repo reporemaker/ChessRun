@@ -3559,3 +3559,131 @@ button.gv-chip {
   letter-spacing: 0.12em;
   color: #c3d0e0;
 }
+
+/* ---------------------------------------------------------------- *
+ * Günün Mücadelesi — kesintisiz kayan tahta
+ * ---------------------------------------------------------------- */
+
+/* Dokuz satır (giren + sekiz). --t (0..1) oyun döngüsünden her karede
+   yazılıyor: t=0'da giren satır çerçevenin bir kare üstünde, t=1'de
+   yerinde. transition YOK — hareket zaten süreklidir, geçiş eklemek
+   kareyi geciktirirdi. */
+.board.daily-slide {
+  --t: 0;
+  transform: translate3d(0, calc(var(--cell) * (var(--t) - 1)), 0);
+  will-change: transform;
+}
+
+/* Giren satır dokunulmaz — daha tahtada değil */
+.board-row.incoming .square {
+  pointer-events: none;
+}
+
+/* Vezir (mantar): altın hale — bir vuruş dayanacağını hatırlatır */
+.piece.mushroom {
+  animation: mushroom-glow 1.2s ease-in-out infinite;
+}
+
+@keyframes mushroom-glow {
+  0%, 100% { text-shadow: 0 0 2px #0b0d12, 0 0 6px rgba(251, 191, 36, 0.55); }
+  50% { text-shadow: 0 0 2px #0b0d12, 0 0 16px rgba(251, 191, 36, 0.95); }
+}
+
+/* Alt satır: düşmeye bir kayma kaldı — kırmızı zemin fade'in üstüne biner */
+.board-frame.daily .square.edge {
+  box-shadow: inset 0 0 0 1px rgba(244, 63, 94, 0.28);
+}
+
+.daily-rules {
+  opacity: 0.72;
+  line-height: 1.35;
+}
+
+/* Yenilme sahnesi: vuran taşın hareketi Web Animations API'de (DailyBoard);
+   burada yalnızca vurulan kare. Bir saniye sonra oyun sonu perdesi. */
+.square.hit::after {
+  animation: none;
+  box-shadow:
+    0 0 0 2px rgba(244, 63, 94, 0.95),
+    0 0 22px rgba(244, 63, 94, 0.75);
+  opacity: 1;
+}
+
+.square.hit {
+  animation: hit-flash 320ms steps(2, end) 3;
+}
+
+/* filter DEĞİL (Safari siyah dikdörtgen hatası — bkz. .piece notu): zemin rengi */
+@keyframes hit-flash {
+  0%, 100% { background-color: inherit; }
+  50% { background-color: rgba(244, 63, 94, 0.55); }
+}
+
+/* Dönüşüm titreşimi (Mario mantarı): eski ve yeni figür üst üste, birbirini
+   dışlayan yanıp sönmeyle; sonda yeni figür kalır. Büyümede altın parlama,
+   küçülmede kırmızı. Süre DailyGame MORPH_MS ile aynı. */
+.piece.morph {
+  display: inline-grid;
+  place-items: center;
+}
+
+.piece.morph .morph-pair {
+  display: inline-grid;
+  place-items: center;
+}
+
+.piece.morph .g {
+  grid-area: 1 / 1;
+}
+
+.piece.morph .g.old {
+  animation: morph-old 700ms steps(1, end) forwards;
+}
+
+.piece.morph .g.new {
+  animation: morph-new 700ms steps(1, end) forwards;
+}
+
+@keyframes morph-old {
+  0%, 14%, 28%, 42%, 56%, 70% { opacity: 1; }
+  7%, 21%, 35%, 49%, 63%, 77%, 100% { opacity: 0; }
+}
+
+@keyframes morph-new {
+  0%, 14%, 28%, 42%, 56%, 70% { opacity: 0; }
+  7%, 21%, 35%, 49%, 63%, 77%, 100% { opacity: 1; }
+}
+
+.piece.morph.up {
+  animation: morph-glow-up 700ms ease-out forwards;
+}
+
+.piece.morph.down {
+  animation: morph-glow-down 700ms ease-out forwards;
+}
+
+/* text-shadow, filter değil (Safari) */
+@keyframes morph-glow-up {
+  0% { text-shadow: 0 0 2px #0b0d12, 0 0 0 rgba(251, 191, 36, 0); transform: scale(1); }
+  40% { text-shadow: 0 0 2px #0b0d12, 0 0 22px rgba(251, 191, 36, 1); transform: scale(1.25); }
+  100% { text-shadow: 0 0 2px #0b0d12, 0 0 6px rgba(251, 191, 36, 0.5); transform: scale(1); }
+}
+
+@keyframes morph-glow-down {
+  0% { text-shadow: 0 0 2px #0b0d12, 0 0 18px rgba(244, 63, 94, 1); transform: scale(1.2); }
+  100% { text-shadow: 0 0 2px #0b0d12, 0 0 0 rgba(244, 63, 94, 0); transform: scale(1); }
+}
+
+/* Günlük çarpan rozeti (üst çubuk) ve kapanış satırı */
+.gv-bonus {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.outro-bonus {
+  font-style: normal;
+  color: var(--gold);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

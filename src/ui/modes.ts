@@ -1,10 +1,12 @@
 import { DEFAULT_COLS } from '../engine/config'
-import { hashSeed } from '../engine/random'
 import type { GameMode } from '../engine/types'
 import type { StringKey } from './i18n'
 
 /**
- * Ana sayfadaki dört kartın kaynağı.
+ * Ana sayfadaki üç serbest kartın kaynağı. Dördüncü kart Günün Mücadelesi
+ * (`mode: 'daily'`) — kendi motoru ve ekranı var (engine/daily.ts,
+ * components/DailyGame.tsx), bu listeye girmez: haftalık lig sekmeleri ve
+ * serbest kartlar yalnızca buradan çizilir.
  *
  * `ready` bayrağı motorda karşılığı olmayan modlar için: kart "yakında"
  * rozetiyle çiziliyor ve tıklanamıyor. Üçlü artık motorda var, bayrağı açık.
@@ -57,13 +59,4 @@ export function modeInfo(id: ModeId): ModeInfo {
 
 export function isPlayable(id: ModeId): boolean {
   return modeInfo(id).ready
-}
-
-/**
- * Günün oyunu hangi mod? Tarihten türetiliyor, yani herkeste aynı —
- * "bugünün tahtası" hem aynı tohumu hem aynı modu paylaşıyor.
- */
-export function dailyMode(day: string): GameMode {
-  const playable = MODES.filter((entry) => entry.ready).map((entry) => entry.id as GameMode)
-  return playable[hashSeed(`mode:${day}`) % playable.length]
 }

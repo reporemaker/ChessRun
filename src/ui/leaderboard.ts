@@ -1,4 +1,7 @@
-import type { AwardsResponse, PulseResponse, SubmitBody, WeeklyResponse } from '@shared/leaderboard'
+import type { AwardsResponse, PulseResponse, SubmitBody, WeeklyResponse,
+  DailyResponse,
+  DailyStartBody,
+} from '@shared/leaderboard'
 import type { GameMode } from '../engine/types'
 import { badgeOf, readBadges, readSelectedBadge } from './badges'
 import { getIdentity } from './identity'
@@ -41,13 +44,15 @@ export async function submitRun(run: RunRecord): Promise<boolean> {
     name: identity.name,
     alg: 'HMAC-SHA256',
     mode: run.mode,
-    score: run.score,
+    // HAM puan: günlük çarpanı sunucu kendi kaydından uygular
+    score: run.rawScore ?? run.score,
     distance: run.distance,
     cols: run.cols,
     level: run.level,
     at: run.at,
     week: run.week,
     daily: run.daily,
+    day: run.day,
     sig: run.sig,
     ...selectedBadge(),
   }
@@ -119,6 +124,55 @@ export async function fetchAwards(): Promise<AwardsResponse['firsts'] | null> {
     if (!response.ok) return null
     const data = (await response.json()) as AwardsResponse
     return Array.isArray(data.firsts) ? data.firsts : null
+  } catch {
+    return null
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Günün Mücadelesi — tohum ve tek hak sunucuda
+ * ------------------------------------------------------------------ */
+
+export interface DailyInfo {
+  seed: number
+  played: boolean
+}
+
+/** Bugünün tohumu ve hak durumu. Sunucu yok/ulaşılamıyorsa null. */
+export async function fetchDaily(day: string): Promise<DailyInfo | null> {
+  if (!ENDPOINT) return null
+  try {
+    const response = await fetch(`${ENDPOINT}/daily?day=${encodeURIComponent(day)}`, {
+      headers: { 'x-chessrun-token': getIdentity().token },
+      cache: 'no-store',
+    })
+    if (!response.ok) return null
+    const data = (await response.json()) as DailyResponse
+    if (typeof data.seed !== 'number') return null
+    return { seed: data.seed >>> 0, played: Boolean(data.played) }
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Hakkı yakar ve tohumu getirir. `played: true` dönerse hak ZATEN yanmıştı
+ * (çağrı öncesi durum) — oyun başlamamalı. Sunucu yok/ulaşılamıyorsa null.
+ */
+export async function startDaily(day: string): Promise<DailyInfo | null> {
+  if (!ENDPOINT) return null
+  try {
+    const body: DailyStartBody = { token: getIdentity().token, day }
+    const response = await fetch(`${ENDPOINT}/daily/start`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+      cache: 'no-store',
+    })
+    if (!response.ok) return null
+    const data = (await response.json()) as DailyResponse
+    if (typeof data.seed !== 'number') return null
+    return { seed: data.seed >>> 0, played: Boolean(data.played) }
   } catch {
     return null
   }

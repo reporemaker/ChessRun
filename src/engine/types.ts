@@ -39,7 +39,7 @@ export type GameStatus = 'playing' | 'gameover'
  *              oynarsın, oynamadıkların bir satır düşer. Tek taş değil
  *              kadro yönetiyorsun; bir taşı kaybetmek koşuyu bitirmez.
  */
-export type GameMode = 'classic' | 'kingRun' | 'trio'
+export type GameMode = 'classic' | 'kingRun' | 'trio' | 'daily'
 
 export type GameEvent =
   | { kind: 'capture'; piece: PieceType; points: number }

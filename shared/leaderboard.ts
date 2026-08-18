@@ -32,11 +32,33 @@ export const LB_LIMITS = {
   renamesPerDay: 3,
 } as const
 
+/* ------------------------------------------------------------------ *
+ * Günlük çarpan — günün mücadelesi puanı o günkü diğer koşuları büyütür
+ *
+ * çarpan = 1 + min(günlükPuan, DAILY_BONUS_CAP) / DAILY_BONUS_DIV
+ * (150 → ×1,15 · 500+ → ×1,5). Yalnızca mücadeleden SONRA oynanan
+ * koşulara (aynı yerel takvim günü). Sunucu kendi kaydından uygular
+ * (istemcinin çarptığı skora güvenmez), istemci aynı formülle gösterir.
+ * ------------------------------------------------------------------ */
+export const DAILY_BONUS_CAP = 500
+export const DAILY_BONUS_DIV = 1000
+
+export function dailyBonus(dailyScore: number | null | undefined): number {
+  if (dailyScore == null || !(dailyScore > 0)) return 1
+  return 1 + Math.min(dailyScore, DAILY_BONUS_CAP) / DAILY_BONUS_DIV
+}
+
+/** Çarpan uygulanmış puan (aşağı yuvarlanır) */
+export function applyDailyBonus(score: number, dailyScore: number | null | undefined): number {
+  return Math.floor(score * dailyBonus(dailyScore))
+}
+
 export interface SubmitBody {
   token: string
   name: string
   alg: 'HMAC-SHA256'
   mode: Mode
+  /** HAM puan (çarpansız); sunucu günlük çarpanı kendisi uygular */
   score: number
   distance: number
   cols: number
@@ -47,6 +69,8 @@ export interface SubmitBody {
   week: string
   /** Günlük meydan okumaysa günün anahtarı */
   daily?: string
+  /** Koşunun yerel takvim günü — günlük çarpanın hangi güne bakacağı (daily ile aynı biçim) */
+  day?: string
   /** İstemcinin kendi anahtarıyla attığı imza — sunucu saklıyor, doğrulayamıyor */
   sig?: string
   /** Oyuncunun seçtiği rozet — tabloda adın önünde */
@@ -80,6 +104,33 @@ export interface WeeklyResponse {
 export interface PulseResponse {
   day: string
   players: number
+}
+
+/**
+ * Günün Mücadelesi — tohum ve tek hak, sunucuda.
+ *
+ *   GET  /lb/daily?day=YYYY-MM-DD   başlık: x-chessrun-token (ist.)  → DailyResponse
+ *   POST /lb/daily/start            gövde: DailyStartBody             → DailyResponse
+ *
+ * Tohum sunucu sırrından türer (HMAC(secret, gün)); tarihten hesaplanan
+ * tohum herkesçe önceden bilinir ve yarının tahtası çalışılabilirdi.
+ * Hak KOŞU BAŞLAYINCA yanar: `start` günü + jeton hash'ini `lb_daily`ye
+ * yazar (aynı tablo nabzı da besliyor: "bugün X kişi oynadı"). Cevaptaki
+ * `played` çağrı ÖNCESİ durum — start'ta true dönerse hak zaten yanmıştı,
+ * oyun başlamamalı. Gün istemcinin takvim günü; sunucu UTC güne ±1 gün
+ * tolerans tanır (saat dilimleri), dışı reddedilir.
+ */
+export interface DailyStartBody {
+  token: string
+  day: string
+}
+
+export interface DailyResponse {
+  day: string
+  /** 32 bit tohum */
+  seed: number
+  /** Jeton verildiyse: bu gün için hak yandı mı (start'ta: çağrı öncesi) */
+  played: boolean
 }
 
 /**

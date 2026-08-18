@@ -17,7 +17,7 @@
  * Sabit listeler — hem tip hem doğrulama kaynağı
  * ------------------------------------------------------------------ */
 
-export const MODES = ['classic', 'kingRun', 'trio'] as const
+export const MODES = ['classic', 'kingRun', 'trio', 'daily'] as const
 export type Mode = (typeof MODES)[number]
 
 export const UI_LANGS = ['tr', 'en', 'de', 'es', 'fr'] as const

@@ -65,7 +65,7 @@ export function emptyLifetime(now = new Date()): Lifetime {
   return {
     since: now.toISOString().slice(0, 10),
     runs: 0,
-    runsByMode: { classic: 0, kingRun: 0, trio: 0 },
+    runsByMode: { classic: 0, kingRun: 0, trio: 0, daily: 0 },
     total: {
       captured: { ...ZERO },
       steps: { ...ZERO },

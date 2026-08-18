@@ -32,6 +32,8 @@ const COUNT_STEPS = 26
 interface ArcadeOutroProps {
   run: RunRecord | null
   score: number
+  /** Günlük çarpan uygulandıysa (>1): kapanışta gösterilir */
+  bonus?: number
   distance: number
   mated: boolean
   table: RunRecord[]
@@ -53,6 +55,7 @@ interface ArcadeOutroProps {
 export function ArcadeOutro({
   run,
   score,
+  bonus,
   distance,
   mated,
   table,
@@ -125,6 +128,7 @@ export function ArcadeOutro({
           <p className="outro-score">
             <strong>{shown}</strong>
             <span>{t('game.scoreLine', { n: distance })}</span>
+            {bonus != null && bonus > 1 && <em className="outro-bonus">{t('game.bonus', { x: bonus.toFixed(2) })}</em>}
           </p>
           {isRecord && <p className="outro-record">{t('outro.record')}</p>}
           {!isRecord && isWeekRecord && (

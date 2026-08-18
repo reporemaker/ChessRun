@@ -117,7 +117,7 @@ export function Dashboard({ period, at }: Props) {
           {modes.data && <Bars dim="mode" rows={modes.data.rows} unit="runs" />}
           {s && s.runsDaily > 0 && (
             <p className="foot">
-              {fmtInt(s.runsDaily)} oyun günlük meydan okumada ({MODE_LABEL.classic}/{MODE_LABEL.kingRun}/{MODE_LABEL.trio} karışık)
+              {fmtInt(s.runsDaily)} oyun {MODE_LABEL.daily}'nde
             </p>
           )}
         </div>

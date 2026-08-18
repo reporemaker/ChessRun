@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { minColsOf } from './engine/config'
 import { Game, type GameConfig, type GameHandle } from './components/Game'
+import { DailyGame } from './components/DailyGame'
 import { Home } from './components/Home'
 import { Page, type PageId } from './components/Pages'
 import { RankingPopup } from './components/RankingPopup'
@@ -11,7 +12,18 @@ import { fetchAwards } from './ui/leaderboard'
 import { useSettings } from './ui/settings'
 import { unlockSound } from './ui/sound'
 import { trackSessionEnd, trackVisit } from './ui/stats'
+import { dailySeed, dayKey } from './ui/scores'
 import './App.css'
+
+/** ?dev=game&mode=… kısayolu; günlük için bugünün tohumu ve günü de dolar */
+function devConfig(mode: string, seedParam: string | null): GameConfig {
+  const day = dayKey()
+  // &seed=N ile belirli bir tahta (yalnızca DEV; günlük kilit DEV'de zaten yok)
+  const seed = seedParam != null && seedParam !== '' ? Number(seedParam) >>> 0 : dailySeed(day)
+  return mode === 'daily'
+    ? { mode: 'daily', playerColor: 'w', cols: 8, seed, daily: day }
+    : { mode: mode as GameConfig['mode'], playerColor: 'w', cols: 8 }
+}
 
 /**
  * Menü, oyun ve iki katman: ayarlar penceresi ile bilgi sayfaları.
@@ -25,12 +37,10 @@ export default function App() {
   // görüntüsüyle doğrulama için. Üretim derlemesinde tamamen kapalı.
   const [config, setConfig] = useState<GameConfig | null>(() =>
     import.meta.env.DEV && window.location.search.includes('dev=game')
-      ? {
-          mode: (new URLSearchParams(window.location.search).get('mode') ??
-            'classic') as GameConfig['mode'],
-          playerColor: 'w',
-          cols: 8,
-        }
+      ? devConfig(
+          new URLSearchParams(window.location.search).get('mode') ?? 'classic',
+          new URLSearchParams(window.location.search).get('seed'),
+        )
       : null,
   )
   // ?dev=settings — ayarlar penceresini açık başlat (yalnızca DEV)
@@ -109,7 +119,19 @@ export default function App() {
 
   return (
     <>
-      {config ? (
+      {config?.mode === 'daily' ? (
+        <DailyGame
+          key={runKey}
+          ref={gameRef}
+          config={config}
+          onExit={() => setConfig(null)}
+          onOpenSettings={() => setSettingsOpen(true)}
+          onOpenPage={setPage}
+          onOpenRanking={() => setRankOpen(true)}
+          onOpenBadges={() => setBadgesOpen(true)}
+          badgeVersion={badgeVersion}
+        />
+      ) : config ? (
         <Game
           key={runKey}
           ref={gameRef}
@@ -170,7 +192,12 @@ export default function App() {
       )}
 
       {rankOpen && (
-        <RankingPopup mode={config?.mode} demo={demoRank} onClose={() => setRankOpen(false)} />
+        <RankingPopup
+          // Günlük ligi sunucuda henüz yok: pencere haftanın ligini açar
+          mode={config?.mode === 'daily' ? undefined : config?.mode}
+          demo={demoRank}
+          onClose={() => setRankOpen(false)}
+        />
       )}
 
       {page && <Page page={page} onClose={() => setPage(null)} />}

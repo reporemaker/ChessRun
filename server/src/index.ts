@@ -1,6 +1,6 @@
 import { dayKeyUtc, type Device } from '../../shared/events'
 import { verifyAccess } from './access'
-import { awards, bannedWords, cleanSubmit, pulse, submitRun, weekly } from './lb'
+import { awards, bannedWords, cleanSubmit, daily, dailyStart, pulse, submitRun, weekly } from './lb'
 import { actOnName, getWords, listNames, setWords } from './moderation'
 import { breakdown, pruneRaw, rollupDay, series, summary } from './api'
 import { addDays } from './period'
@@ -43,6 +43,8 @@ export interface Env {
   SKIP_ACCESS?: string
   ACCESS_TEAM?: string
   ACCESS_AUD?: string
+  /** Günün Mücadelesi tohum sırrı (wrangler secret); yoksa deterministik yedek */
+  DAILY_SECRET?: string
 }
 
 const NO_CONTENT = { status: 204 } as const
@@ -252,7 +254,12 @@ export default {
           if (clean) await submitRun(env.DB, clean, now)
           return noContent()
         }
+        if (path === '/lb/daily/start') {
+          if (request.method !== 'POST') return new Response('method', { status: 405 })
+          return await dailyStart(env.DB, await readBody(request), env.DAILY_SECRET, now)
+        }
         if (request.method !== 'GET') return new Response('method', { status: 405 })
+        if (path === '/lb/daily') return await daily(env.DB, url, request.headers.get('x-chessrun-token'), env.DAILY_SECRET, now)
         if (path === '/lb/weekly') return await weekly(env.DB, url, request.headers.get('x-chessrun-token'), now)
         if (path === '/lb/pulse') return await pulse(env.DB, url, now)
         if (path === '/lb/awards') return await awards(env.DB, request.headers.get('x-chessrun-token'), now)

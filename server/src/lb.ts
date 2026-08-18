@@ -9,6 +9,9 @@ import {
   type SubmitBody,
   type WeeklyEntry,
   type WeeklyResponse,
+  type DailyResponse,
+  type DailyStartBody,
+  applyDailyBonus,
 } from '../../shared/leaderboard'
 import { hasBannedWord } from '../../shared/names'
 import { isoWeekUtc, previousWeek } from '../../shared/week'
@@ -96,6 +99,8 @@ export interface CleanSubmit {
   daily: string | null
   badge: string | null
   badgeTier: BadgeTier | null
+  /** Koşunun yerel takvim günü (çarpan için); yoksa null */
+  day: string | null
 }
 
 /**
@@ -121,7 +126,8 @@ export function cleanSubmit(raw: unknown, nowMs: number, extraBanned: readonly s
   if (score === 0 && distance === 0) return null
 
   const daily = str(body.daily, 10)
-  if (daily && (!DAY_RE.test(daily) || Math.abs(Date.parse(`${daily}T00:00:00Z`) - nowMs) > 2 * 86_400_000)) return null
+  if (daily && !acceptedDay(daily, nowMs)) return null
+  const day = str(body.day, 10)
 
   const badge = str(body.badge, 24)
   const badgeTier = str(body.badgeTier, 8) as BadgeTier
@@ -140,6 +146,7 @@ export function cleanSubmit(raw: unknown, nowMs: number, extraBanned: readonly s
     at,
     week,
     daily: daily || null,
+    day: day && acceptedDay(day, nowMs) ? day : null,
     badge: BADGE_RE.test(badge) ? badge : null,
     badgeTier: BADGE_TIERS.includes(badgeTier) ? badgeTier : null,
   }
@@ -204,6 +211,20 @@ export async function submitRun(db: D1Database, clean: CleanSubmit, nowMs: numbe
 
   if (player?.status === 'banned') return
 
+  /* Günlük çarpan: günün mücadelesi DEĞİLSE ve koşunun günü verildiyse, o
+     gün için oyuncunun kaydedilmiş günlük puanına bak; yalnızca mücadeleden
+     SONRA gelen koşulara uygulanır (ts karşılaştırması sunucu saatiyle). */
+  let score = clean.score
+  if (clean.mode !== 'daily' && clean.day) {
+    const bonusRow = await db
+      .prepare(`SELECT score, ts FROM lb_daily WHERE daily = ?1 AND token_hash = ?2`)
+      .bind(clean.day, hash)
+      .first<{ score: number | null; ts: number | null }>()
+    if (bonusRow?.score != null && bonusRow.ts != null && bonusRow.ts <= nowMs) {
+      score = applyDailyBonus(clean.score, bonusRow.score)
+    }
+  }
+
   const statements: D1PreparedStatement[] = []
 
   if (!player) {
@@ -251,13 +272,24 @@ export async function submitRun(db: D1Database, clean: CleanSubmit, nowMs: numbe
          WHERE excluded.score > lb_weekly.score
             OR (excluded.score = lb_weekly.score AND excluded.distance > lb_weekly.distance)`,
       )
-      .bind(clean.week, clean.mode, hash, clean.score, clean.distance, clean.at, nowMs),
+      .bind(clean.week, clean.mode, hash, score, clean.distance, clean.at, nowMs),
   )
 
   if (clean.daily) {
     statements.push(
       db.prepare(`INSERT OR IGNORE INTO lb_daily (daily, token_hash) VALUES (?1, ?2)`).bind(clean.daily, hash),
     )
+    // Günün mücadelesi puanı güne yazılır (günde tek koşu; tekrar gelirse en iyisi kalır)
+    if (clean.mode === 'daily') {
+      statements.push(
+        db
+          .prepare(
+            `UPDATE lb_daily SET score = MAX(COALESCE(score, 0), ?3), ts = COALESCE(ts, ?4)
+             WHERE daily = ?1 AND token_hash = ?2`,
+          )
+          .bind(clean.daily, hash, clean.score, nowMs),
+      )
+    }
   }
 
   await db.batch(statements)
@@ -353,6 +385,75 @@ export async function weekly(db: D1Database, url: URL, token: string | null, now
       'cache-control': token ? 'private, max-age=15' : 'public, max-age=30',
     },
   })
+}
+
+/* ------------------------------------------------------------------ *
+ * Günün Mücadelesi — tohum + tek hak
+ * ------------------------------------------------------------------ */
+
+/**
+ * İstemcinin (yerel takvim) günü kabul edilir mi. Dünyada şu an hangi
+ * günler "bugün" ise onlar: en batı (UTC−12) ile en doğu (UTC+14) arası.
+ * Böylece "yarın"ın tohumu ancak yarın bir yerde başlayınca açılır ve
+ * bir oyuncu en çok komşu günleri başlatabilir (±2 günlük eski tolerans
+ * yarının tahtasını 36 saat önceden veriyordu).
+ */
+export function acceptedDay(day: string, nowMs: number): boolean {
+  if (!DAY_RE.test(day)) return false
+  const west = dayKeyUtc(nowMs - 12 * 3_600_000)
+  const east = dayKeyUtc(nowMs + 14 * 3_600_000)
+  return day >= west && day <= east
+}
+
+/**
+ * Günün tohumu: HMAC-SHA256(secret, gün) ilk 4 bayt. Sır yoksa (yerel
+ * geliştirme) gün metninin hash'i — istemcinin çevrimdışı yedeğiyle aynı
+ * olması şart değil, yalnızca deterministik olması yeter.
+ */
+export async function dailySeed(secret: string | undefined, day: string): Promise<number> {
+  const enc = new TextEncoder()
+  if (!secret) {
+    const digest = await crypto.subtle.digest('SHA-256', enc.encode(`chessrun-daily:${day}`))
+    return new DataView(digest).getUint32(0)
+  }
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  const mac = await crypto.subtle.sign('HMAC', key, enc.encode(day))
+  return new DataView(mac).getUint32(0)
+}
+
+async function dailyPlayed(db: D1Database, day: string, hash: string): Promise<boolean> {
+  const row = await db
+    .prepare(`SELECT 1 AS x FROM lb_daily WHERE daily = ?1 AND token_hash = ?2`)
+    .bind(day, hash)
+    .first<{ x: number }>()
+  return row != null
+}
+
+/** GET /lb/daily?day= — tohum + (jeton varsa) hak durumu */
+export async function daily(db: D1Database, url: URL, token: string | null, secret: string | undefined, nowMs: number): Promise<Response> {
+  const dayParam = url.searchParams.get('day') ?? ''
+  const day = acceptedDay(dayParam, nowMs) ? dayParam : dayKeyUtc(nowMs)
+  const seed = await dailySeed(secret, day)
+  const played = token && /^[a-zA-Z0-9-]{16,64}$/.test(token) ? await dailyPlayed(db, day, await hashToken(token)) : false
+  const body: DailyResponse = { day, seed, played }
+  return Response.json(body, { headers: { 'cache-control': 'no-store' } })
+}
+
+/** POST /lb/daily/start — hakkı yakar; `played` çağrı öncesi durum */
+export async function dailyStart(db: D1Database, raw: unknown, secret: string | undefined, nowMs: number): Promise<Response> {
+  const body = (raw && typeof raw === 'object' ? raw : {}) as Partial<DailyStartBody>
+  const token = str(body.token, 64)
+  const day = str(body.day, 10)
+  if (token.length < 16 || !/^[a-zA-Z0-9-]+$/.test(token) || !acceptedDay(day, nowMs)) {
+    return new Response('bad request', { status: 400 })
+  }
+  const hash = await hashToken(token)
+  const played = await dailyPlayed(db, day, hash)
+  if (!played) {
+    await db.prepare(`INSERT OR IGNORE INTO lb_daily (daily, token_hash) VALUES (?1, ?2)`).bind(day, hash).run()
+  }
+  const out: DailyResponse = { day, seed: await dailySeed(secret, day), played }
+  return Response.json(out, { headers: { 'cache-control': 'no-store' } })
 }
 
 export async function pulse(db: D1Database, url: URL, nowMs: number): Promise<Response> {

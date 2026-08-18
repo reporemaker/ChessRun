@@ -6,7 +6,12 @@
  * oynadıysan oyun çevrimdışı açılır ve yeni sürüm çıktığında sessizce
  * güncellenir (gezinme isteklerinde önce ağ, sonra önbellek).
  */
-const CACHE = 'chessrun-v1'
+// v2 (18 Ağustos): API yolları önbellek dışına alındı; eski önbellekte
+// takılı /lb cevapları activate'te silinsin diye ad yükseltildi.
+const CACHE = 'chessrun-v2'
+
+/** Canlı veri: asla önbellekten verilmez, SW hiç karışmaz */
+const NETWORK_ONLY = ['/lb/', '/collect/', '/api/']
 
 self.addEventListener('install', (event) => {
   self.skipWaiting()
@@ -28,6 +33,10 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url)
   if (url.origin !== self.location.origin) return
+  // Sıralama / günlük kilit / istatistik: her zaman ağ. Aksi hâlde ilk
+  // cevap önbelleğe girip sonraki tüm istekler ağa hiç çıkmıyordu
+  // (kullanıcı ~10 dk gecikmeli sıralama gördü).
+  if (NETWORK_ONLY.some((prefix) => url.pathname.startsWith(prefix))) return
 
   // Sayfa gezinmeleri: önce ağ (yeni sürümü kaçırma), düşerse önbellek
   if (request.mode === 'navigate') {

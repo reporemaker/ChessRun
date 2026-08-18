@@ -31,12 +31,15 @@ import { GLYPH, PIECE_NAME_KEY } from '../ui/pieces'
 import {
   type RunRecord,
   currentStreak,
+  dailyScoreOf,
+  dayKey,
   rankOf,
   readRuns,
   readStanding,
   recordRun,
   topRuns,
 } from '../ui/scores'
+import { applyDailyBonus, dailyBonus } from '@shared/leaderboard'
 import { useRanking } from '../ui/useRanking'
 import { setCols, setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
 import { shareRun, shareText } from '../ui/share'
@@ -179,6 +182,14 @@ export function Game({
      üretmeli, günlük meydan okuma ve ileride sunucu doğrulaması buna
      dayanıyor. */
   const runStart = useRef(performance.now())
+  /* Günlük çarpan: koşu BAŞINDA sabitlenir (bugün günün mücadelesi
+     oynandıysa onun puanı → 1 + min(puan,500)/1000). Yalnızca mücadeleden
+     sonraki koşular alır — koşu başlarken kayıt varsa zaten sonrasındayız.
+     Sunucu aynı çarpanı kendi kaydından uygular; buradaki gösterim ve
+     yerel defter içindir. Günlük modun kendisi çarpan almaz. */
+  const runDay = useRef(dayKey())
+  const dailyToday = useRef<number | null>(dailyScoreOf(readRuns(), runDay.current))
+  const bonus = dailyBonus(dailyToday.current)
   const tally = useRef(emptyTally())
   // tallyEvents hamleden ÖNCEKİ taş tipini istiyor. commit'in kapanışındaki
   // `game` bir tur zincirinde bayatlıyor (runTurn arada render olmadan
@@ -280,13 +291,17 @@ export function Game({
     const cols = colsOf(state.board)
     const level = levelOf(state.distance) + 1
 
+    const boosted = applyDailyBonus(state.score, dailyToday.current)
     const run = await recordRun({
       mode: state.mode,
-      score: state.score,
+      score: boosted,
       distance: state.distance,
       cols,
       level,
       daily: config.daily,
+      day: runDay.current,
+      rawScore: boosted !== state.score ? state.score : undefined,
+      bonus: boosted !== state.score ? bonus : undefined,
       chain: state.chain,
       kings: counts.kings,
       bestStreak: counts.bestStreak,
@@ -368,6 +383,8 @@ export function Game({
     // Koşunun ikinci doğum yeri — bileşen yeniden monte olmadığı için
     // ölçüm ref'lerini burada elle sıfırlamak zorundayız
     runStart.current = performance.now()
+    runDay.current = dayKey()
+    dailyToday.current = dailyScoreOf(readRuns(), runDay.current)
     tally.current = emptyTally()
     prevType.current = next.playerType
     finished.current = false
@@ -591,6 +608,7 @@ export function Game({
           <span className="gv-mode">{t(`mode.${game.mode}.name`)}</span>
         </span>
         {config.daily && <span>{t('game.daily')}</span>}
+        {bonus > 1 && <span className="gv-bonus">{t('game.bonus', { x: bonus.toFixed(2) })}</span>}
         <span className="gv-sp" />
         <span>{t('home.rank')} —</span>
       </div>
@@ -598,7 +616,7 @@ export function Game({
       {/* ---- mobil üst köşeler ---- */}
       <div className="gv-cnr">
         <span className="gv-cell">
-          <span className="gv-lb">{t('hud.score')}</span>
+          <span className="gv-lb">{t('hud.score')}{bonus > 1 ? ` · ×${bonus.toFixed(2)}` : ''}</span>
           <span className="gv-n xl">{game.score}</span>
         </span>
         <span className="gv-cell r">
@@ -648,7 +666,8 @@ export function Game({
         {arcadeOutro && (
           <ArcadeOutro
             run={result?.run ?? null}
-            score={game.score}
+            score={applyDailyBonus(game.score, dailyToday.current)}
+            bonus={bonus > 1 ? bonus : undefined}
             distance={game.distance}
             mated={game.events.some((event) => event.kind === 'checkmated')}
             table={result?.table ?? []}

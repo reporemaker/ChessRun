@@ -23,6 +23,11 @@ export interface RunRecord {
   week: string
   /** Günlük meydan okumaysa günün anahtarı: 2026-08-16 */
   daily?: string
+  /** Koşunun yerel takvim günü — günlük çarpan hangi güne bakıyor */
+  day?: string
+  /** Günlük çarpan uygulandıysa: ham puan ve çarpan (`score` çarpılmış hâl) */
+  rawScore?: number
+  bonus?: number
   /** Dönüşüm zinciri, sıkıştırılmış: "n>b>q" */
   chain?: string
   /* --- Rozet sayaçları: eski kayıtlarda yok, bu yüzden hepsi isteğe bağlı.
@@ -84,6 +89,17 @@ export function weekEnd(date: Date): Date {
   end.setHours(0, 0, 0, 0)
   end.setDate(end.getDate() + (8 - day))
   return end
+}
+
+/**
+ * Günün mücadelesi puanı (o günün en iyi günlük koşusu) — diğer oyunlara
+ * çarpan için. Oynanmadıysa null.
+ */
+export function dailyScoreOf(runs: RunRecord[], day: string): number | null {
+  const best = runs
+    .filter((run) => run.mode === 'daily' && run.daily === day)
+    .reduce((top, run) => Math.max(top, run.score), -1)
+  return best < 0 ? null : best
 }
 
 /** Günün bittiği an: yarın 00:00 */
@@ -213,6 +229,9 @@ export interface RunInput {
   cols: number
   level: number
   daily?: string
+  day?: string
+  rawScore?: number
+  bonus?: number
   chain?: PieceType[]
   /* --- Rozet sayaçları. `RunRecord`'da baştan tanımlıydılar ama hiçbir
      şey yazmıyordu; `badges.ts`'in geriye dönük hesabı bunları okuyor.
@@ -253,6 +272,9 @@ export async function recordRun(input: RunInput, now = new Date()): Promise<RunR
     at,
     week,
     daily: input.daily,
+    day: input.day,
+    rawScore: input.rawScore,
+    bonus: input.bonus,
     chain: input.chain?.join('>'),
     kings: input.kings,
     bestStreak: input.bestStreak,

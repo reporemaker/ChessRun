@@ -28,6 +28,7 @@ const MODE_NAME_KEY: Record<GameMode, StringKey> = {
   classic: 'mode.classic.name',
   kingRun: 'mode.kingRun.name',
   trio: 'mode.trio.name',
+  daily: 'mode.daily.name',
 }
 
 function formatDay(day: string): string {
@@ -44,7 +45,7 @@ function distanceBar(distance: number): string {
 export function shareText(input: ShareInput, t: Translate): string {
   const lines = [`${t(MODE_NAME_KEY[input.mode])} · ${formatDay(input.day)}`]
 
-  if (input.mode === 'classic') {
+  if (input.mode === 'classic' || input.mode === 'daily') {
     lines.push(input.chain.map((type) => GLYPH[type]).join('→'))
     lines.push(
       `${t('share.points', { n: input.score })} · ${t('share.rows', { n: input.distance })}`,

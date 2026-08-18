@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import { DEFAULT_COLS, minColsOf } from '../engine/config'
-import { type ModeId, MODES, dailyMode, isPlayable, modeInfo } from '../ui/modes'
+import { type ModeId, MODES, isPlayable } from '../ui/modes'
+import { DAILY_REPLAY_ALLOWED, dailyPlayed } from '../ui/dailyLock'
+import { dailyBonus } from '@shared/leaderboard'
 import {
   type RunRecord,
   currentStreak,
+  dailyScoreOf,
   dailySeed,
   dayEnd,
   dayKey,
   readRuns,
 } from '../ui/scores'
-import { fetchPulse } from '../ui/leaderboard'
+import { type DailyInfo, fetchDaily, fetchPulse, leaderboardEnabled, startDaily } from '../ui/leaderboard'
 import { useRanking } from '../ui/useRanking'
 import { lifetimeStreak } from '../ui/lifetime'
 import { useSettings } from '../ui/settings'
@@ -95,25 +98,70 @@ export function Home({ onStart, onOpenSettings }: HomeProps) {
 
   const runs = useMemo(() => readRuns(), [])
   const streak = useMemo(() => Math.max(currentStreak(runs), lifetimeStreak()), [runs])
-  const seed = dailySeed(day)
-  const todayMode = dailyMode(day)
+  /* Günün Mücadelesi: tohum ve tek hak SUNUCUDA (tohum sırdan türer, hak
+     jetona bağlı). Sunucu cevap verene dek kart "…" gösterir; sunucu
+     tanımlı değilse (yerel geliştirme) tarihten tohum + cihaz kilidi. */
+  const [remote, setRemote] = useState<DailyInfo | null | 'pending'>(leaderboardEnabled ? 'pending' : null)
+  const [dailyError, setDailyError] = useState(false)
+  const [starting, setStarting] = useState(false)
+  useEffect(() => {
+    if (!leaderboardEnabled) return
+    let alive = true
+    setRemote('pending')
+    void fetchDaily(day).then((info) => alive && setRemote(info))
+    return () => {
+      alive = false
+    }
+  }, [day])
+  const localSeed = dailySeed(day)
+  const seed = remote && remote !== 'pending' ? remote.seed : localSeed
+  const played = useMemo(
+    () => dailyPlayed(day) || (remote != null && remote !== 'pending' && remote.played),
+    [day, remote],
+  )
+  const dailyLocked = played && !DAILY_REPLAY_ALLOWED
+  // Bugünkü çarpan: günün mücadelesi puanından (diğer üç oyuna uygulanır)
+  const todayBonus = dailyBonus(dailyScoreOf(runs, day))
   const hi = useMemo(
     () => runs.reduce((best, run) => Math.max(best, run.score), 0),
     [runs],
   )
 
-  function start(id: ModeId, daily: boolean) {
+  function start(id: ModeId) {
     if (!isPlayable(id)) return
 
     // Üçlü dar koridora sığmıyor; motor zaten genişletiyor ama kayıt da
     // gerçek genişliği yazsın diye burada da düzeltiliyor
     const width = Math.max(cols, minColsOf(id))
+    onStart({ mode: id, playerColor: 'w', cols: width })
+  }
 
-    onStart(
-      daily
-        ? { mode: id, playerColor: 'w', cols: DEFAULT_COLS, seed, daily: day }
-        : { mode: id, playerColor: 'w', cols: width },
-    )
+  /**
+   * Günün Mücadelesi: sabit 8 sütun, günün tohumu, günde bir kez.
+   * Sunucu varsa hak orada yanar ve tohum oradan gelir; sunucu ulaşılamıyorsa
+   * BAŞLATMAZ (herkes aynı tahtayı oynamalı) — kart hata gösterir. Sunucu
+   * tanımlı değilse yerel tohum.
+   */
+  function launchDaily() {
+    if (dailyLocked || starting) return
+    if (!leaderboardEnabled) {
+      onStart({ mode: 'daily', playerColor: 'w', cols: DEFAULT_COLS, seed: localSeed, daily: day })
+      return
+    }
+    setStarting(true)
+    setDailyError(false)
+    void startDaily(day).then((info) => {
+      setStarting(false)
+      if (!info) {
+        setDailyError(true)
+        return
+      }
+      if (info.played && !DAILY_REPLAY_ALLOWED) {
+        setRemote(info)
+        return
+      }
+      onStart({ mode: 'daily', playerColor: 'w', cols: DEFAULT_COLS, seed: info.seed, daily: day })
+    })
   }
 
   return (
@@ -156,15 +204,22 @@ export function Home({ onStart, onOpenSettings }: HomeProps) {
         <div className="bi-men">
           <Card
             today
-            glyph={modeInfo(todayMode).glyph}
-            title={t('home.daily')}
-            sub={`${t(modeInfo(todayMode).nameKey)} · ${t('home.dailyMeta', {
-              seed: seed.toString(16).slice(0, 6).toUpperCase(),
-              clock,
-            })}`}
-            value={bestScore(runs, todayMode, day)}
+            glyph="⚡"
+            title={t('mode.daily.name')}
+            sub={
+              dailyError
+                ? t('daily.offline')
+                : played
+                  ? `${t('daily.played')}${todayBonus > 1 ? ` · ${t('daily.bonusToday', { x: todayBonus.toFixed(2) })}` : ''} · ${t('daily.playedSub', { clock })}`
+                  : `${t('mode.daily.motto')} · ${t('home.dailyMeta', {
+                      seed: remote === 'pending' ? '……' : seed.toString(16).slice(0, 6).toUpperCase(),
+                      clock,
+                    })}`
+            }
+            value={bestScore(runs, 'daily', day)}
             valueLabel={t('home.best')}
-            onClick={() => start(todayMode, true)}
+            disabled={dailyLocked || starting}
+            onClick={launchDaily}
           />
 
           {MODES.map((mode) => {
@@ -184,7 +239,7 @@ export function Home({ onStart, onOpenSettings }: HomeProps) {
                 value={mode.ready ? bestScore(runs, mode.id) : null}
                 valueLabel={mode.ready ? t('home.hi') : t('common.soon')}
                 disabled={!mode.ready}
-                onClick={() => start(mode.id, false)}
+                onClick={() => start(mode.id)}
               />
             )
           })}

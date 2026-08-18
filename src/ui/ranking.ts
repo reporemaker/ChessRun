@@ -106,7 +106,8 @@ export function readRanking(mode?: GameMode, now: Date = new Date()): RankingVie
  * Hiç koşu yoksa Av.
  */
 export function weekMode(now: Date = new Date()): GameMode {
-  const best = bestOf(runsOfWeek(readRuns(), isoWeekKey(now)))
+  // Günlük mücadele haftalık lig değil — bu haftanın ligi üç serbest moddan biri
+  const best = bestOf(runsOfWeek(readRuns(), isoWeekKey(now)).filter((run) => run.mode !== 'daily'))
   return best?.mode ?? 'classic'
 }
 

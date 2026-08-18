@@ -152,3 +152,52 @@ describe('cleanSubmit', () => {
     expect(c?.badgeTier).toBeNull()
   })
 })
+
+describe('günün mücadelesi — tohum ve gün', () => {
+  it('tohum sırra ve güne bağlı, deterministik, 32 bit', async () => {
+    const { dailySeed, acceptedDay } = await import('./lb')
+    const a = await dailySeed('s1', '2026-08-18')
+    const b = await dailySeed('s1', '2026-08-18')
+    const c = await dailySeed('s1', '2026-08-19')
+    const d = await dailySeed('s2', '2026-08-18')
+    expect(a).toBe(b)
+    expect(a).not.toBe(c)
+    expect(a).not.toBe(d)
+    expect(Number.isInteger(a) && a >= 0 && a <= 0xffffffff).toBe(true)
+    // sırsız yedek de deterministik
+    expect(await dailySeed(undefined, '2026-08-18')).toBe(await dailySeed(undefined, '2026-08-18'))
+    // 12:00 UTC: batıda (UTC-12) hâlâ 18'i 00:00, doğuda (UTC+14) 19'u 02:00 → 18 ve 19 kabul, 17 ve 20 ret
+    const noon = Date.parse('2026-08-18T12:00:00Z')
+    expect(acceptedDay('2026-08-18', noon)).toBe(true)
+    expect(acceptedDay('2026-08-19', noon)).toBe(true)
+    expect(acceptedDay('2026-08-17', noon)).toBe(false)
+    expect(acceptedDay('2026-08-20', noon)).toBe(false)
+    // 06:00 UTC: batıda hâlâ 17'si (18:00), doğuda 18'i 20:00 → 17 ve 18 kabul, 19 ret
+    const morning = Date.parse('2026-08-18T06:00:00Z')
+    expect(acceptedDay('2026-08-17', morning)).toBe(true)
+    expect(acceptedDay('2026-08-18', morning)).toBe(true)
+    expect(acceptedDay('2026-08-19', morning)).toBe(false)
+    expect(acceptedDay('bozuk', noon)).toBe(false)
+  })
+})
+
+describe('günlük çarpan', () => {
+  it('formül: 1 + min(puan,500)/1000, aşağı yuvarlama', async () => {
+    const { dailyBonus, applyDailyBonus } = await import('../../shared/leaderboard')
+    expect(dailyBonus(null)).toBe(1)
+    expect(dailyBonus(0)).toBe(1)
+    expect(dailyBonus(150)).toBeCloseTo(1.15)
+    expect(dailyBonus(500)).toBe(1.5)
+    expect(dailyBonus(5000)).toBe(1.5)
+    expect(applyDailyBonus(1000, 150)).toBe(1150)
+    expect(applyDailyBonus(333, 150)).toBe(382)
+  })
+
+  it('cleanSubmit koşunun gününü (day) taşır, bozuksa düşürür', () => {
+    const now = Date.parse('2026-08-18T12:00:00Z')
+    const base = { token: 'abcdefghijklmnop1234', name: 'x', alg: 'HMAC-SHA256', mode: 'classic', score: 10, distance: 3, cols: 8, level: 1, at: new Date(now).toISOString(), week: '2026-W34' }
+    expect(cleanSubmit({ ...base, day: '2026-08-18' }, now)?.day).toBe('2026-08-18')
+    expect(cleanSubmit({ ...base, day: '2020-01-01' }, now)?.day).toBeNull()
+    expect(cleanSubmit(base, now)?.day).toBeNull()
+  })
+})

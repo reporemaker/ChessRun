@@ -51,6 +51,7 @@ export const MODE_LABEL: Record<Mode, string> = {
   classic: 'Av',
   kingRun: 'Kaçış',
   trio: 'Üçlü',
+  daily: 'Günün Mücadelesi',
 }
 
 export const DIM_LABEL: Record<Dimension, string> = {
@@ -73,6 +74,7 @@ const VALUE_LABEL: Record<string, string> = {
   classic: 'Av',
   kingRun: 'Kaçış',
   trio: 'Üçlü',
+  daily: 'Günün Mücadelesi',
   lifeLost: 'Yenildi',
   fellOff: 'Tahtadan düştü',
   stuckOut: 'Sıkıştı',
