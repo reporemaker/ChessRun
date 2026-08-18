@@ -4,7 +4,7 @@ import { GLYPH } from '../ui/pieces'
 
 interface Props {
   demo: Demo
-  /** Gösterilen kare — zamanlama üstteki LessonStage'de */
+  /** Gösterilen kare - zamanlama üstteki LessonStage'de */
   idx: number
 }
 
@@ -20,7 +20,7 @@ const reduced = () =>
   typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /**
- * Ders tahtası — bir demonun tek karesini çizer, kare değişince farkı
+ * Ders tahtası - bir demonun tek karesini çizer, kare değişince farkı
  * oyunun hareket diliyle oynatır: yer değiştiren taş kayar (FLIP), yenen
  * taş büyüyüp söner, kaymada bütün tahta bir satır iner, yenilenmede
  * soluk geçiş. Vurgular oyundakiyle aynı: yeşil halka sıradaki taş, altın
@@ -131,7 +131,7 @@ export function MiniBoard({ demo, idx }: Props) {
 }
 
 /** Kayma karesi gerçekten bir önceki karenin bir satır inmiş hâli mi?
- *  (Geri sarmada ya da ders değişiminde değil — o zaman soluk geçiş) */
+ *  (Geri sarmada ya da ders değişiminde değil - o zaman soluk geçiş) */
 function isShifted(prev: Frame, next: Frame): boolean {
   for (let r = 1; r < next.rows.length; r++) {
     const above = prev.rows[r - 1]
@@ -145,7 +145,7 @@ function isShifted(prev: Frame, next: Frame): boolean {
 
 /**
  * Kaybolan taşın hayaleti: kareye geçici bir glif konur, animasyon bitince
- * silinir. React ağacının dışında — bir sonraki karede zaten yok.
+ * silinir. React ağacının dışında - bir sonraki karede zaten yok.
  */
 function ghost(board: HTMLElement, r: number, c: number, token: string, cell: number, kind: 'pop' | 'fade') {
   const sq = board.querySelector<HTMLElement>(`[data-rc="${r}:${c}"]`)

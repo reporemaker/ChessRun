@@ -10,14 +10,14 @@ import { BadgeGlyph } from './BadgeGlyph'
 
 interface Props {
   onClose: () => void
-  /** Açılışta seçili mod — oyundan açıldıysa oynanan mod */
+  /** Açılışta seçili mod - oyundan açıldıysa oynanan mod */
   mode?: GameMode
   /** Yalnızca DEV: sunucu gelmeden gerçek görünüm için örnek tablo */
   demo?: boolean
 }
 
 /**
- * Haftalık sıralama — kendi penceresi.
+ * Haftalık sıralama - kendi penceresi.
  *
  * Ayarlar penceresinin içine gömülü liste dar ve kısa kalıyordu; sıralama
  * oyunun sosyal yüzü, kendi sahnesini hak ediyor. Düzen: mod sekmeleri ·
@@ -25,7 +25,7 @@ interface Props {
  * listede değilsen altta yapışık kendi satırın. Yalnızca haftalık lig.
  *
  * Sunucu bağlanana kadar liste kendi koşuların (ranking.ts dürüst davranıyor:
- * sıra ve oyuncu sayısı bilinmiyor). Rozet glifi için ad yanında yer var —
+ * sıra ve oyuncu sayısı bilinmiyor). Rozet glifi için ad yanında yer var -
  * rozet sistemi gelince dolacak.
  */
 export function RankingPopup({ onClose, mode: initialMode, demo = false }: Props) {
@@ -98,7 +98,7 @@ export function RankingPopup({ onClose, mode: initialMode, demo = false }: Props
 
           <div className="rank-me">
             <span>
-              <b className="gold">{view.rank == null ? '—' : `#${view.rank}`}</b>
+              <b className="gold">{view.rank == null ? '-' : `#${view.rank}`}</b>
               <small>{t('settings.rankMine')}</small>
             </span>
             <span>
@@ -106,7 +106,7 @@ export function RankingPopup({ onClose, mode: initialMode, demo = false }: Props
               <small>{t('settings.scoreMine')}</small>
             </span>
             <span>
-              <b>{view.players == null ? '—' : view.players.toLocaleString(lang)}</b>
+              <b>{view.players == null ? '-' : view.players.toLocaleString(lang)}</b>
               <small>{t('settings.players')}</small>
             </span>
           </div>
@@ -138,7 +138,7 @@ export function RankingPopup({ onClose, mode: initialMode, demo = false }: Props
             ))}
           </ol>
 
-          {/* Listede değilsen kendi satırın altta yapışık — "ben neredeyim"
+          {/* Listede değilsen kendi satırın altta yapışık - "ben neredeyim"
               sorusu kaydırmadan cevaplansın */}
           {meOutside && (
             <div className="rank-row me sticky">
@@ -151,7 +151,7 @@ export function RankingPopup({ onClose, mode: initialMode, demo = false }: Props
             </div>
           )}
 
-          {/* Geçen haftanın ilk üçü — kürsü. Sıra 2·1·3: ortadaki en yüksek.
+          {/* Geçen haftanın ilk üçü - kürsü. Sıra 2·1·3: ortadaki en yüksek.
               Sunucu (Faz 9) gelince dolacak; şimdilik yalnızca demo. */}
           {view.lastWeek && (
             <div className="rank-last">

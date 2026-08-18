@@ -15,7 +15,7 @@ export interface Settings {
   pieceColor: Color
   sound: boolean
   lang: Lang
-  /** Koridor genişliği, sütun olarak (4–8) — yalnızca serbest oyunları etkiliyor */
+  /** Koridor genişliği, sütun olarak (4-8) - yalnızca serbest oyunları etkiliyor */
   cols: number
 }
 
@@ -25,7 +25,7 @@ interface Stored {
   pieceColor?: Color
   lang?: Lang
   cols?: number
-  /** Eski sürüm: 'narrow' | 'medium' | 'wide' — okunurken sayıya çevriliyor */
+  /** Eski sürüm: 'narrow' | 'medium' | 'wide' - okunurken sayıya çevriliyor */
   corridor?: string
 }
 

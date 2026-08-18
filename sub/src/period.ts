@@ -1,7 +1,7 @@
 import type { Period } from '@shared/events'
 
 /**
- * Panel tarafı dönem gezinmesi — UTC. Sunucudaki `period.ts` aralığı
+ * Panel tarafı dönem gezinmesi - UTC. Sunucudaki `period.ts` aralığı
  * hesaplıyor; burası yalnızca "önceki / sonraki" için `at` gününü
  * kaydırıyor. Sunucu `at`'ten aralığı kendisi çıkarıyor.
  */
@@ -31,16 +31,18 @@ export function shift(period: Period, at: string, dir: -1 | 1): string {
   return d.toISOString().slice(0, 10)
 }
 
-/** Gelecekte mi — "sonraki" düğmesi bugünü aşmasın */
+/** Gelecekte mi - "sonraki" düğmesi bugünü aşmasın */
 export function isFuture(at: string, now = new Date()): boolean {
   return at > todayUtc(now)
 }
 
-/** URL hash ↔ durum: #/stats?period=week&at=2026-08-17 — derin bağlantı, tarayıcı geri tuşu */
+/** URL hash ↔ durum: #/stats?period=week&at=2026-08-17 - derin bağlantı, tarayıcı geri tuşu */
 export interface Route {
-  page: 'dashboard' | 'stats' | 'names'
+  page: 'dashboard' | 'stats' | 'names' | 'league'
   period: Period
   at: string
+  /** Lig sayfası: ISO hafta (2026-W34); yoksa bu hafta */
+  week?: string
 }
 
 const PERIODS: Period[] = ['day', 'week', 'month', 'year']
@@ -50,13 +52,16 @@ export function parseHash(hash: string, now = new Date()): Route {
   const params = new URLSearchParams(query)
   const period = params.get('period') as Period | null
   const at = params.get('at')
+  const week = params.get('week')
   return {
-    page: path === 'stats' ? 'stats' : path === 'names' ? 'names' : 'dashboard',
+    page: path === 'stats' ? 'stats' : path === 'names' ? 'names' : path === 'league' ? 'league' : 'dashboard',
     period: period && PERIODS.includes(period) ? period : 'week',
     at: at && /^\d{4}-\d{2}-\d{2}$/.test(at) ? at : todayUtc(now),
+    week: week && /^\d{4}-W\d{2}$/.test(week) ? week : undefined,
   }
 }
 
 export function toHash(route: Route): string {
-  return `#/${route.page}?period=${route.period}&at=${route.at}`
+  const week = route.week ? `&week=${route.week}` : ''
+  return `#/${route.page}?period=${route.period}&at=${route.at}${week}`
 }

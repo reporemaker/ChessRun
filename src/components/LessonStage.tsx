@@ -15,10 +15,10 @@ const BEAT_MS = 1600
 const LOOP_PAUSE = 1.5
 
 /**
- * Ders sahnesi — kılavuzun "ekranı".
+ * Ders sahnesi - kılavuzun "ekranı".
  *
  * Solda büyük tahta, sağda dersin adımları: her adım animasyonun bir
- * karesi, sıradaki adım altınla yanıyor. Metin ve hareket aynı şey —
+ * karesi, sıradaki adım altınla yanıyor. Metin ve hareket aynı şey -
  * okuduğun cümle o an tahtada oluyor. Altta kaset düğmeleri: önceki /
  * oynat-durdur / sonraki, ve bölümün ders sekmeleri. Adıma tıklayınca
  * oraya atlar. Sahne görünür değilken oynatma durur (aynı anda dört

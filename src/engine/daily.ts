@@ -6,7 +6,7 @@ import { type Rng, createRng, hashSeed, shuffled } from './random'
 import type { Board, Color, PieceType, Pos, Row } from './types'
 
 /**
- * Günün Mücadelesi — Av'ın "kesintisiz" hâli.
+ * Günün Mücadelesi - Av'ın "kesintisiz" hâli.
  *
  * Tahta tık tık değil, sürekli ve yumuşak kayar; rakip hamle YAPMAZ.
  * Tek koşu, can yok. Kaybetmenin iki yolu var:
@@ -15,7 +15,7 @@ import type { Board, Color, PieceType, Pos, Row } from './types'
  *
  * Yediğin taşa dönüşürsün; şahı yersen VEZİR olursun (Mario'nun mantarı):
  * vezirken vurulursan ölmez, şahı yediğin taşa geri dönersin. Vezirken
- * yeme dönüşüm vermez — mantar bir vuruş yiyene kadar sürer.
+ * yeme dönüşüm vermez - mantar bir vuruş yiyene kadar sürer.
  *
  * Bu modda piyon da rakip veziri de yok: piyon kayan tahtada yerinde
  * sayıyor (dönüşünce ölüm), vezir de her şeyi koruduğu için tahtayı
@@ -37,7 +37,7 @@ export const DAILY_FINAL_MS = 1000
 /**
  * Her 5 yemede bir "tık" hızlanır; 100 yemede (20 tık) son hıza ulaşır.
  * Tıklar arası oran sabit (geometrik): ilk tık da son tık da aynı ölçüde
- * "sıkıştırır" — doğrusal bölseydik ilk tıklar hissedilmez, sonlar sert olurdu.
+ * "sıkıştırır" - doğrusal bölseydik ilk tıklar hissedilmez, sonlar sert olurdu.
  */
 export const DAILY_TICK_CAPTURES = 5
 export const DAILY_TICKS = 20
@@ -47,7 +47,7 @@ export const DAILY_SCORE_FACTOR = 2
 
 /**
  * Vezir (mantar) kaç yeme sürer. 500 oyunluk simülasyonda sınırsız vezir
- * oyunun %85'ini vezir olarak geçirtiyordu — dönüşüm zinciri kayboluyordu.
+ * oyunun %85'ini vezir olarak geçirtiyordu - dönüşüm zinciri kayboluyordu.
  * Süre dolunca şahı yediğin taşa dönersin; şah yersen sayaç yenilenir.
  * 0 = sınırsız (yalnızca vurulunca biter).
  */
@@ -63,7 +63,7 @@ export const DAILY_ROW_SCORE = 1
 export const DAILY_OPENING_ROWS = 3
 
 /**
- * Rakip taş havuzu — piyon ve vezir yok. Şah havuzdan gelmez: tahtada her
+ * Rakip taş havuzu - piyon ve vezir yok. Şah havuzdan gelmez: tahtada her
  * zaman TEK şah bulunur (kullanıcı 18 Ağustos: "şah yoksa yenisi gelsin");
  * açılışta bir tane konur, yendiğinde ya da dipten düştüğünde bir sonraki
  * satır bir şah taşır. Bkz. `spawnDailyRow` withKing.
@@ -81,18 +81,27 @@ export const DAILY_OPENING_KING_ROW = ROWS - 3
  * Şah tahtadan çıkınca (yendin ya da dipten düştü) yenisi HEMEN gelmez: bu
  * kadar şahsız kayma geçmeden sıradaki satıra konmaz. 500 oyunluk
  * simülasyonda (18 Ağustos) anında gelen şah "şah çiftliği" yaratıyordu:
- * yedikçe yeni şah, oyun başına 20–30 şah, puanın yarısı şahtan. Bir ekran
+ * yedikçe yeni şah, oyun başına 20-30 şah, puanın yarısı şahtan. Bir ekran
  * (6 satır) ara ile "her ekranda en çok bir şah".
  */
 export const DAILY_KING_GAP_ROWS = 6
 
 /**
  * Satır başına beklenen taş: satır indeksiyle (yani zamanla) artar, oyuncunun
- * ne yaptığına BAĞLI DEĞİL — herkes aynı gün aynı satırları görsün diye.
+ * ne yaptığına BAĞLI DEĞİL - herkes aynı gün aynı satırları görsün diye.
  */
-export const DAILY_BASE_ROW_PIECES = 0.9
-export const DAILY_ROW_PIECES_PER_ROW = 1 / 80
-export const DAILY_MAX_ROW_PIECES = 2.0
+export const DAILY_BASE_ROW_PIECES = 0.85
+export const DAILY_ROW_PIECES_PER_ROW = 1 / 90
+export const DAILY_MAX_ROW_PIECES = 1.9
+
+/**
+ * Her yeni satırda en az bir çıkış (kullanıcı kararı, 18 Ağustos): giren
+ * satır tahtaya oturduğunda oyuncunun SON güvenli çıkışını kapatıyorsa,
+ * satırdaki suçlu taş(lar) silinir. Yalnızca satırın kapattığı çıkış
+ * sayılır - oyuncunun dibe inmesiyle daralan seçenekler oyunun kendisi.
+ * 500 oyunluk simülasyonda kilit ölümlerinin ~%18'i satır girişindendi.
+ */
+export const DAILY_ROW_RESCUE = true
 
 export type DailyEndReason = 'captured' | 'fellOff'
 
@@ -101,18 +110,24 @@ export type DailyEvent =
   | { kind: 'transform'; to: PieceType }
   /** Şah yendi: vezir oldun */
   | { kind: 'promote'; points: number }
-  /** Vezirken vuruldun: mantar gitti, eski taşına döndün */
-  | { kind: 'shrink'; to: PieceType }
+  /**
+   * Vezirken vuruldun: mantar gitti, eski taşına döndün. Vuran taş (`by`,
+   * `piece`) seni "yemek" için karene gelir ve orada harcanır: tahtadan
+   * silinir (kullanıcı kararı, 18 Ağustos). Vuran bulunamazsa by null.
+   */
+  | { kind: 'shrink'; to: PieceType; by: Pos | null; piece: PieceType | null }
   /** Vezir süresi doldu: eski taşına döndün (vuruş yok) */
   | { kind: 'expire'; to: PieceType }
   | { kind: 'scroll'; points: number }
+  /** Giren satır son çıkışı kapatıyordu, inceltildi (istatistik için) */
+  | { kind: 'rescue' }
   | { kind: 'gameover'; reason: DailyEndReason }
 
 export interface DailyState {
   seed: number
   /** ROWS satır; 0 en üst */
   board: Board
-  /** Üstten girmek üzere olan satır — kayma sırasında kısmen görünür */
+  /** Üstten girmek üzere olan satır - kayma sırasında kısmen görünür */
   incoming: Row
   /** Şimdiye dek üretilen satır sayısı = sıradaki satırın indeksi */
   spawned: number
@@ -147,7 +162,7 @@ export function dailyTicks(captures: number): number {
   return Math.min(DAILY_TICKS, Math.floor(captures / DAILY_TICK_CAPTURES))
 }
 
-/** Bir satırın kayma süresi (ms) — yeme sayısına göre */
+/** Bir satırın kayma süresi (ms) - yeme sayısına göre */
 export function dailyIntervalMs(captures: number): number {
   const ratio = DAILY_FINAL_MS / DAILY_START_MS
   return DAILY_START_MS * Math.pow(ratio, dailyTicks(captures) / DAILY_TICKS)
@@ -159,7 +174,7 @@ export function dailyLevel(captures: number): number {
 }
 
 /* ------------------------------------------------------------------ *
- * Satır üretimi — yalnızca (tohum, satır indeksi)'ne bağlı
+ * Satır üretimi - yalnızca (tohum, satır indeksi)'ne bağlı
  * ------------------------------------------------------------------ */
 
 function rowRng(seed: number, index: number): Rng {
@@ -205,7 +220,7 @@ export function spawnDailyRow(
   }
 
   // Şah: karıştırılmış sütun listesinin ilk boş karesi (yoksa ilk kare).
-  // Ek rng tüketimi yok — şahsız hâli aynı satırın birebir aynısı.
+  // Ek rng tüketimi yok - şahsız hâli aynı satırın birebir aynısı.
   if (withKing) {
     const col = columns.find((c) => !row.cells[c]) ?? columns[0]
     row.cells[col] = makePiece('k', enemyColor)
@@ -217,7 +232,7 @@ export function hasKing(rows: readonly Row[], enemyColor: Color): boolean {
   return rows.some((row) => row.cells.some((cell) => cell?.type === 'k' && cell.color === enemyColor))
 }
 
-/** Tahtadaki `r` satırının üretim indeksi — kare deseni ve testler için */
+/** Tahtadaki `r` satırının üretim indeksi - kare deseni ve testler için */
 export function rowIndexAt(state: DailyState, r: number): number {
   // incoming = spawned-1; board[0] = spawned-2; board[r] = spawned-2-r
   return state.spawned - 2 - r
@@ -235,7 +250,7 @@ export interface DailyOptions {
 /**
  * Açılış adil mi? Atın en az bir güvenli hamlesi olmalı ve o hamleden sonra
  * da en az bir güvenli hamle kalmalı. Aksi hâlde ilk iki kaymada kaderden
- * ölüm var — günde tek hakta kabul edilemez. Simülasyonda tohumların
+ * ölüm var - günde tek hakta kabul edilemez. Simülasyonda tohumların
  * ~%10'u böyle açılıyordu.
  */
 export function openingIsFair(state: DailyState): boolean {
@@ -260,7 +275,7 @@ export const DAILY_OPENING_TRIES = 32
 
 /**
  * Günün tahtası. Tohum adil bir açılış vermiyorsa tohum tuzlanır
- * (`seed#1`, `seed#2`, …) — deterministik: aynı gün herkes aynı tuzu bulur.
+ * (`seed#1`, `seed#2`, …) - deterministik: aynı gün herkes aynı tuzu bulur.
  */
 export function createDaily({ seed, playerColor = 'w' }: DailyOptions): DailyState {
   let state = buildDaily(seed >>> 0, playerColor)
@@ -326,7 +341,7 @@ function cloneState(state: DailyState): DailyState {
  * ------------------------------------------------------------------ */
 
 /**
- * Oynanabilir kareler: taşın tüm satranç hamleleri. Güvenlik SÜZÜLMEZ —
+ * Oynanabilir kareler: taşın tüm satranç hamleleri. Güvenlik SÜZÜLMEZ -
  * vurulan kareye basmak serbest, sonucu ölüm. En alt satır da oynanabilir:
  * orada bir sonraki kaymaya kadar vaktin var.
  */
@@ -410,13 +425,17 @@ export function applyDailyMove(state: DailyState, to: Pos): DailyState {
     target?.type !== 'k' && enemyThreats(next.board, next.playerColor, next.enemyColor).has(key(to))
   if (attacked) {
     if (next.playerType === 'q' && next.base) {
-      // Vuruldun ama vezirdin: küçül, devam et
+      // Vuruldun ama vezirdin: küçül, devam et. Vuran taş mantarı "yer" ve
+      // harcanır: tahtadan kalkar (en yakın vuran).
+      const by = dailyStriker(next)
+      const piece = by ? (next.board[by.row].cells[by.col]?.type ?? null) : null
+      if (by) next.board[by.row].cells[by.col] = null
       next.playerType = next.base
       next.base = null
       next.queenLeft = 0
       next.chain.push(next.playerType)
       next.board[to.row].cells[to.col] = { ...moving, type: next.playerType }
-      next.events.push({ kind: 'shrink', to: next.playerType })
+      next.events.push({ kind: 'shrink', to: next.playerType, by, piece })
     } else {
       next.status = 'gameover'
       next.endReason = 'captured'
@@ -428,8 +447,56 @@ export function applyDailyMove(state: DailyState, to: Pos): DailyState {
 }
 
 /* ------------------------------------------------------------------ *
- * Kayma adımı — arayüz her tam satırda bir kez çağırır
+ * Kayma adımı - arayüz her tam satırda bir kez çağırır
  * ------------------------------------------------------------------ */
+
+/**
+ * Oyuncunun `board` üstünde `player` karesinden en az bir güvenli çıkışı var
+ * mı: hamle sonrası kare vurulmuyor ve dip satıra inmiyor. (Şah yeme her
+ * zaman güvenli sayılır.)
+ */
+export function hasSafeExit(board: Board, player: Pos, playerColor: Color, enemyColor: Color): boolean {
+  const piece = board[player.row]?.cells[player.col]
+  if (!piece) return true
+  for (const to of pseudoMoves(board, player, playerColor)) {
+    if (to.row >= ROWS - 1) continue
+    if (board[to.row].cells[to.col]?.type === 'k') return true
+    const trial = cloneBoard(board)
+    trial[player.row].cells[player.col] = null
+    trial[to.row].cells[to.col] = piece
+    if (!enemyThreats(trial, playerColor, enemyColor).has(key(to))) return true
+  }
+  return false
+}
+
+/**
+ * Giren satır (board[0]) oyuncunun son çıkışını kapattıysa suçlu taşları sil.
+ * Önce tek taş silmeyi dener (satırdaki her taş için), olmadı satırı boşaltır
+ * (şah varsa en son o gider). Değişiklik yapıldıysa true.
+ */
+export function rescueEntryRow(board: Board, player: Pos, playerColor: Color, enemyColor: Color): boolean {
+  if (hasSafeExit(board, player, playerColor, enemyColor)) return false
+  const row = board[0]
+  const cols = row.cells.map((c, i) => (c ? i : -1)).filter((i) => i >= 0)
+  if (cols.length === 0) return false
+  // Satır olmasa çıkış var mıydı? Yoksa sebep satır değil (iniş) - dokunma
+  const bare: Board = [emptyRow(DAILY_COLS), ...board.slice(1)]
+  if (!hasSafeExit(bare, player, playerColor, enemyColor)) return false
+  // Tek taş (şah en sona)
+  const order = [...cols].sort((a, b) => Number(row.cells[a]?.type === 'k') - Number(row.cells[b]?.type === 'k'))
+  for (const col of order) {
+    const trial: Board = [{ id: row.id, cells: row.cells.map((c, i) => (i === col ? null : c)) }, ...board.slice(1)]
+    if (hasSafeExit(trial, player, playerColor, enemyColor)) {
+      row.cells[col] = null
+      return true
+    }
+  }
+  // Hepsi (şah hariç dene, sonra şah da)
+  const keepKing = row.cells.map((c) => (c?.type === 'k' ? c : null))
+  const trialK: Board = [{ id: row.id, cells: keepKing }, ...board.slice(1)]
+  row.cells = hasSafeExit(trialK, player, playerColor, enemyColor) ? keepKing : new Array(DAILY_COLS).fill(null)
+  return true
+}
 
 export function applyDailyScroll(state: DailyState): DailyState {
   if (state.status !== 'playing') return state
@@ -445,15 +512,19 @@ export function applyDailyScroll(state: DailyState): DailyState {
   }
 
   next.board = [next.incoming, ...next.board.slice(0, ROWS - 1)]
+  next.player = { row: next.player.row + 1, col: next.player.col }
+  // Her yeni satırda en az bir çıkış: giren satır son çıkışı kapattıysa incelt
+  if (DAILY_ROW_RESCUE && rescueEntryRow(next.board, next.player, next.playerColor, next.enemyColor)) {
+    next.events.push({ kind: 'rescue' })
+  }
   // Şah yoksa sayaç işler; bekleme dolunca sıradaki satır bir şah getirir.
-  // Giren satırda şah varsa (yolda) sayaç sıfır — çift şah doğmaz.
+  // Giren satırda şah varsa (yolda) sayaç sıfır - çift şah doğmaz.
   const kingOnBoard = hasKing(next.board, next.enemyColor)
   next.kingless = kingOnBoard ? 0 : next.kingless + 1
   const withKing = !kingOnBoard && next.kingless >= DAILY_KING_GAP_ROWS
   next.incoming = spawnDailyRow(next.seed, next.spawned, next.enemyColor, withKing)
   if (withKing) next.kingless = 0
   next.spawned += 1
-  next.player = { row: next.player.row + 1, col: next.player.col }
   next.distance += 1
 
   const points = DAILY_ROW_SCORE * DAILY_SCORE_FACTOR
@@ -463,7 +534,7 @@ export function applyDailyScroll(state: DailyState): DailyState {
 }
 
 /**
- * Oyuncuyu vuran taş — yenilme sahnesi için. Birden çok vuran varsa en
+ * Oyuncuyu vuran taş - yenilme sahnesi için. Birden çok vuran varsa en
  * yakını (o "yer"). Vurulmuyorsa null.
  */
 export function dailyStriker(state: DailyState): Pos | null {

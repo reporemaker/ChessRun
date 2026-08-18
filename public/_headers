@@ -1,0 +1,19 @@
+# Cloudflare Pages başlıkları (oyun, chessrun.app). Oyun tamamen aynı
+# origin'den besleniyor: harici betik/stil/yazı tipi yok, API'ler /collect ve
+# /lb apex'te. Bu yüzden CSP sıkı tutulabiliyor. 'unsafe-inline' yalnızca
+# stil için: React satır içi stil atıyor.
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+
+# Hash'li varlıklar: bir yıl, değişmez
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Service worker her seferinde ağdan denetlensin
+/sw.js
+  Cache-Control: no-cache

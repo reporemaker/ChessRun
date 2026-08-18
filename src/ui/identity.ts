@@ -6,7 +6,7 @@
  * HMAC-SHA256 ile imzalanıyor.
  *
  * Dürüst sınır: anahtar tarayıcıda durduğu için bu imza *kurcalamayı*
- * fark ettirir, kararlı bir hile girişimini durduramaz — depolamayı elle
+ * fark ettirir, kararlı bir hile girişimini durduramaz - depolamayı elle
  * düzenleyen biri kendi anahtarıyla yeniden imzalayabilir. Gerçek koruma
  * ancak sunucu tarafında, tohumlu bir koşunun tekrar oynatılıp
  * doğrulanmasıyla olur (bkz. README, sıradaki adımlar).
@@ -21,7 +21,7 @@ import { getSettings } from './settings'
 export interface Identity {
   /** Cihazın kalıcı kimliği */
   token: string
-  /** Görünen ad — oyuncu değiştirebilir */
+  /** Görünen ad - oyuncu değiştirebilir */
   name: string
   createdAt: string
 }
@@ -37,7 +37,7 @@ const PIECES: PieceType[] = ['n', 'b', 'r', 'q', 'p', 'k']
  *
  * Yalnızca iki anda çağrılıyor: ilk kimlik oluşturulurken (site İngilizce
  * açıldıysa İngilizce ad) ve oyuncu ⟳'a bastığında (o an seçili dilde).
- * Dil değiştirmek ada DOKUNMAZ — ad oyuncunun etiketi, arayüz metni değil.
+ * Dil değiştirmek ada DOKUNMAZ - ad oyuncunun etiketi, arayüz metni değil.
  *
  * Sıfat değil AD-belirteç kullanılıyor ("Gölge Vezir", "Shadow Queen",
  * "Schatten-Dame", "Dama Sombra", "Dame Ombre"): sıfat olsaydı DE/ES/FR'de
@@ -101,24 +101,24 @@ export function getIdentity(): Identity {
   return identity
 }
 
-/** Ad için üst sınır — sıralama satırına ve künye fişine sığan uzunluk */
+/** Ad için üst sınır - sıralama satırına ve künye fişine sığan uzunluk */
 export const NAME_MAX = 24
 
 /** Kimliğe bürünmeye kapalı adlar: küçük harfe indirilip boşluksuz karşılaştırılıyor */
 const RESERVED = ['chessrun', 'smartkraft', 'admin', 'sistem', 'system']
 
 /**
- * Adı sıralama tablosuna girecek hâle getirir — tekilliği DEĞİL hijyeni
+ * Adı sıralama tablosuna girecek hâle getirir - tekilliği DEĞİL hijyeni
  * sağlıyor. Tekillik hesapsız modelde anlamsız: kimlik jeton, ad etiket;
  * tabloda adın yanında zaten kısa jeton duruyor.
  *
  * - `#` yasak: kısa jeton `#f93c` biçimiyle karışıp "Ahmet #f93c" taklidine
  *   izin vermesin
- * - kontrol ve yön karakterleri (RTL override, sıfır genişlik) atılıyor —
+ * - kontrol ve yön karakterleri (RTL override, sıfır genişlik) atılıyor -
  *   görünmez ad ve görsel taklit yolu
  * - ardışık boşluk teke iniyor, kırpılıyor, NAME_MAX'a kesiliyor
  * - rezerve adlar reddediliyor
- * - yasaklı kökler (shared/names: normalize + l33t) reddediliyor — sunucu
+ * - yasaklı kökler (shared/names: normalize + l33t) reddediliyor - sunucu
  *   aynı listeyi bir kez daha çalıştırıyor, panelden büyütülmüş hâliyle
  *
  * Boş ya da geçersiz sonuç `null`: çağıran ya eski adı korur ya rastgele üretir.
@@ -141,7 +141,7 @@ export function cleanName(raw: string): string | null {
 }
 
 /**
- * Adı değiştirir. Geçersiz ad verilirse mevcut ad korunur ve `null` döner —
+ * Adı değiştirir. Geçersiz ad verilirse mevcut ad korunur ve `null` döner -
  * arayüz "olmadı" diyebilsin. Boş verilirse rastgele yeni ad üretilir.
  */
 export function renameIdentity(name: string): Identity | null {
@@ -166,6 +166,27 @@ function store(identity: Identity): void {
   } catch {
     // depolama kapalı: kimlik yalnızca bu oturumda yaşar
   }
+}
+
+/**
+ * Kurtarma: başka cihazdan/kodla gelen kimliği ve imza anahtarını bu
+ * cihaza yazar. Mevcut kimlik ezilir - çağıran onayı önceden almış olmalı.
+ * Bellek önbelleği de değişiyor; yine de çağıranın sayfayı yenilemesi
+ * daha temiz (bileşenlerdeki eski kimlik kopyaları için).
+ */
+export function installIdentity(identity: Identity, secret: Uint8Array): void {
+  store(identity)
+  cached = identity
+  try {
+    localStorage.setItem(SECRET_KEY, btoa(String.fromCharCode(...secret)))
+  } catch {
+    // yoksay
+  }
+}
+
+/** İmza anahtarının ham baytları - yalnızca kurtarma blob'unu doldurmak için */
+export function exportSecret(): Uint8Array {
+  return secretBytes()
 }
 
 /** Jetonun gösterilebilir kısa hâli: `a1b2…9f` */

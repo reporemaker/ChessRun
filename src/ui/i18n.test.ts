@@ -32,7 +32,7 @@ describe('sözlük', () => {
     }
   })
 
-  it('beş dilin tamamı eksiksiz — hiçbir dil yedeğe düşmüyor', () => {
+  it('beş dilin tamamı eksiksiz - hiçbir dil yedeğe düşmüyor', () => {
     for (const { code } of LANGS) {
       expect(missingKeys(code), `${code} eksikleri`).toEqual([])
       expect(hasFullProse(code), code).toBe(true)
@@ -45,7 +45,7 @@ describe('sözlük', () => {
     expect(translate('tr', 'flash.kingBonus', { points: 25, lives: 1 })).toContain('+25')
   })
 
-  it('eksik değişkeni olduğu gibi bırakıyor — yarım cümle üretmiyor', () => {
+  it('eksik değişkeni olduğu gibi bırakıyor - yarım cümle üretmiyor', () => {
     expect(translate('tr', 'home.streak', {})).toBe('SERİ {n} GÜN')
   })
 

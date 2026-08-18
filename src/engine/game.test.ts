@@ -89,7 +89,7 @@ describe('dönüşüm', () => {
     expect(next.score).toBe(3)
   })
 
-  it('vezirken piyon yiyince piyona düşer — güç kaybı gerçek', () => {
+  it('vezirken piyon yiyince piyona düşer - güç kaybı gerçek', () => {
     const state = blankState({ playerType: 'q' })
     put(state, { row: ROWS - 3, col: 3 }, 'p')
 
@@ -138,7 +138,7 @@ describe('şah yenince tahta yenilenir', () => {
     expect(next.board[next.player.row].cells[next.player.col]?.color).toBe(next.playerColor)
   })
 
-  it('yeni tahtada oyuncuyu vuran taş bulunmaz — kazanılan can korunur', () => {
+  it('yeni tahtada oyuncuyu vuran taş bulunmaz - kazanılan can korunur', () => {
     for (let round = 0; round < 200; round++) {
       const next = afterKingCapture()
 
@@ -179,10 +179,10 @@ describe('şah yenince tahta yenilenir', () => {
     expect(kingsEaten).toBeGreaterThan(10) // test boşa dönmesin
   })
 
-  it('dar tahtada da can kaybettirmez — şah yeniden doğarken dibe konamaz', () => {
+  it('dar tahtada da can kaybettirmez - şah yeniden doğarken dibe konamaz', () => {
     // Regresyon: kayma sonrası yeniden doğan şah oyuncunun bitişiğine
     // düştüğünde, eski kod onu yalnızca kendi satırında taşımaya çalışıyordu.
-    // 4 sütunda o satır doluysa şah yerinde kalıyor ve oyuncuyu yiyordu —
+    // 4 sütunda o satır doluysa şah yerinde kalıyor ve oyuncuyu yiyordu -
     // ~350 şah yemede bir. Bu yüzden test bilerek dar tahtada ve hacimli.
     let kingsEaten = 0
 
@@ -228,7 +228,7 @@ describe('şah çekme', () => {
     expect(checkedKingSquare(checkPosition())).toEqual({ row: 2, col: 3 })
   })
 
-  it('şah altındaki rakip başka taşını oynayamaz — sadece şahını kurtarır', () => {
+  it('şah altındaki rakip başka taşını oynayamaz - sadece şahını kurtarır', () => {
     const state = checkPosition()
 
     const next = applyEnemyMove(state)
@@ -323,7 +323,7 @@ describe('şaha kaç hamle', () => {
     expect(movesToKing(state)).toBe(1)
   })
 
-  it('taş tipine göre değişir — aynı tahtada fil ile at farklı sayar', () => {
+  it('taş tipine göre değişir - aynı tahtada fil ile at farklı sayar', () => {
     const asBishop = blankState({ playerType: 'b', player: { row: 7, col: 3 } })
     put(asBishop, { row: 5, col: 5 }, 'k')
     expect(movesToKing(asBishop)).toBe(1) // çapraz hat açık
@@ -394,7 +394,7 @@ describe('koridor genişliği', () => {
     }
   })
 
-  it('sınır dışı genişlik istekleri 4–8 aralığına çekilir', () => {
+  it('sınır dışı genişlik istekleri 4-8 aralığına çekilir', () => {
     expect(clampCols(1)).toBe(4)
     expect(clampCols(99)).toBe(8)
     expect(clampCols(6)).toBe(6)
@@ -439,7 +439,7 @@ describe('zorluk', () => {
     expect(rowPieces(0, 'q')).toBeGreaterThan(rowPieces(0, 'p'))
   })
 
-  it('dar koridorda satır başına daha az taş doğar — baskı orantılı kalır', () => {
+  it('dar koridorda satır başına daha az taş doğar - baskı orantılı kalır', () => {
     expect(rowPieces(0, 'n', 4)).toBeCloseTo(rowPieces(0, 'n', 8) / 2)
     expect(rowPieces(0, 'n', 8)).toBe(BASE_ROW_PIECES)
 
@@ -488,7 +488,7 @@ describe('zorluk', () => {
     expect(weightOf('p')).toBeCloseTo(others / 3)
   })
 
-  it('yem piyonu istenen sütuna konur — ilk av garantisi', () => {
+  it('yem piyonu istenen sütuna konur - ilk av garantisi', () => {
     const row = spawnRow({ cols: 6, pieces: 0, enemyColor: 'b', baitCol: 2 })
 
     expect(row.cells[2]?.type).toBe('p')
@@ -508,7 +508,7 @@ describe('tehdit hesabı', () => {
     expect(threats.has(key({ row: 5, col: 4 }))).toBe(false)
   })
 
-  it('en alt satıra inmek güvenli sayılmaz — kayma hemen ardından gelir', () => {
+  it('en alt satıra inmek güvenli sayılmaz - kayma hemen ardından gelir', () => {
     const state = blankState({ player: { row: ROWS - 2, col: 3 }, playerType: 'r' })
 
     const safe = safeMoves(state).map(key)
@@ -519,7 +519,7 @@ describe('tehdit hesabı', () => {
 })
 
 describe('sıkışma', () => {
-  it('hamlesi kalmayan oyuncuyu kurtarmak için taş silinmez — kaybetmek gerçek', () => {
+  it('hamlesi kalmayan oyuncuyu kurtarmak için taş silinmez - kaybetmek gerçek', () => {
     const state = blankState()
     // Piyonun ilerleyeceği kare tıkalı, çaprazları boş → hiç hamlesi yok
     put(state, { row: ROWS - 3, col: 3 }, 'p')
@@ -559,7 +559,7 @@ describe('sıkışma', () => {
     expect(next.events.some((e) => e.kind === 'stuckOut')).toBe(true)
   })
 
-  it('sıkışma tahtayı boşaltmaz — şah yemenin ödülüyle karışmamalı', () => {
+  it('sıkışma tahtayı boşaltmaz - şah yemenin ödülüyle karışmamalı', () => {
     let dense = 0
     const rounds = 60
 

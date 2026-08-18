@@ -122,7 +122,7 @@ describe('recordLifetime (depo)', () => {
     expect(life.since).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })
 
-  it('eski/eksik kayıt bozulmuyor — bilinmeyen alanlar sıfırla dolar', () => {
+  it('eski/eksik kayıt bozulmuyor - bilinmeyen alanlar sıfırla dolar', () => {
     localStorage.setItem('chessrun:lifetime', JSON.stringify({ runs: 3, total: { kings: 1 } }))
     const life = readLifetime()
     expect(life.runs).toBe(3)

@@ -1,4 +1,4 @@
-import { type Ref, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import { type CSSProperties, type Ref, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { ROWS } from '../engine/config'
 import {
@@ -14,26 +14,28 @@ import {
   dailyLevel,
   dailyMoves,
   dailyStriker,
-  dailyUnderThreat,
 } from '../engine/daily'
 import type { PieceType, Pos } from '../engine/types'
 import { getIdentity, shortToken } from '../ui/identity'
 import { DAILY_REPLAY_ALLOWED, markDailyPlayed } from '../ui/dailyLock'
+import { leaderboardEnabled, startDaily } from '../ui/leaderboard'
 import { GLYPH, PIECE_NAME_KEY } from '../ui/pieces'
-import { type RunRecord, currentStreak, rankOf, readRuns, readStanding, recordRun, topRuns } from '../ui/scores'
-import { lifetimeStreak } from '../ui/lifetime'
+import { type RunRecord, currentStreak, readRuns, readStanding, recordRun } from '../ui/scores'
+import { lifetimeStreak, recordLifetime } from '../ui/lifetime'
+import { emptyTally } from '../ui/badges'
 import { useRanking } from '../ui/useRanking'
 import { trackRun } from '../ui/stats'
 import { setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
 import { LANGS } from '../ui/i18n'
-import { shareRun, shareText } from '../ui/share'
-import { feedbackHref } from '../ui/feedback'
+import type { ShareInput } from '../ui/share'
+import { dailyBonus } from '@shared/leaderboard'
+import { FeedbackLinks } from './FeedbackLinks'
 import { type Translate, useT } from '../ui/text'
 import { type SoundName, playSound, unlockSound } from '../ui/sound'
 import { APP_VERSION } from '../ui/version'
-import { ArcadeOutro } from './ArcadeOutro'
+import { DailyOutro } from './DailyOutro'
 import { BadgeChip } from './BadgeChip'
-import { DailyBoard } from './DailyBoard'
+import { DailyBoard, STRIKE_DELAY_MS, STRIKE_MOVE_MS } from './DailyBoard'
 import { NameChip } from './NameChip'
 import type { GameConfig, GameHandle } from './Game'
 
@@ -47,7 +49,7 @@ import type { GameConfig, GameHandle } from './Game'
  * kendisi kompozitörde, 60 fps'te, React'siz.
  *
  * Sekme arka plana gidince rAF durur; geri gelince geçen süre kadar adım
- * atılır (en çok ROWS+1 — yeterince uzun kaldıysan düşmüşsündür). Karar:
+ * atılır (en çok ROWS+1 - yeterince uzun kaldıysan düşmüşsündür). Karar:
  * duraklatma yok, süre akar.
  */
 
@@ -71,15 +73,20 @@ interface Flash {
 interface RunResult {
   run: RunRecord
   isBest: boolean
-  table: RunRecord[]
-  rank: number
+  /** Koşu öncesi en iyi (kapanışta "en iyin") */
+  best: number
+  elapsedMs: number
 }
 
 /** Hız değişimi tık tık değil: hedefe bu zaman sabitiyle yaklaşır */
 const SPEED_EASE_MS = 600
 
+/** Geri sayım adımı ve "BAŞLA" görünme süresi */
+const COUNT_STEP_MS = 1000
+const GO_MS = 600
+
 /**
- * Yenilme sahnesi: vurulan kareye inince oyun ANINDA kararmaz — vuran taş
+ * Yenilme sahnesi: vurulan kareye inince oyun ANINDA kararmaz - vuran taş
  * gelip seni alır, "VURULDUN" görünür, bir saniye sonra oyun sonu ekranı
  * (kullanıcı 18 Ağustos: "yenildiğimi göster, 1 sn sonra game over").
  */
@@ -87,7 +94,7 @@ const STRIKE_MS = 1000
 
 /**
  * Dönüşüm titreşimi süresi (Mario mantarı). Aynı hamlede birden çok dönüşüm
- * olabilir (korunan şahı yedin: at→vezir, sonra vuruldun: vezir→at) —
+ * olabilir (korunan şahı yedin: at→vezir, sonra vuruldun: vezir→at) -
  * sırayla oynatılır ki oyuncu ne olduğunu görsün. CSS morph-* ile aynı.
  */
 const MORPH_MS = 700
@@ -98,12 +105,15 @@ interface Morph {
   id: number
   from: PieceType
   to: PieceType
-  tone: 'up' | 'down'
+  /** hold: iki figür aynı, yalnızca bekletir (vuran taş yoldayken vezir görünsün) */
+  tone: 'up' | 'down' | 'hold'
+  /** Bu adımın süresi; yoksa MORPH_MS */
+  durationMs?: number
 }
 
 /**
  * Sunucuya gönderim. Worker `shared/events` MODES'ta `daily`yi tanıdığı
- * sürümle birlikte dağıtılmalı — eski Worker bilinmeyen modu `classic`e
+ * sürümle birlikte dağıtılmalı - eski Worker bilinmeyen modu `classic`e
  * düşürüp günlük koşuları Av ligine karıştırırdı (18 Ağustos: birlikte dağıtıldı).
  */
 const DAILY_SUBMIT = true
@@ -125,13 +135,74 @@ export function DailyGame({
 
   const [game, setGame] = useState<DailyState>(() => createDaily({ seed }))
   const [runId, setRunId] = useState(0)
+  /* Açılış: önce "Hazır mısın?" penceresi (kurallar), sonra 3-2-1 geri sayım,
+     sonra tahta akmaya başlar. Tahta arkada duruyor (kaymıyor, hamle yok). */
+  const [phase, setPhase] = useState<'ready' | 'countdown' | 'playing'>('ready')
+  const [count, setCount] = useState(3)
+  const countTimer = useRef<number | null>(null)
+  // "Hazırım": hak burada yanar (sunucu start). Sunucu yoksa yerel; ulaşılamıyorsa
+  // ya da hak zaten yanmışsa pencere bunu söyler, oyun başlamaz.
+  const [arming, setArming] = useState(false)
+  const [introError, setIntroError] = useState<'offline' | 'played' | null>(null)
+
+  async function onReady() {
+    unlockSound()
+    if (arming || phase !== 'ready') return
+    if (leaderboardEnabled && day) {
+      setArming(true)
+      setIntroError(null)
+      const info = await startDaily(day)
+      setArming(false)
+      // Geliştirmede sunucusuz da oynanabilsin (yerel tohum); canlıda sunucu şart
+      if (!info && !DAILY_REPLAY_ALLOWED) {
+        setIntroError('offline')
+        return
+      }
+      if (info?.played && !DAILY_REPLAY_ALLOWED) {
+        setIntroError('played')
+        return
+      }
+      // Tohum sunucudan gelenle aynı olmalı; değilse (gün döndü vb.) tahtayı yenile
+      if (info && info.seed !== seed) {
+        const fresh = createDaily({ seed: info.seed })
+        latest.current = fresh
+        setGame(fresh)
+      }
+    }
+    if (day) markDailyPlayed(day)
+    beginCountdown()
+  }
+
+  function beginCountdown() {
+    setPhase('countdown')
+    setCount(3)
+    let n = 3
+    const tick = () => {
+      n -= 1
+      if (n >= 1) {
+        setCount(n)
+        countTimer.current = window.setTimeout(tick, COUNT_STEP_MS)
+      } else {
+        setCount(0)
+        countTimer.current = window.setTimeout(() => {
+          runStart.current = performance.now()
+          lastTs.current = null
+          setPhase('playing')
+        }, GO_MS)
+      }
+    }
+    countTimer.current = window.setTimeout(tick, COUNT_STEP_MS)
+  }
+  useEffect(() => () => {
+    if (countTimer.current != null) window.clearTimeout(countTimer.current)
+  }, [])
   const [flash, setFlash] = useState<Flash | null>(null)
   const [result, setResult] = useState<RunResult | null>(null)
-  const [shared, setShared] = useState<'shared' | 'copied' | 'failed' | null>(null)
   const [hiScore, setHiScore] = useState(() => readStanding('daily').allTime?.score ?? 0)
   const [identity, setIdentity] = useState(() => getIdentity())
   // Yenilme sahnesi (vuran taş → oyuncu) ve oyun sonu perdesinin gecikmesi
-  const [strike, setStrike] = useState<{ from: Pos; to: Pos } | null>(null)
+  const [strike, setStrike] = useState<{ from: Pos; to: Pos; ghost?: PieceType } | null>(null)
+  const strikeClear = useRef<number | null>(null)
   const [outro, setOutro] = useState(false)
   const outroTimer = useRef<number | null>(null)
   // Dönüşüm kuyruğu: sırayla oynar, biri bitince öbürü başlar
@@ -145,13 +216,14 @@ export function DailyGame({
     if (outroTimer.current != null) window.clearTimeout(outroTimer.current)
     if (morphTimer.current != null) window.clearTimeout(morphTimer.current)
     if (hitTimer.current != null) window.clearTimeout(hitTimer.current)
+    if (strikeClear.current != null) window.clearTimeout(strikeClear.current)
   }, [])
 
   // morphTimer null = kuyruk boşta; doluysa sıradaki, mevcut bitince gelir
   function playNextMorph() {
     const next = morphQueue.current.shift() ?? null
     setMorph(next)
-    morphTimer.current = next ? window.setTimeout(playNextMorph, MORPH_MS) : null
+    morphTimer.current = next ? window.setTimeout(playNextMorph, next.durationMs ?? MORPH_MS) : null
   }
 
   function enqueueMorphs(items: Morph[]) {
@@ -170,13 +242,8 @@ export function DailyGame({
   const finished = useRef(false)
   const runStart = useRef(performance.now())
 
-  // Hak koşu başlayınca yanar — kapatıp kaçmak kurtarmaz
-  useEffect(() => {
-    if (day) markDailyPlayed(day)
-  }, [day])
 
-  const moves = useMemo(() => dailyMoves(game), [game])
-  const threatened = useMemo(() => game.status === 'playing' && dailyUnderThreat(game), [game])
+  const moves = useMemo(() => (phase === 'playing' ? dailyMoves(game) : []), [game, phase])
 
   function commit(next: DailyState) {
     const prevType = latest.current.playerType
@@ -197,11 +264,22 @@ export function DailyGame({
         morphs.push({ id: ++morphId.current, from: 'q', to: event.to, tone: 'down' })
         typeBefore = event.to
       } else if (event.kind === 'shrink') {
+        // Vuran taş karene gelirken vezir görünmeye devam eder (hold), taş
+        // varınca kırmızı flaş + küçülme; vuran taş orada söner (DailyBoard ghost)
+        const travel = event.by ? STRIKE_DELAY_MS + STRIKE_MOVE_MS : 0
+        if (event.by && event.piece) {
+          setStrike({ from: event.by, to: next.player, ghost: event.piece })
+          if (strikeClear.current != null) window.clearTimeout(strikeClear.current)
+          strikeClear.current = window.setTimeout(() => setStrike(null), travel + 400)
+          morphs.push({ id: ++morphId.current, from: 'q', to: 'q', tone: 'hold', durationMs: travel })
+        }
         morphs.push({ id: ++morphId.current, from: 'q', to: event.to, tone: 'down' })
         typeBefore = event.to
-        setHitFlash(true)
         if (hitTimer.current != null) window.clearTimeout(hitTimer.current)
-        hitTimer.current = window.setTimeout(() => setHitFlash(false), HIT_FLASH_MS)
+        hitTimer.current = window.setTimeout(() => {
+          setHitFlash(true)
+          hitTimer.current = window.setTimeout(() => setHitFlash(false), HIT_FLASH_MS)
+        }, travel)
       }
     }
     enqueueMorphs(morphs)
@@ -246,11 +324,18 @@ export function DailyGame({
       kings: state.kings,
       bestStreak: state.bestCombo,
     })
+    // Ömür boyu sayaçlar + günlük seri: bu mod da sayılır (19 Ağustos'a kadar
+    // yalnızca Game.tsx yazıyordu; seri hiç ilerlemiyordu). Yenen taş = zincir.
+    const tally = emptyTally()
+    tally.kings = state.kings
+    tally.bestStreak = state.bestCombo
+    for (const piece of state.chain) tally.captured[piece] += 1
+    recordLifetime(tally, { mode: 'daily', distance: state.distance, daily: day || undefined })
     if (DAILY_SUBMIT) {
       const { submitRun } = await import('../ui/leaderboard')
       void submitRun(run)
     }
-    // İstatistik: ayrı uç, jeton yok. Hız ayarı bu modda yok — 'normal'.
+    // İstatistik: ayrı uç, jeton yok. Hız ayarı bu modda yok - 'normal'.
     trackRun({
       mode: 'daily',
       daily: true,
@@ -271,15 +356,15 @@ export function DailyGame({
 
   async function finishRun(state: DailyState) {
     const before = readStanding('daily')
+    const elapsedMs = performance.now() - runStart.current
     const run = await record(state, state.endReason === 'fellOff' ? 'fellOff' : 'lifeLost')
     const after = readStanding('daily')
-    const runs = readRuns()
     setHiScore(after.allTime?.score ?? run.score)
     setResult({
       run,
       isBest: run.score > 0 && run.score > (before.allTime?.score ?? 0),
-      table: topRuns(runs, 'daily'),
-      rank: rankOf(runs, run),
+      best: before.allTime?.score ?? 0,
+      elapsedMs,
     })
   }
 
@@ -296,7 +381,7 @@ export function DailyGame({
 
   /* --- zaman döngüsü ------------------------------------------------ */
   useEffect(() => {
-    if (game.status !== 'playing') return
+    if (game.status !== 'playing' || phase !== 'playing') return
     let raf = 0
     const frame = (ts: number) => {
       const last = lastTs.current ?? ts
@@ -329,11 +414,11 @@ export function DailyGame({
     return () => cancelAnimationFrame(raf)
     // commit her render'da yeni kapanış; döngü yalnızca koşu başında kurulur
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [game.status, runId])
+  }, [game.status, phase, runId])
 
   function onMove(to: Pos) {
     const state = latest.current
-    if (state.status !== 'playing') return
+    if (state.status !== 'playing' || phase !== 'playing') return
     const moved = applyDailyMove(state, to)
     if (moved === state) return
     unlockSound()
@@ -354,7 +439,6 @@ export function DailyGame({
     setGame(next)
     setFlash(null)
     setResult(null)
-    setShared(null)
     setStrike(null)
     setOutro(false)
     setMorph(null)
@@ -364,29 +448,24 @@ export function DailyGame({
     if (morphTimer.current != null) window.clearTimeout(morphTimer.current)
     morphTimer.current = null
     setRunId((n) => n + 1)
+    if (countTimer.current != null) window.clearTimeout(countTimer.current)
+    beginCountdown()
   }
 
-  async function onShare() {
-    setShared(
-      await shareRun(
-        shareText(
-          {
-            mode: 'daily',
-            day,
-            score: game.score,
-            distance: game.distance,
-            chain: game.chain,
-            streak: Math.max(currentStreak(readRuns()), lifetimeStreak()),
-          },
-          t,
-        ),
-      ),
-    )
+  const shareInput: ShareInput = {
+    mode: 'daily',
+    day,
+    score: game.score,
+    distance: game.distance,
+    captures: game.captures,
+    chain: game.chain,
+    streak: Math.max(currentStreak(readRuns()), lifetimeStreak()),
+    name: identity.name,
+    lang: settings.lang,
+    bonus: dailyBonus(game.score),
   }
 
   const speedNow = 1000 / dailyIntervalMs(game.captures)
-  const shareLabel =
-    shared === 'copied' ? t('game.shareCopied') : shared === 'shared' ? t('game.shareDone') : t('game.share')
 
   const stateLine = (
     <span className="gv-tx gv-state">
@@ -400,12 +479,6 @@ export function DailyGame({
           {game.queenLeft > 0 && <> · <b>{t('daily.queenLeft', { n: game.queenLeft })}</b></>}
           {' → '}
           {GLYPH[game.base]}
-        </>
-      )}
-      {threatened && (
-        <>
-          {' · '}
-          <i>{t('hud.threat')}</i>
         </>
       )}
     </span>
@@ -438,7 +511,7 @@ export function DailyGame({
         </span>
       </div>
 
-      <div className="gv-board">
+      <div className="gv-board" style={{ '--cols': String(DAILY_COLS) } as CSSProperties}>
         <DailyBoard
           state={game}
           moves={moves}
@@ -450,6 +523,36 @@ export function DailyGame({
           onMove={onMove}
         />
 
+        {phase === 'ready' && (
+          <div className="outro daily-intro" role="dialog" aria-modal="true">
+            <div className="outro-head">
+              <p className="di-title">{t('daily.intro.title')}</p>
+              <p className="di-ask">{t('daily.intro.ask')}</p>
+            </div>
+            <ul className="di-rules">
+              <li>{t('daily.intro.r1')}</li>
+              <li>{t('daily.intro.r2')}</li>
+              <li>{t('daily.intro.r3')}</li>
+            </ul>
+            <div className="outro-actions">
+              <button type="button" className="outro-btn primary" autoFocus disabled={arming} onClick={() => void onReady()}>
+                {arming ? '…' : introError === 'played' ? t('daily.played') : t('daily.intro.go')}
+              </button>
+              {introError === 'offline' && <p className="di-err">{t('daily.offline')}</p>}
+              {introError === 'played' && <p className="di-err">{t('daily.playedSub', { clock: '' }).replace(/\s*·\s*$/, '')}</p>}
+              <button type="button" className="outro-btn" onClick={onExit}>
+                {t('game.toMenu')}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {phase === 'countdown' && (
+          <div className="daily-count" aria-live="assertive">
+            <span key={count} className={count > 0 ? 'num' : 'go'}>{count > 0 ? count : t('daily.count.go')}</span>
+          </div>
+        )}
+
         {flash && !outro && (
           <div key={flash.id} className={`flash ${flash.tone}`}>
             {flash.text}
@@ -457,20 +560,17 @@ export function DailyGame({
         )}
 
         {outro && (
-          <ArcadeOutro
-            run={result?.run ?? null}
-            score={game.score}
-            distance={game.distance}
-            mated={false}
-            table={result?.table ?? []}
-            rank={result?.rank ?? null}
+          <DailyOutro
+            state={game}
+            day={day}
+            seedHex={(seed >>> 0).toString(16).slice(0, 6).toUpperCase()}
             isRecord={result?.isBest ?? false}
-            chain={game.chain}
-            daily={day || undefined}
-            shareLabel={shareLabel}
-            onShare={() => void onShare()}
-            onRestart={restart}
+            best={result?.best ?? hiScore}
+            elapsedMs={result?.elapsedMs ?? performance.now() - runStart.current}
+            streak={Math.max(currentStreak(readRuns()), lifetimeStreak())}
+            share={shareInput}
             onExit={onExit}
+            onRestart={DAILY_REPLAY_ALLOWED ? restart : undefined}
           />
         )}
       </div>
@@ -529,7 +629,7 @@ export function DailyGame({
           </span>
           <span className="gv-cell">
             <span className="gv-lb">{t('daily.combo')}</span>
-            <span className="gv-n md">{game.combo > 0 ? `×${game.combo}` : '—'}</span>
+            <span className="gv-n md">{game.combo > 0 ? `×${game.combo}` : '-'}</span>
           </span>
         </div>
 
@@ -618,7 +718,7 @@ export function DailyGame({
           <span className="gv-lb">{t('settings.ranking')}</span>
           <span className="gv-rank-row">
             <span className="gv-cell">
-              <span className="gv-n md gold">{ranking.rank == null ? '—' : `#${ranking.rank}`}</span>
+              <span className="gv-n md gold">{ranking.rank == null ? '-' : `#${ranking.rank}`}</span>
               <span className="gv-lb">{t('settings.rankMine')}</span>
             </span>
             <span className="gv-cell">
@@ -626,7 +726,7 @@ export function DailyGame({
               <span className="gv-lb">{t('settings.scoreMine')}</span>
             </span>
             <span className="gv-cell">
-              <span className="gv-n md">{ranking.players ?? '—'}</span>
+              <span className="gv-n md">{ranking.players ?? '-'}</span>
               <span className="gv-lb">{t('settings.players')}</span>
             </span>
           </span>
@@ -646,7 +746,7 @@ export function DailyGame({
           <button type="button" onClick={() => onOpenPage('about')}>
             {t('settings.about')}
           </button>
-          <a href={feedbackHref(settings.lang, 'daily')}>{t('settings.feedback')}</a>
+          <FeedbackLinks lang={settings.lang} mode="daily" />
         </div>
       </aside>
     </div>

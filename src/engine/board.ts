@@ -15,7 +15,7 @@ export function newId(): number {
   return nextId++
 }
 
-/** Tahta genişliği artık sabit değil — her zaman tahtanın kendisinden okunur */
+/** Tahta genişliği artık sabit değil - her zaman tahtanın kendisinden okunur */
 export function colsOf(board: Board): number {
   return board[0].cells.length
 }
@@ -48,7 +48,7 @@ export interface SpawnOptions {
   pieces: number
   enemyColor: Color
   withKing?: boolean
-  /** Bu sütuna kesin bir piyon koy — oyuncuya ilk avını garantilemek için */
+  /** Bu sütuna kesin bir piyon koy - oyuncuya ilk avını garantilemek için */
   baitCol?: number | null
   rng?: Rng
 }
@@ -108,7 +108,7 @@ export function findKing(board: Board, enemyColor: Color): Pos | null {
 /**
  * Klasik modda şah her zaman tahtada olmalı: yendiğinde ya da alttan
  * silindiğinde en üst satırdaki boş bir kareye yenisi doğar.
- * (Şah Kaçışı modunda rakip şahı yok — oyuncunun kendisi şah.)
+ * (Şah Kaçışı modunda rakip şahı yok - oyuncunun kendisi şah.)
  */
 export function ensureKing(board: Board, enemyColor: Color, rng: Rng = systemRng): void {
   if (findKing(board, enemyColor)) return
@@ -126,7 +126,7 @@ export function ensureKing(board: Board, enemyColor: Color, rng: Rng = systemRng
 export interface CreateBoardOptions {
   playerColor: Color
   cols: number
-  /** Oyuncunun başlangıç taşı — Şah Kaçışı'nda şah */
+  /** Oyuncunun başlangıç taşı - Şah Kaçışı'nda şah */
   playerPiece?: PieceType
   /** Rakip şahı tahtaya konsun mu (klasik mod) */
   withKing?: boolean
@@ -169,7 +169,7 @@ export function createBoard({
   return { board, player }
 }
 
-/** Satranç tahtasında iki kare arası mesafe — moves.ts'e bağımlı kalmamak için burada */
+/** Satranç tahtasında iki kare arası mesafe - moves.ts'e bağımlı kalmamak için burada */
 function distance(a: Pos, b: Pos): number {
   return Math.max(Math.abs(a.row - b.row), Math.abs(a.col - b.col))
 }
@@ -191,7 +191,7 @@ export interface RefreshOptions {
 /**
  * Tahtayı baştan kurar: şah yendiğinde çağrılır.
  *
- * Kazanılan can aynı turda geri alınmamalı — bu yüzden oyuncunun çevresi
+ * Kazanılan can aynı turda geri alınmamalı - bu yüzden oyuncunun çevresi
  * temizlenir, yeni şah uzağa konur ve en alt satırdaki oyuncu bir yukarı
  * alınır (orada kalsa bir sonraki kaymada zaten düşerdi).
  */
@@ -339,7 +339,7 @@ export function respawnSquare(
 }
 
 /* ------------------------------------------------------------------ *
- * Üçlü — kadro yerleşimi
+ * Üçlü - kadro yerleşimi
  * ------------------------------------------------------------------ */
 
 /** Bir karenin *görünen* rengi. Tahta kayarken satır arttığı için

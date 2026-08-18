@@ -30,7 +30,7 @@ describe('ISO hafta anahtarı', () => {
     expect(isoWeekKey(new Date(2026, 7, 17))).not.toBe(week)
   })
 
-  it('yıl sınırında haftayı bölmez — perşembesi hangi yıldaysa o yıla ait', () => {
+  it('yıl sınırında haftayı bölmez - perşembesi hangi yıldaysa o yıla ait', () => {
     // 2025-12-29 pazartesi ile 2026-01-04 pazar aynı ISO haftası
     expect(isoWeekKey(new Date(2025, 11, 29))).toBe(isoWeekKey(new Date(2026, 0, 4)))
     expect(isoWeekKey(new Date(2026, 0, 1))).toBe('2026-W01')
@@ -138,7 +138,7 @@ describe('gün serisi', () => {
     expect(currentStreak(runs, now)).toBe(3)
   })
 
-  it('bugün oynanmadıysa seri dünden sayılır — gün bitmeden kırılmaz', () => {
+  it('bugün oynanmadıysa seri dünden sayılır - gün bitmeden kırılmaz', () => {
     const runs = ['2026-08-15', '2026-08-14'].map(daily)
     expect(currentStreak(runs, now)).toBe(2)
   })

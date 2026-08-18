@@ -103,7 +103,7 @@ export function createGame({
     chain: [playerType],
     score: 0,
     // Kaçış tek canlık: mat olduğun an koşu biter.
-    // Üçlü'de "can" diye ayrı bir sayaç yok — kalan taş sayısı odur.
+    // Üçlü'de "can" diye ayrı bir sayaç yok - kalan taş sayısı odur.
     lives: mode === 'kingRun' ? 1 : mode === 'trio' ? squad.length : START_LIVES,
     distance: 0,
     checkStreak: 0,
@@ -116,10 +116,10 @@ export function createGame({
 }
 
 /**
- * Oyuncunun oynayabileceği kareler — Üçlü'de yalnızca *seçili* taşın.
+ * Oyuncunun oynayabileceği kareler - Üçlü'de yalnızca *seçili* taşın.
  *
  * Kaçış'ta gerçek satranç kuralı geçerli: **vurulan kareye giremezsin.**
- * Böylece "mat" kendiliğinden tanımlanıyor — vuruluyorsun ve gidecek güvenli
+ * Böylece "mat" kendiliğinden tanımlanıyor - vuruluyorsun ve gidecek güvenli
  * kare yok. Diğer modlarda böyle bir kısıt yok, risk oyuncunun tercihi.
  */
 export function legalMoves(state: GameState): Pos[] {
@@ -156,7 +156,7 @@ export function threatenedSquares(state: GameState): Set<string> {
 }
 
 /**
- * Şah çekiliyse rakip şahın karesi — arayüz bunu işaretler.
+ * Şah çekiliyse rakip şahın karesi - arayüz bunu işaretler.
  * Üçlü'de şahı kadronun *herhangi* bir taşı çekmiş olabilir.
  */
 export function checkedKingSquare(state: GameState): Pos | null {
@@ -214,10 +214,10 @@ function settleSquad(state: GameState): void {
 /* ------------------------------------------------------------------ *
  * Tur fazlara bölündü: her fazın kendi animasyonu var ve arayüz
  * bunları sırayla oynatıyor. Motor zamanlamayı hiç bilmiyor.
- *   1. applyPlayerMove — oyuncu oynar, yediği taşa dönüşür
- *  1.5 applyBoardRefresh — yalnızca şah yendiyse
- *   2. applyScroll     — tahta bir satır ilerler
- *   3. applyEnemyMove  — rakip tek taşını oynar
+ *   1. applyPlayerMove - oyuncu oynar, yediği taşa dönüşür
+ *  1.5 applyBoardRefresh - yalnızca şah yendiyse
+ *   2. applyScroll     - tahta bir satır ilerler
+ *   3. applyEnemyMove  - rakip tek taşını oynar
  * ------------------------------------------------------------------ */
 
 /** 1. faz: oyuncunun hamlesi */
@@ -294,7 +294,7 @@ export function applyPlayerMove(state: GameState, to: Pos): GameState {
  * Üçlü'nün ikinci puan kaynağı: **yeni** tehdit kurmak.
  *
  * Yalnızca oynanan taşın yeni karesinden vurduğu ve eski karesinden
- * vurmadığı rakip taşlar sayılıyor — yani puan baskı *kurmaktan* geliyor,
+ * vurmadığı rakip taşlar sayılıyor - yani puan baskı *kurmaktan* geliyor,
  * baskıyı sürdürmekten değil. Aynı taşı iki kare arasında gidip gelerek
  * saymak da bu yüzden işe yaramıyor. Şah dışarıda: onun karşılığı zaten
  * şah puanı.
@@ -333,7 +333,7 @@ function attackedEnemies(
  * Şah yendiğinde kadro takviyesi.
  *
  * Eksik taş varsa o geri gelir; kadro tamsa dördüncü taş katılır ve o taş
- * her zaman **ikinci fil** olur — çünkü tek fil tahtanın yarısını hiç
+ * her zaman **ikinci fil** olur - çünkü tek fil tahtanın yarısını hiç
  * göremiyor. İkinci fil bu yüzden zorunlu olarak karşı renkte doğuyor.
  */
 function reinforceSquad(state: GameState): void {
@@ -363,7 +363,7 @@ function reinforceSquad(state: GameState): void {
  *
  * Hem hedefi görünür kılıyor (şah avı Av modunun asıl amacı) hem de satranç
  * bilmeyene taşının nasıl hareket ettiğini öğretiyor: "atla 3, filken 1".
- * Tahta her tur kaydığı için sayı yaklaşık — yine de yön duygusu veriyor.
+ * Tahta her tur kaydığı için sayı yaklaşık - yine de yön duygusu veriyor.
  */
 export function movesToKing(state: GameState, maxDepth = 4): number | null {
   if (state.status !== 'playing' || state.mode === 'kingRun') return null
@@ -378,7 +378,7 @@ export function movesToKing(state: GameState, maxDepth = 4): number | null {
   board[state.player.row].cells[state.player.col] = null
 
   // Taşı geçici olarak kareye koyup hamlelerini sor, sonra kareyi eski
-  // hâline döndür — altındaki düşman taşı silinmesin
+  // hâline döndür - altındaki düşman taşı silinmesin
   const movesFrom = (from: Pos): Pos[] => {
     const occupant = board[from.row].cells[from.col]
     board[from.row].cells[from.col] = piece
@@ -434,7 +434,7 @@ export function applyBoardRefresh(state: GameState): GameState {
 
   rebuildBoard(next, next.mode === 'trio' ? 0 : 2)
 
-  // Yeni tahtada oyuncuyu vuran taş kalmasın — hiçbiri "bilinen tehdit" değil
+  // Yeni tahtada oyuncuyu vuran taş kalmasın - hiçbiri "bilinen tehdit" değil
   if (next.mode !== 'trio') dropAmbushers(next, next.player, new Set())
 
   next.events.push({ kind: 'boardRefresh' })
@@ -513,14 +513,14 @@ export function applyScroll(state: GameState): GameState {
 
   const next = cloneState(state)
 
-  // Kaymadan önce oyuncuyu kimlerin vurduğunu not al — sonrasında bu listede
+  // Kaymadan önce oyuncuyu kimlerin vurduğunu not al - sonrasında bu listede
   // olmayan bir tehdit varsa, o tehdit oyuncunun hamlesiyle değil kaymayla
   // doğmuş demektir ve oyuncunun görüp kaçınma şansı olmamıştır.
   //
   // Üçlü'de bu not kadronun **her** taşı için ayrı tutuluyor. Yalnızca
   // oynanan taşı korumak ölçümde modu oynanamaz kılıyordu: rakip turda tek
   // hamle yapıyor, ama kayma her tur bedava saldırgan doğuruyor ve üç
-  // hedefin arasından birini mutlaka vuruyordu — oyuncunun tek hamlesiyle
+  // hedefin arasından birini mutlaka vuruyordu - oyuncunun tek hamlesiyle
   // cevap veremeyeceği bir tempo. 300 koşuda kadronun tamamı ortalama
   // 6 turda yenmişti, düşerek kaybedilen taş sayısı sıfırdı.
   const knownAttackers = new Set(
@@ -568,11 +568,11 @@ export function applyScroll(state: GameState): GameState {
  * Kadronun kayma karşısındaki hâli.
  *
  * Oyunun asıl gerilimi burada: turda tek taş oynadığın için diğer ikisi
- * her tur bir satır dibe iniyor. En alt satırda yakalanan taş düşer —
+ * her tur bir satır dibe iniyor. En alt satırda yakalanan taş düşer -
  * koşu bitmez, kadro küçülür.
  *
  * Pusu koruması kadronun tamamına uygulanıyor: rakip turda bir hamle
- * yapıyor, oyuncu da bir hamle — bu tempo adil. Ama kayma her tur bedava
+ * yapıyor, oyuncu da bir hamle - bu tempo adil. Ama kayma her tur bedava
  * saldırgan doğuruyor ve üç hedef arasından birini vurmak neredeyse hiç
  * ıskalamıyor; korumasız bırakılan taşlar oyuncunun cevap veremeyeceği bir
  * hızda eriyordu. Oyuncunun *kendi hamlesiyle* girdiği tehditler ise
@@ -624,7 +624,7 @@ function scrollSquad(
  *
  * Oyuncu güvenli olduğunu görerek indiği bir kareye, üstten yeni doğan bir
  * kale ya da vezir yüzünden ölmemeli. Oyuncunun hamlesinden *önce* de onu
- * vuran taşlar dokunulmadan bırakılır — bilerek alınan risk risktir.
+ * vuran taşlar dokunulmadan bırakılır - bilerek alınan risk risktir.
  */
 function dropAmbushers(state: GameState, target: Pos, knownAttackers: Set<number>): void {
   // Tek geçiş yetmiyor: önündeki taş kalkan bir kalenin hattı açılıyor ve
@@ -637,7 +637,7 @@ function dropAmbushers(state: GameState, target: Pos, knownAttackers: Set<number
     for (const [id, pos] of attackers) {
       if (knownAttackers.has(id)) continue
 
-      // Şah silinemez (tahtada hep bir tane olmalı) — pusudan çıkarıp uzağa taşınır
+      // Şah silinemez (tahtada hep bir tane olmalı) - pusudan çıkarıp uzağa taşınır
       if (state.board[pos.row].cells[pos.col]?.type === 'k' && state.mode !== 'kingRun') {
         if (relocateKing(state, pos, target)) changed++
         continue
@@ -745,7 +745,7 @@ export function applyEnemyMove(state: GameState): GameState {
 }
 
 /**
- * Üçlü: kadrodan bir taş gider. Can kaybı değil — koşu ancak kadro
+ * Üçlü: kadrodan bir taş gider. Can kaybı değil - koşu ancak kadro
  * tükenince biter. Bu yüzden yeniden doğma da yok: kaybettiğin taşı geri
  * almanın tek yolu rakip şahı yemek.
  */
@@ -780,7 +780,7 @@ function losePiece(
 
 /**
  * Kaçış'ın bitiş koşulu: vuruluyorsun ve gidecek güvenli kare yok.
- * Vurulmuyorsan hamlesizlik ölüm değil — beklersin, bedeli bir satır.
+ * Vurulmuyorsan hamlesizlik ölüm değil - beklersin, bedeli bir satır.
  */
 function checkPlayerMated(state: GameState): void {
   if (state.status !== 'playing' || state.mode !== 'kingRun') return
@@ -793,7 +793,7 @@ function checkPlayerMated(state: GameState): void {
   state.events.push({ kind: 'gameover' })
 }
 
-/** Tüm fazları tek seferde çalıştırır — testler ve animasyonsuz kullanım için */
+/** Tüm fazları tek seferde çalıştırır - testler ve animasyonsuz kullanım için */
 export function playerMove(state: GameState, to: Pos): GameState {
   const moved = applyPlayerMove(state, to)
   if (moved === state) return state
@@ -804,7 +804,7 @@ export function playerMove(state: GameState, to: Pos): GameState {
 /**
  * Sıkışma: oyuncunun hiç hamlesi kalmadı.
  *
- * Bekleme düğmesi yok — hamlen varsa oynamak zorundasın. Hamlen yoksa bu
+ * Bekleme düğmesi yok - hamlen varsa oynamak zorundasın. Hamlen yoksa bu
  * faz devreye giriyor: bir sıkışma hakkı yanıyor, tahta aynı yoğunlukta
  * yeniden diziliyor, puanın kalıyor ve üstüne prim geliyor. Hak bittiyse
  * sıkışmak koşuyu bitiriyor.
@@ -835,7 +835,7 @@ export function applyStuck(state: GameState): GameState {
   // Yeni tahtada da vurulmuyor olmalı
   if (next.mode !== 'trio') dropAmbushers(next, next.player, new Set())
 
-  // Ve en az bir hamlesi olmalı — yoksa kurtuluş kurtarmamış olur
+  // Ve en az bir hamlesi olmalı - yoksa kurtuluş kurtarmamış olur
   if (!hasAnyMove(next)) {
     for (const pos of next.squad) clearAround(next.board, pos)
     dropAmbushers(next, next.player, new Set())
@@ -849,7 +849,7 @@ export function applyStuck(state: GameState): GameState {
 
 /**
  * Oyuncu hâlâ hiç puan alamadıysa yeni satıra yakalanabilir bir piyon konur.
- * Hiçbir koşu 0 puanla bitmesin diye — ilk av, dönüşüm zincirini başlatır.
+ * Hiçbir koşu 0 puanla bitmesin diye - ilk av, dönüşüm zincirini başlatır.
  * (Kaçış ve Üçlü'de puan zaten hayatta kalmakla geliyor, yeme şart değil.)
  */
 function baitColumn(state: GameState): number | null {
@@ -871,7 +871,7 @@ function loseLife(state: GameState, reason: 'captured' | 'fellOff'): void {
     return
   }
 
-  // Can kaybında taşını korursun — asıl ceza zaten ilerlemenin kesilmesi
+  // Can kaybında taşını korursun - asıl ceza zaten ilerlemenin kesilmesi
   const threatened = enemyThreats(state.board, state.playerColor, state.enemyColor)
   const pos = respawnSquare(state.board, threatened, state.rng)
   state.board[pos.row].cells[pos.col] = makePiece(state.playerType, state.playerColor)

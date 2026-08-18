@@ -29,7 +29,7 @@ describe('acceptedWeeks / previousWeek', () => {
     expect(acceptedWeeks(Date.UTC(2026, 7, 23, 23))).toEqual(['2026-W34', '2026-W35'])
   })
 
-  it('geçen hafta — yıl sınırı dahil', () => {
+  it('geçen hafta - yıl sınırı dahil', () => {
     expect(previousWeek('2026-W34')).toBe('2026-W33')
     expect(previousWeek('2026-W35')).toBe('2026-W34')
     expect(previousWeek('2027-W01')).toBe('2026-W53')
@@ -101,6 +101,11 @@ const GOOD = {
 }
 
 describe('cleanSubmit', () => {
+  it('ham adı da taşıyor - reddedilirse panele not düşmek için', () => {
+    expect(cleanSubmit({ ...GOOD, name: '  #SmartKraft  ' }, NOW)).toMatchObject({ name: null, rawName: '  #SmartKraft  ' })
+    expect(cleanSubmit({ ...GOOD, name: 'x'.repeat(80) }, NOW)?.rawName).toHaveLength(40)
+  })
+
   it('geçerli gövdeyi olduğu gibi alıyor', () => {
     const c = cleanSubmit(GOOD, NOW)
     expect(c).toMatchObject({
@@ -153,7 +158,7 @@ describe('cleanSubmit', () => {
   })
 })
 
-describe('günün mücadelesi — tohum ve gün', () => {
+describe('günün mücadelesi - tohum ve gün', () => {
   it('tohum sırra ve güne bağlı, deterministik, 32 bit', async () => {
     const { dailySeed, acceptedDay } = await import('./lb')
     const a = await dailySeed('s1', '2026-08-18')
@@ -182,15 +187,18 @@ describe('günün mücadelesi — tohum ve gün', () => {
 })
 
 describe('günlük çarpan', () => {
-  it('formül: 1 + min(puan,500)/1000, aşağı yuvarlama', async () => {
-    const { dailyBonus, applyDailyBonus } = await import('../../shared/leaderboard')
+  it('formül: 1 + puan/1000, üst sınır yok, aşağı yuvarlama, skor tavanı', async () => {
+    const { dailyBonus, applyDailyBonus, LB_LIMITS } = await import('../../shared/leaderboard')
     expect(dailyBonus(null)).toBe(1)
     expect(dailyBonus(0)).toBe(1)
     expect(dailyBonus(150)).toBeCloseTo(1.15)
     expect(dailyBonus(500)).toBe(1.5)
-    expect(dailyBonus(5000)).toBe(1.5)
+    expect(dailyBonus(1000)).toBe(2)
+    expect(dailyBonus(1882)).toBeCloseTo(2.882)
     expect(applyDailyBonus(1000, 150)).toBe(1150)
     expect(applyDailyBonus(333, 150)).toBe(382)
+    expect(applyDailyBonus(1000, 1000)).toBe(2000)
+    expect(applyDailyBonus(LB_LIMITS.scoreMax, 5000)).toBe(LB_LIMITS.scoreMax)
   })
 
   it('cleanSubmit koşunun gününü (day) taşır, bozuksa düşürür', () => {
@@ -199,5 +207,25 @@ describe('günlük çarpan', () => {
     expect(cleanSubmit({ ...base, day: '2026-08-18' }, now)?.day).toBe('2026-08-18')
     expect(cleanSubmit({ ...base, day: '2020-01-01' }, now)?.day).toBeNull()
     expect(cleanSubmit(base, now)?.day).toBeNull()
+  })
+})
+
+describe('paylaşım sayfası (/s/)', () => {
+  it('dilinde başlık/açıklama, kaçırılmış, oyuna yönlendirir', async () => {
+    const { buildSharePage, renderSharePage } = await import('./share')
+    const url = new URL('https://chessrun.app/s/?g=daily&d=2026-08-18&p=318&r=41&c=34&n=Ate%C5%9F%20At&l=tr&k=3')
+    const page = buildSharePage(url)
+    expect(page.title).toContain('Günün Mücadelesi')
+    expect(page.description).toContain('Ateş At 318 puan yaptı')
+    expect(page.description).toContain('3 gün üst üste')
+    expect(page.target).toBe('https://chessrun.app/?g=daily&d=2026-08-18')
+    const html = renderSharePage(page, url.toString())
+    expect(html).toContain('og:image')
+    expect(html).toContain('lang="tr"')
+    const bad = buildSharePage(new URL('https://chessrun.app/s/?g=classic&p=1&n=%3Cscript%3Ex%3C/script%3E&l=en'))
+    expect(renderSharePage(bad, 'x')).not.toContain('<script>x')
+    const en = buildSharePage(new URL('https://chessrun.app/s/?g=zzz&l=xx&p=5'))
+    expect(en.title).toBe('ChessRun · Hunt')
+    expect(en.target).toBe('https://chessrun.app/?g=classic')
   })
 })

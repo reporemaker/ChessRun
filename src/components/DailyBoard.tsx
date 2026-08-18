@@ -16,18 +16,24 @@ interface DailyBoardProps {
   moves: Pos[]
   /**
    * Kayan katman. Oyun döngüsü her karede `--t` (0..1) değişkenini bu
-   * elemana yazar; React yeniden çizmez — kayma tamamen kompozitörde.
+   * elemana yazar; React yeniden çizmez - kayma tamamen kompozitörde.
    */
   slideRef: RefObject<HTMLDivElement | null>
   /** Koşu bitti: kırmızı alarm + tarama silme (Board ile aynı CSS) */
   dying: boolean
-  /** Yenilme sahnesi: vuran taş `from`dan oyuncunun karesine gelir */
-  strike: { from: Pos; to: Pos } | null
+  /**
+   * Vuruş sahnesi: vuran taş `from`dan oyuncunun karesine gelir.
+   * `ghost` doluysa vuran taş tahtadan çoktan silinmiştir (vezir vuruşu):
+   * o tipte bir hayalet çizilir, karene kayar ve orada söner; kurban sönmez
+   * (dönüşüm titreşimi devralır). `ghost` yoksa oyun sonu vuruşu: gerçek
+   * taş kayar, kurban söner.
+   */
+  strike: { from: Pos; to: Pos; ghost?: PieceType } | null
   /**
    * Dönüşüm titreşimi (Mario mantarı): oyuncunun taşı iki figür arasında
    * yanıp söner, sonuncuda `to`da kalır. `tone` yön: büyüme ya da küçülme.
    */
-  morph: { id: number; from: PieceType; to: PieceType; tone: 'up' | 'down' } | null
+  morph: { id: number; from: PieceType; to: PieceType; tone: 'up' | 'down' | 'hold' } | null
   /** Vezirken vurulma: kare kırmızı flaş, taş kalır */
   hitFlash: boolean
   onMove: (pos: Pos) => void
@@ -39,7 +45,7 @@ interface DailyBoardProps {
  * Dokuz satır çizilir: üstten girmek üzere olan satır + sekiz oyun satırı.
  * Katman `translateY(cell × (t − 1))` ile kayar: t=0'da giren satır tamamen
  * çerçevenin üstünde, t→1'de yerine oturur; tam o anda motor bir adım atar
- * (satır tahtaya girer, dip satır düşer) ve t sıfırlanır — görüntü hiç
+ * (satır tahtaya girer, dip satır düşer) ve t sıfırlanır - görüntü hiç
  * kırılmaz. Kareler DOM'da satır kimliğiyle anahtarlı: satır aşağı
  * kaydıkça aynı düğümler taşınır, yeniden kurulmaz. Dokunma hedefi de
  * kayan düğümün kendisi olduğu için ara konumda bile doğru kareye basılır.
@@ -56,7 +62,7 @@ export function DailyBoard({ state, moves, slideRef, dying, strike, morph, hitFl
   // offsetTop/Left transform'dan etkilenmez, kayma ile çakışmaz.
   //
   // Kayma ADIMINDA çalışmamalı: satırlar bir indeks aşağı kayınca taşın
-  // offsetTop'u bir kare artıyor ama taş tahtaya göre yerinden oynamadı —
+  // offsetTop'u bir kare artıyor ama taş tahtaya göre yerinden oynamadı -
   // FLIP bunu hamle sanıp taşı bir kare daha "düşürüyordu" (18 Ağustos
   // canlı test: "taşım iki kere geri gidiyor"). Ölçüt: oyuncunun bulunduğu
   // satırın kimliği + sütunu değişmediyse hareket yok.
@@ -88,11 +94,29 @@ export function DailyBoard({ state, moves, slideRef, dying, strike, morph, hitFl
     if (!strike) return
     const root = slideRef.current
     if (!root) return
-    const strikerSq = root.querySelector<HTMLElement>('[data-striker="1"]')
     const playerSq = root.querySelector<HTMLElement>('[data-player="1"]')
+    if (!playerSq) return
+    if (strike.ghost) {
+      // Hayalet: vuran taş tahtada yok; kayar, karede söner
+      const ghost = root.querySelector<HTMLElement>('.piece.ghost')
+      const fromSq = root.querySelector<HTMLElement>(`[data-row="${strike.from.row}"][data-col="${strike.from.col}"]`)
+      if (!ghost || !fromSq) return
+      const dx = playerSq.offsetLeft - fromSq.offsetLeft
+      const dy = playerSq.offsetTop - fromSq.offsetTop
+      ghost.animate(
+        [
+          { transform: 'translate(0, 0)', opacity: 1, offset: 0 },
+          { transform: `translate(${dx}px, ${dy}px)`, opacity: 1, offset: 0.72 },
+          { transform: `translate(${dx}px, ${dy}px) scale(0.5)`, opacity: 0, offset: 1 },
+        ],
+        { duration: STRIKE_MOVE_MS + 220, delay: STRIKE_DELAY_MS, easing: 'cubic-bezier(.4, 0, .2, 1)', fill: 'forwards' },
+      )
+      return
+    }
+    const strikerSq = root.querySelector<HTMLElement>('[data-striker="1"]')
     const striker = strikerSq?.querySelector<HTMLElement>('.piece')
-    const victim = playerSq?.querySelector<HTMLElement>('.piece')
-    if (!strikerSq || !playerSq || !striker) return
+    const victim = playerSq.querySelector<HTMLElement>('.piece')
+    if (!strikerSq || !striker) return
     const dx = playerSq.offsetLeft - strikerSq.offsetLeft
     const dy = playerSq.offsetTop - strikerSq.offsetTop
     striker.style.zIndex = '4'
@@ -128,19 +152,21 @@ export function DailyBoard({ state, moves, slideRef, dying, strike, morph, hitFl
                 const pos = { row: r, col: c }
                 const canMove = onBoard && movable.has(key(pos))
                 const isPlayer = onBoard && state.player.row === r && state.player.col === c
-                const isStriker = onBoard && strike != null && strike.from.row === r && strike.from.col === c
+                const isStriker = onBoard && strike != null && !strike.ghost && strike.from.row === r && strike.from.col === c
                 return (
                   <button
                     type="button"
                     key={c}
                     data-player={isPlayer ? '1' : undefined}
                     data-striker={isStriker ? '1' : undefined}
+                    data-row={onBoard ? r : undefined}
+                    data-col={c}
                     className={[
                       'square',
                       (index + c) % 2 === 0 ? 'light' : 'dark',
                       canMove ? 'movable' : '',
                       isPlayer ? 'player-square' : '',
-                      isPlayer && (strike || hitFlash) ? 'hit' : '',
+                      isPlayer && ((strike && !strike.ghost) || hitFlash) ? 'hit' : '',
                       r === ROWS - 1 ? 'edge' : '',
                     ].join(' ')}
                     disabled={!canMove}
@@ -172,6 +198,11 @@ export function DailyBoard({ state, moves, slideRef, dying, strike, morph, hitFl
                       </span>
                     )}
                     {canMove && !cell && <span className="dot" />}
+                    {onBoard && strike?.ghost && strike.from.row === r && strike.from.col === c && (
+                      <span key={`ghost-${state.spawned}`} className={`piece ghost ${skinOf(state.enemyColor)}`} aria-hidden>
+                        {GLYPH[strike.ghost]}
+                      </span>
+                    )}
                   </button>
                 )
               })}

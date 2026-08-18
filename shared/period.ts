@@ -1,10 +1,10 @@
 import type { Period } from './events'
 
 /**
- * Dönem aritmetiği — UTC, saf, test edilebilir.
+ * Dönem aritmetiği - UTC, saf, test edilebilir.
  *
  * Her şey `YYYY-MM-DD` gün anahtarı üstünde. Hafta ISO: Pazartesi başlar.
- * `previous` her dönem için eşdeğer önceki aralık — panelin her KPI'da
+ * `previous` her dönem için eşdeğer önceki aralık - panelin her KPI'da
  * gösterdiği delta buradan.
  */
 
@@ -73,7 +73,7 @@ export function bucketOf(period: Period, day: string): string {
   return period === 'year' ? day.slice(0, 7) : day
 }
 
-/** `from`..`to` arasındaki her gün — seride boş günler sıfır olarak çıksın diye */
+/** `from`..`to` arasındaki her gün - seride boş günler sıfır olarak çıksın diye */
 export function daysBetween(range: Range): string[] {
   const out: string[] = []
   for (let day = range.from; day <= range.to; day = addDays(day, 1)) out.push(day)

@@ -6,13 +6,15 @@ import { type BadgeAward, badgeOf } from '../ui/badges'
 import { GLYPH } from '../ui/pieces'
 import { BadgeGlyph } from './BadgeGlyph'
 import type { RunRecord } from '../ui/scores'
+import type { ShareInput } from '../ui/share'
+import { SharePanel } from './SharePanel'
 
 /**
  * Şah Kaçışı'nın kapanışı: eski atari kabinlerindeki gibi üç perde.
  *
- *   1. ölüm    — ekran kırmızı çakar, tarama çizgisi tahtayı siler (Board yapıyor)
- *   2. başlık  — GAME OVER yanıp söner, puan sayaç sayaç yukarı tırmanır
- *   3. tablo   — skor listesi satır satır düşer, senin satırın yanıp söner
+ *   1. ölüm    - ekran kırmızı çakar, tarama çizgisi tahtayı siler (Board yapıyor)
+ *   2. başlık  - GAME OVER yanıp söner, puan sayaç sayaç yukarı tırmanır
+ *   3. tablo   - skor listesi satır satır düşer, senin satırın yanıp söner
  *
  * Ekrana dokunmak sırayı atlar: kutlamayı izlemek isteyen izler,
  * istemeyen doğrudan tabloya geçer.
@@ -26,7 +28,7 @@ export type OutroPhase = 'dying' | 'title' | 'table'
  */
 const DYING_MS = 1620
 const TITLE_MS = 1500
-/** Puanın sayaç sayaç tırmanması — arcade sayacı gibi kesikli */
+/** Puanın sayaç sayaç tırmanması - arcade sayacı gibi kesikli */
 const COUNT_STEPS = 26
 
 interface ArcadeOutroProps {
@@ -39,15 +41,15 @@ interface ArcadeOutroProps {
   table: RunRecord[]
   rank: number | null
   isRecord: boolean
-  /** Haftalık rekor — tüm zamanlar rekoru değilse gösteriliyor */
+  /** Haftalık rekor - tüm zamanlar rekoru değilse gösteriliyor */
   isWeekRecord?: boolean
   /** Av'ın dönüşüm zinciri: koşunun hikâyesi (♞→♟→♛) */
   chain?: PieceType[]
-  /** Bu koşuda kazanılan rozet kademeleri — kapanış özeti */
+  /** Bu koşuda kazanılan rozet kademeleri - kapanış özeti */
   badges?: BadgeAward[]
   daily?: string
-  shareLabel?: string
-  onShare?: () => void
+  /** Paylaşım girdisi; verilirse Paylaş düğmesi (SharePanel) çizilir */
+  share?: ShareInput
   onRestart: () => void
   onExit: () => void
 }
@@ -65,8 +67,7 @@ export function ArcadeOutro({
   chain,
   badges,
   daily,
-  shareLabel,
-  onShare,
+  share,
   onRestart,
   onExit,
 }: ArcadeOutroProps) {
@@ -76,7 +77,7 @@ export function ArcadeOutro({
   const t = useT()
 
   // Perdeler sırayla açılır. Kaybetme sesi burada çalınmıyor: onu
-  // `gameover` olayı geldiği anda commit() zaten çalıyor — buradan bir
+  // `gameover` olayı geldiği anda commit() zaten çalıyor - buradan bir
   // kez daha çalmak sesi üst üste bindiriyordu.
   useEffect(() => {
     if (phase !== 'dying') return
@@ -137,7 +138,7 @@ export function ArcadeOutro({
           {chain && chain.length > 1 && (
             <p className="outro-chain">{chain.map((type) => GLYPH[type]).join(' → ')}</p>
           )}
-          {/* Bu koşuda kazanılan rozetler — koşu ortasındaki flash'ın kalıcı özeti */}
+          {/* Bu koşuda kazanılan rozetler - koşu ortasındaki flash'ın kalıcı özeti */}
           {badges && badges.length > 0 && (
             <ul className="outro-badges" aria-label={t('badges.inRun')}>
               {badges.map((award) => {
@@ -181,15 +182,12 @@ export function ArcadeOutro({
           </ol>
 
           <div className="outro-actions">
-            {daily && onShare ? (
-              <button type="button" className="outro-btn primary" onClick={onShare}>
-                {shareLabel}
-              </button>
-            ) : (
+            {!daily && (
               <button type="button" className="outro-btn primary" onClick={onRestart}>
                 {t('game.again')}
               </button>
             )}
+            {share && <SharePanel input={share} />}
             <button type="button" className="outro-btn" onClick={onExit}>
               {t('game.toMenu')}
             </button>

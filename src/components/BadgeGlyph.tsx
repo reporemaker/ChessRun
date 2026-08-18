@@ -10,12 +10,12 @@ interface Props {
 }
 
 /**
- * Rozet simgesi — SVG ikonu varsa onu, yoksa Unicode glifi çiziyor.
+ * Rozet simgesi - SVG ikonu varsa onu, yoksa Unicode glifi çiziyor.
  * Boyut ve renk üst öğenin sınıfından: `.bdg-glyph`, `.rank-badge` 20px,
  * kademe rengi `.t-*` ile `currentColor` üzerinden.
  *
  * SVG işaretlemesi kendi sabitimizden geliyor (badgeIcons.ts), kullanıcı
- * girdisi değil — dangerouslySetInnerHTML burada güvenli.
+ * girdisi değil - dangerouslySetInnerHTML burada güvenli.
  */
 export function BadgeGlyph({ id, className = '', title, ariaLabel }: Props) {
   const badge = badgeOf(id)

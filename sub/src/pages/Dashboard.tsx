@@ -13,7 +13,7 @@ interface Props {
   at: string
 }
 
-const METRICS: Metric[] = ['visitors', 'players', 'runs', 'sessions']
+const METRICS: Metric[] = ['visitors', 'players', 'runs', 'runs_daily', 'sessions']
 
 /**
  * Dashboard: KPI satırı, tek büyük seri, iki kırılım özeti.
@@ -27,8 +27,8 @@ export function Dashboard({ period, at }: Props) {
 
   const sum = useQuery(`sum ${period} ${at}`, () => api.summary(period, at))
   const ser = useQuery(`ser ${metric} ${period} ${at}`, () => api.series(metric, period, at))
-  const modes = useQuery(`bd mode ${period} ${at}`, () => api.breakdown('mode', period, at, 3))
-  const ends = useQuery(`bd end ${period} ${at}`, () => api.breakdown('end_reason', period, at, 5))
+  const modes = useQuery(`bd mode ${period} ${at}`, () => api.breakdown('mode', period, at, 4))
+  const ends = useQuery(`bd end ${period} ${at}`, () => api.breakdown('end_reason', period, at, 6))
   const countries = useQuery(`bd country ${period} ${at}`, () => api.breakdown('country', period, at, 6))
 
   const s = sum.data
@@ -59,7 +59,7 @@ export function Dashboard({ period, at }: Props) {
           value={s ? fmtInt(s.runs) : '…'}
           now={s?.runs}
           before={p?.runs}
-          hint="Biten koşu sayısı — bütün modlar"
+          hint="Kaydedilen koşu sayısı (yarım bırakılan dahil) - bütün modlar"
         />
         <Kpi
           neutral
@@ -111,13 +111,15 @@ export function Dashboard({ period, at }: Props) {
           <header className="card-head">
             <h2>Oyunlar</h2>
             <span className="muted">
-              {s ? `${fmtInt(s.runsByMode.classic)} · ${fmtInt(s.runsByMode.kingRun)} · ${fmtInt(s.runsByMode.trio)}` : ''}
+              {s
+                ? `${MODE_LABEL.classic} ${fmtInt(s.runsByMode.classic)} · ${MODE_LABEL.kingRun} ${fmtInt(s.runsByMode.kingRun)} · ${MODE_LABEL.trio} ${fmtInt(s.runsByMode.trio)} · Günlük ${fmtInt(s.runsByMode.daily)}`
+                : ''}
             </span>
           </header>
           {modes.data && <Bars dim="mode" rows={modes.data.rows} unit="runs" />}
           {s && s.runsDaily > 0 && (
             <p className="foot">
-              {fmtInt(s.runsDaily)} oyun {MODE_LABEL.daily}'nde
+              {fmtInt(s.runsDaily)} oyun {MODE_LABEL.daily}'nde - grafikte "Günlük mücadele" ölçütü
             </p>
           )}
         </div>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { COL_CHOICES } from '../engine/config'
-import { feedbackHref } from '../ui/feedback'
+import { FeedbackLinks } from './FeedbackLinks'
 import { getIdentity, shortToken } from '../ui/identity'
 import { LANGS, hasFullProse } from '../ui/i18n'
 import { GLYPH } from '../ui/pieces'
@@ -10,13 +10,14 @@ import { useT } from '../ui/text'
 import { APP_VERSION } from '../ui/version'
 import { BadgeChip } from './BadgeChip'
 import { NameChip } from './NameChip'
+import { Persistence } from './Persistence'
 
 /**
  * Oyun sürerken pencere açıldıysa App bunu geçiriyor: koridor değişimi
  * mevcut koşuyu etkilesin mi sorusu buradan cevaplanıyor.
  */
 export interface LiveGame {
-  /** Günlük meydan okumada genişlik sabit — soru sorulmaz, ayar sonrakine kalır */
+  /** Günlük meydan okumada genişlik sabit - soru sorulmaz, ayar sonrakine kalır */
   daily: boolean
   /** Uyarı metnindeki puan */
   score: () => number
@@ -27,17 +28,17 @@ export interface LiveGame {
 interface SettingsProps {
   onClose: () => void
   onOpenPage: (page: 'help' | 'about') => void
-  /** Oyun sürüyorsa menüye dönüş bağlantısı — mobilde tek çıkış yolu */
+  /** Oyun sürüyorsa menüye dönüş bağlantısı - mobilde tek çıkış yolu */
   onExitGame?: () => void
   onOpenRanking: () => void
   onOpenBadges: () => void
-  /** Seçili rozet değişince artar — fiş yeniden okusun */
+  /** Seçili rozet değişince artar - fiş yeniden okusun */
   badgeVersion: number
   game?: LiveGame
 }
 
 /**
- * Ayarlar penceresi — kararlaştırılmış formlarında:
+ * Ayarlar penceresi - kararlaştırılmış formlarında:
  * taş rengi ve koridor (segment), ses (anahtar), dil (kod ızgarası),
  * ayraç (başlıklı), sıralama (üç sayı + açılır liste), bağlantılar (iki
  * düğme), künye (rozetler).
@@ -60,10 +61,14 @@ export function Settings({
   const t = useT()
   const closeRef = useRef<HTMLButtonElement>(null)
 
-  // Sıralama özeti — bu haftanın ligi, sunucu görünümü gelince yerini alıyor
+  // Sıralama özeti - bu haftanın ligi, sunucu görünümü gelince yerini alıyor
   const { view: ranking, status: rankStatus } = useRanking()
 
   const [identity, setIdentity] = useState(() => getIdentity())
+  // Sıfırlama / kurtarma sonrası ad değişmiş olabilir - fiş sürümüyle yeniden oku
+  useEffect(() => {
+    setIdentity(getIdentity())
+  }, [badgeVersion])
 
   // Koridor: oyun sürerken seçilen genişlik önce burada bekler, onay ister
   const [pendingCols, setPendingCols] = useState<number | null>(null)
@@ -140,7 +145,7 @@ export function Settings({
             </span>
           </div>
 
-          {/* A2 · koridor + B · ses — aynı satırda, iki sütun.
+          {/* A2 · koridor + B · ses - aynı satırda, iki sütun.
               Koridor oyunu etkileyen tek ayar; ses küçük bir anahtar.
               İkisini yan yana koymak bir satır kazandırıyor. */}
           <div className="pop-lin two">
@@ -185,7 +190,7 @@ export function Settings({
           </div>
 
           {/* Koridor uyarısı: oyun sürerken genişlik değişecekse. Puan
-              kaybolmuyor, kapanıyor — mevcut koşu deftere yazılıyor. */}
+              kaybolmuyor, kapanıyor - mevcut koşu deftere yazılıyor. */}
           {pendingCols != null && game && (
             <div className="pop-warn" role="alertdialog" aria-live="polite">
               <b>{t('corridor.restart.title')}</b>
@@ -236,7 +241,7 @@ export function Settings({
             </div>
           </div>
 
-          {/* G · künye — ad düzenlenebilir (NameChip). Tekillik yok, hijyen var:
+          {/* G · künye - ad düzenlenebilir (NameChip). Tekillik yok, hijyen var:
               bkz. identity.ts cleanName. */}
           <div className="pop-chips">
             <span className="pop-chip">
@@ -253,10 +258,10 @@ export function Settings({
           {/* D · ayraç */}
           <div className="pop-dv">{t('settings.ranking')}</div>
 
-          {/* E · sıralama özeti — tam liste kendi penceresinde */}
+          {/* E · sıralama özeti - tam liste kendi penceresinde */}
           <button type="button" className="pop-trio" onClick={onOpenRanking}>
             <span>
-              <span className="v gold num">{ranking.rank == null ? '—' : `#${ranking.rank}`}</span>
+              <span className="v gold num">{ranking.rank == null ? '-' : `#${ranking.rank}`}</span>
               <span className="l">{t('settings.rankMine')}</span>
             </span>
             <span>
@@ -264,7 +269,7 @@ export function Settings({
               <span className="l">{t('settings.scoreMine')}</span>
             </span>
             <span>
-              <span className="v num">{ranking.players ?? '—'}</span>
+              <span className="v num">{ranking.players ?? '-'}</span>
               <span className="l">{t('settings.players')}</span>
             </span>
           </button>
@@ -275,11 +280,15 @@ export function Settings({
             {rankStatus === 'offline' && <span className="pend">{t('rank.offline')}</span>}
           </div>
 
+          {/* H · kalıcılık - kurtarma kodu + ana ekrana ekle (Faz 10) */}
+          <div className="pop-dv">{t('settings.persist')}</div>
+          <Persistence identity={identity} />
+
           {/* ayraç */}
           <div className="pop-dv">{t('settings.info')}</div>
 
           {/* F · üstte tek sıra Nasıl oynanır (birincil), altında yan yana
-              Hakkında · Öneri (mailto — form değil, bkz. ui/feedback.ts).
+              Hakkında · Öneri (mailto - form değil, bkz. ui/feedback.ts).
               Adres Hakkında sayfasında yazılı. */}
           <div className="pop-links main">
             <button type="button" onClick={() => onOpenPage('help')}>
@@ -290,7 +299,7 @@ export function Settings({
             <button type="button" onClick={() => onOpenPage('about')}>
               {t('settings.about')}
             </button>
-            <a href={feedbackHref(settings.lang)}>{t('settings.feedback')}</a>
+            <FeedbackLinks lang={settings.lang} />
           </div>
         </div>
       </div>

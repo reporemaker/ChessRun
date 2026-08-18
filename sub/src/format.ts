@@ -1,7 +1,7 @@
 import type { Dimension, Metric, Mode, Period } from '@shared/events'
 
 /**
- * Biçimlendirme ve etiketler — panel Türkçe, tek dil. Beş dilli oyunun
+ * Biçimlendirme ve etiketler - panel Türkçe, tek dil. Beş dilli oyunun
  * aksine panel yalnızca bir kişinin aracı; i18n makinesi buraya girmedi.
  */
 
@@ -11,9 +11,9 @@ const pf = new Intl.NumberFormat('tr-TR', { style: 'percent', maximumFractionDig
 export const fmtInt = (n: number): string => nf.format(n)
 export const fmtPct = (share: number): string => pf.format(share)
 
-/** ms → "1 dk 32 sn" · "48 sn" · "—" */
+/** ms → "1 dk 32 sn" · "48 sn" · "-" */
 export function fmtDuration(ms: number | null | undefined): string {
-  if (ms == null || ms <= 0) return '—'
+  if (ms == null || ms <= 0) return '-'
   const s = Math.round(ms / 1000)
   if (s < 60) return `${s} sn`
   const m = Math.floor(s / 60)
@@ -45,6 +45,7 @@ export const METRIC_LABEL: Record<Metric, string> = {
   sessions: 'Oturum',
   players: 'Oyuncu',
   runs: 'Oyun',
+  runs_daily: 'Günlük mücadele',
 }
 
 export const MODE_LABEL: Record<Mode, string> = {
@@ -69,7 +70,7 @@ export const DIM_LABEL: Record<Dimension, string> = {
   standalone: 'Açılış',
 }
 
-/** Kırılım değerlerinin okunur hâli — bilinmeyen değer olduğu gibi geçer */
+/** Kırılım değerlerinin okunur hâli - bilinmeyen değer olduğu gibi geçer */
 const VALUE_LABEL: Record<string, string> = {
   classic: 'Av',
   kingRun: 'Kaçış',
@@ -138,5 +139,5 @@ export function fmtRange(from: string, to: string): string {
   const t = new Date(`${to}T00:00:00Z`)
   const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }
   if (from === to) return f.toLocaleDateString('tr-TR', { ...opts, weekday: 'long' })
-  return `${f.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', timeZone: 'UTC' })} – ${t.toLocaleDateString('tr-TR', opts)}`
+  return `${f.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', timeZone: 'UTC' })} - ${t.toLocaleDateString('tr-TR', opts)}`
 }

@@ -10,12 +10,12 @@ export const DEFAULT_COLS = MAX_COLS
 export const COL_CHOICES: number[] = [4, 5, 6, 7, 8]
 
 /**
- * Oyuncuya sunulan koridor genişlikleri: 4–8 sütun, beşi de seçilebilir.
+ * Oyuncuya sunulan koridor genişlikleri: 4-8 sütun, beşi de seçilebilir.
  *
  * Bir ara üç adlandırılmış kademe (dar/orta/geniş = 4/6/8) denendi; ölçümde
  * 5 ve 7 komşularından belirgin ayrışmıyordu. Yine de kaldırıldı çünkü
  * "8'de oynuyorum, biraz daha dar istiyorum" diyen oyuncunun 6'ya düşmek
- * dışında seçeneği kalmıyordu — ince ayar hakkı ölçümden değerli.
+ * dışında seçeneği kalmıyordu - ince ayar hakkı ölçümden değerli.
  * Eski kayıtlardaki `narrow|medium|wide` değerleri okunurken sayıya
  * çevriliyor (settings.ts), kimsenin tercihi kaybolmuyor.
  */
@@ -47,7 +47,7 @@ export const START_LIVES = 3
  * Oyuncunun başlangıç taşı.
  *
  * Piyon olamaz: kayma her turda olduğu için piyon 1 kare ilerlerken tahta
- * onu 1 kare geri itiyor — net ilerlemesi sıfır. Hiçbir ava yetişemiyor,
+ * onu 1 kare geri itiyor - net ilerlemesi sıfır. Hiçbir ava yetişemiyor,
  * sadece kendisine gelen taşları bekliyor ve karşı piyonla karşılaştığında
  * her zaman kaybediyor. At ise turda net 1 satır kazanabildiği için
  * oyuncuya gerçek bir seçenek alanı bırakıyor.
@@ -69,7 +69,7 @@ export const MAX_CHECK_STREAK = 5
 export const MATE_SCORE = 5
 
 /**
- * Hayatta kalınan her satırın puanı — üç modda da aynı.
+ * Hayatta kalınan her satırın puanı - üç modda da aynı.
  *
  * Ölçümle konuldu: eskiden puan yalnızca yemekten geldiği için ChessRun
  * dakikada 28.7 puan verirken Şah Kaçışı 62.3 veriyordu. Satır puanı
@@ -81,13 +81,13 @@ export const ROW_SCORE = 1
 /**
  * Sıkışma: hamlen kalmadığında tahta yeniden diziliyor.
  *
- * Bekleme düğmesi kaldırıldı — hamlen varsa oynamak zorundasın (gerçek
+ * Bekleme düğmesi kaldırıldı - hamlen varsa oynamak zorundasın (gerçek
  * satrançtaki hamle zorunluluğu). Ama hamlesiz kalmak oyuncunun hatası
  * olmayabilir, o yüzden sıkışmak sayılı bir kurtuluş: hakkın varken tahta
  * yenilenir ve puan alırsın, hakkın bitince sıkışmak ölümdür.
  *
  * Ödül olması bilerek: kurtuluş anı bir kayıp gibi değil, kazanılmış bir
- * nefes gibi hissettirmeli. Sayıya bağlı olduğu için de sömürülemiyor —
+ * nefes gibi hissettirmeli. Sayıya bağlı olduğu için de sömürülemiyor -
  * bilerek sıkışmaya çalışan oyuncu sadece haklarını tüketir.
  */
 export const STUCK_RIGHTS = 2
@@ -101,7 +101,7 @@ export const STUCK_SCORE = 5
 export const ROWS_PER_LEVEL = 12
 
 /**
- * Yeni satırda doğan taş sayısı — kare başına olasılık değil, satır başına
+ * Yeni satırda doğan taş sayısı - kare başına olasılık değil, satır başına
  * beklenen adet. `0.75` şu demek: satırların **%75'inde tam bir taş** doğar,
  * kalan %25'i bomboş gelir. Tam kısmı garanti, kesir kısmı olasılık olduğu
  * için 1.5 → "bir taş kesin, ikincisi %50" anlamına gelir.
@@ -153,12 +153,12 @@ export const BAIT_START_DISTANCE = 2
  * Üçlü
  *
  * Üç uzun menzilli taş, turda tek hamle. Altın kural: N taşın varsa ve
- * turda bir hamle oynuyorsan, oynadığın taş **en az N satır** tırmanmalı —
+ * turda bir hamle oynuyorsan, oynadığın taş **en az N satır** tırmanmalı -
  * yoksa kadro topluca dibe iner. Üçü de kayan taş (vezir/kale/fil) olması
  * bu yüzden: at ya da piyonla bu ekonomi kapanmıyor.
  * ------------------------------------------------------------------ */
 
-/** Kadronun açılış taşları — sırası aynı zamanda eksik taşın geri geliş sırası */
+/** Kadronun açılış taşları - sırası aynı zamanda eksik taşın geri geliş sırası */
 export const TRIO_TYPES: PieceType[] = ['q', 'r', 'b']
 
 /**
@@ -176,11 +176,11 @@ export const TRIO_THREAT_CAP = 3
 export const TRIO_MATE_SCORE = 20
 
 /**
- * Üçlüde düşman yoğunluğu — ölçümle **1'e** indi.
+ * Üçlüde düşman yoğunluğu - ölçümle **1'e** indi.
  *
  * Tasarımda "kabaca iki katı" deniyordu; 300'er koşuluk ölçüm bunun modu
  * bitirdiğini gösterdi. Çarpan 2 iken koşu 10.5 tur sürüyor, 1.5'te 13.6,
- * 1'de 20.6 — Av 17.6 ve Kaçış 23.0 turun arasına ancak 1'de oturuyor.
+ * 1'de 20.6 - Av 17.6 ve Kaçış 23.0 turun arasına ancak 1'de oturuyor.
  * Sebebi tırmanma ekonomisi: üç taşla turda bir hamle oynanınca oynanan
  * taşın **3 satır** birden tırmanması gerekiyor, yoğun tahtada ise kayan
  * taşların yolu kapanıp tırmanış 1-2 satıra düşüyor.
@@ -191,7 +191,7 @@ export const TRIO_MATE_SCORE = 20
 export const TRIO_ROW_MULTIPLIER = 1
 export const TRIO_MAX_ROW_PIECES = MAX_ROW_PIECES
 
-/** Üçlünün en dar koridoru — 4 sütunda üç kayan taş birbirini kilitliyor */
+/** Üçlünün en dar koridoru - 4 sütunda üç kayan taş birbirini kilitliyor */
 export const TRIO_MIN_COLS = 6
 
 /** Zorluk seviyesi */
@@ -203,7 +203,7 @@ export function levelOf(distance: number): number {
  * Yeni satırda doğacak taş sayısının beklenen değeri.
  *
  * Genişlikle orantılı: 4 sütunluk koridorda satır başına aynı sayıda taş
- * doğurmak, tam tahtanın iki katı yoğunluk demek olurdu — dar koridor
+ * doğurmak, tam tahtanın iki katı yoğunluk demek olurdu - dar koridor
  * "daha sıkışık bir oyun" olsun diye seçiliyor, "iki kat cezalı" olsun
  * diye değil. Kare başına düşen baskı her genişlikte aynı kalıyor.
  */
@@ -218,7 +218,7 @@ export function rowPieces(
 }
 
 /**
- * Moda göre yoğunluk. Üçlüde ağır taş primi yok — kadroda zaten hep bir
+ * Moda göre yoğunluk. Üçlüde ağır taş primi yok - kadroda zaten hep bir
  * vezir var, prim sürekli açık kalırdı; yerine sabit bir çarpan geçiyor.
  */
 export function rowPiecesOf(
@@ -233,7 +233,7 @@ export function rowPiecesOf(
   return Math.min(TRIO_MAX_ROW_PIECES, pieces) * (clampCols(cols) / MAX_COLS)
 }
 
-/** Modun en dar koridoru — Üçlü 4 sütuna sığmıyor */
+/** Modun en dar koridoru - Üçlü 4 sütuna sığmıyor */
 export function minColsOf(mode: GameMode): number {
   return mode === 'trio' ? TRIO_MIN_COLS : MIN_COLS
 }

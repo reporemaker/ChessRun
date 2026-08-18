@@ -12,7 +12,7 @@ import {
   dayKey,
   readRuns,
 } from '../ui/scores'
-import { type DailyInfo, fetchDaily, fetchPulse, leaderboardEnabled, startDaily } from '../ui/leaderboard'
+import { type DailyInfo, fetchDaily, fetchPulse, leaderboardEnabled } from '../ui/leaderboard'
 import { useRanking } from '../ui/useRanking'
 import { lifetimeStreak } from '../ui/lifetime'
 import { useSettings } from '../ui/settings'
@@ -20,13 +20,21 @@ import { useT } from '../ui/text'
 import { APP_VERSION } from '../ui/version'
 import type { StringKey } from '../ui/i18n'
 import type { GameConfig } from './Game'
+import { PieceIcon } from '../ui/pieceIcons'
+
+/** Paylaşım bağlantısıyla gelen kişi: hangi kart vurgulansın (?g=…&d=…) */
+export interface HomeFocus {
+  mode: ModeId
+  day?: string
+}
 
 interface HomeProps {
   onStart: (config: GameConfig) => void
   onOpenSettings: () => void
+  focus?: HomeFocus | null
 }
 
-/** Geri sayım: saat:dakika:saniye — dile bağlı olmayan tek biçim */
+/** Geri sayım: saat:dakika:saniye - dile bağlı olmayan tek biçim */
 function clockOf(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000))
   const parts = [Math.floor(total / 3600), Math.floor(total / 60) % 60, total % 60]
@@ -34,20 +42,20 @@ function clockOf(ms: number): string {
 }
 
 /**
- * Ana sayfa — "tahta arayüz" A varyantı.
+ * Ana sayfa - "tahta arayüz" A varyantı.
  *
  * Zemin gerçek bir satranç tahtası ve yumuşak akıyor; kartlar onun üstünde
  * duruyor, saydam ama gövdeli. Dört kart: bir günün oyunu, üç serbest mod.
  * Masaüstünde iki sütuna açılıyor, mobilde tek sütun kalıyor.
  */
-export function Home({ onStart, onOpenSettings }: HomeProps) {
+export function Home({ onStart, onOpenSettings, focus = null }: HomeProps) {
   const t = useT()
   // Koridor genişliği ayarlar penceresinden geliyor: ana sayfa artık
   // yalnızca "hangi oyunu oynayacağım" sorusunu soruyor
   const { cols } = useSettings()
 
   /* Alt satır: her açılışta farklı bir mikro-ipucu. Rastgele ama son
-     gösterileni sessionStorage'dan okuyup bir daha seçmiyor — sekmede
+     gösterileni sessionStorage'dan okuyup bir daha seçmiyor - sekmede
      ardışık iki açılış aynı cümleyi göstermesin. Sunucu bugünün nabzını
      verirse (fetchPulse) ipucu yerine o gösteriliyor. */
   const hint = useMemo<StringKey>(() => {
@@ -86,7 +94,7 @@ export function Home({ onStart, onOpenSettings }: HomeProps) {
   }, [])
 
   const [pulse, setPulse] = useState<number | null>(null)
-  // Bu haftanın ligindeki sıran — sunucu varsa; yoksa "SUNUCU BEKLEMEDE"
+  // Bu haftanın ligindeki sıran - sunucu varsa; yoksa "SUNUCU BEKLEMEDE"
   const { view: ranking, status: rankStatus } = useRanking()
   useEffect(() => {
     let alive = true
@@ -103,7 +111,6 @@ export function Home({ onStart, onOpenSettings }: HomeProps) {
      tanımlı değilse (yerel geliştirme) tarihten tohum + cihaz kilidi. */
   const [remote, setRemote] = useState<DailyInfo | null | 'pending'>(leaderboardEnabled ? 'pending' : null)
   const [dailyError, setDailyError] = useState(false)
-  const [starting, setStarting] = useState(false)
   useEffect(() => {
     if (!leaderboardEnabled) return
     let alive = true
@@ -115,8 +122,10 @@ export function Home({ onStart, onOpenSettings }: HomeProps) {
   }, [day])
   const localSeed = dailySeed(day)
   const seed = remote && remote !== 'pending' ? remote.seed : localSeed
+  // Sunucu varsa hak durumunda SUNUCU yetkili (panelden sıfırlanabilsin);
+  // cevap gelene dek / sunucu yokken cihaz kilidi
   const played = useMemo(
-    () => dailyPlayed(day) || (remote != null && remote !== 'pending' && remote.played),
+    () => (leaderboardEnabled && remote != null && remote !== 'pending' ? remote.played : dailyPlayed(day)),
     [day, remote],
   )
   const dailyLocked = played && !DAILY_REPLAY_ALLOWED
@@ -138,30 +147,32 @@ export function Home({ onStart, onOpenSettings }: HomeProps) {
 
   /**
    * Günün Mücadelesi: sabit 8 sütun, günün tohumu, günde bir kez.
-   * Sunucu varsa hak orada yanar ve tohum oradan gelir; sunucu ulaşılamıyorsa
-   * BAŞLATMAZ (herkes aynı tahtayı oynamalı) — kart hata gösterir. Sunucu
-   * tanımlı değilse yerel tohum.
+   * Tohum sunucudan (GET, hak yakmaz); HAK oyunda "Hazırım"a basınca yanar
+   * (DailyGame → /lb/daily/start). Sunucu ulaşılamıyorsa BAŞLATMAZ (herkes
+   * aynı tahtayı oynamalı) - kart uyarı gösterir; tanımlı değilse yerel tohum.
    */
   function launchDaily() {
-    if (dailyLocked || starting) return
+    if (dailyLocked) return
     if (!leaderboardEnabled) {
       onStart({ mode: 'daily', playerColor: 'w', cols: DEFAULT_COLS, seed: localSeed, daily: day })
       return
     }
-    setStarting(true)
-    setDailyError(false)
-    void startDaily(day).then((info) => {
-      setStarting(false)
-      if (!info) {
-        setDailyError(true)
-        return
-      }
-      if (info.played && !DAILY_REPLAY_ALLOWED) {
+    if (remote === 'pending') return
+    if (!remote && DAILY_REPLAY_ALLOWED) {
+      // Geliştirme: sunucu yoksa yerel tohumla aç
+      onStart({ mode: 'daily', playerColor: 'w', cols: DEFAULT_COLS, seed: localSeed, daily: day })
+      return
+    }
+    if (!remote) {
+      setDailyError(true)
+      setRemote('pending')
+      void fetchDaily(day).then((info) => {
         setRemote(info)
-        return
-      }
-      onStart({ mode: 'daily', playerColor: 'w', cols: DEFAULT_COLS, seed: info.seed, daily: day })
-    })
+        if (info) setDailyError(false)
+      })
+      return
+    }
+    onStart({ mode: 'daily', playerColor: 'w', cols: DEFAULT_COLS, seed: remote.seed, daily: day })
   }
 
   return (
@@ -193,7 +204,7 @@ export function Home({ onStart, onOpenSettings }: HomeProps) {
                 ? t('home.rankPending')
                 : ranking.rank != null
                   ? `#${ranking.rank}`
-                  : '—'}
+                  : '-'}
             </em>
           </span>
           <button type="button" className="bi-gear" onClick={onOpenSettings}>
@@ -206,8 +217,11 @@ export function Home({ onStart, onOpenSettings }: HomeProps) {
             today
             glyph="⚡"
             title={t('mode.daily.name')}
+            focus={focus?.mode === 'daily'}
             sub={
-              dailyError
+              focus?.mode === 'daily' && focus.day && focus.day !== day
+                ? t('daily.pastBoard')
+                : dailyError
                 ? t('daily.offline')
                 : played
                   ? `${t('daily.played')}${todayBonus > 1 ? ` · ${t('daily.bonusToday', { x: todayBonus.toFixed(2) })}` : ''} · ${t('daily.playedSub', { clock })}`
@@ -218,7 +232,7 @@ export function Home({ onStart, onOpenSettings }: HomeProps) {
             }
             value={bestScore(runs, 'daily', day)}
             valueLabel={t('home.best')}
-            disabled={dailyLocked || starting}
+            disabled={dailyLocked || remote === 'pending'}
             onClick={launchDaily}
           />
 
@@ -233,6 +247,7 @@ export function Home({ onStart, onOpenSettings }: HomeProps) {
             return (
               <Card
                 key={mode.id}
+                focus={focus?.mode === mode.id}
                 glyph={mode.glyph}
                 title={t(mode.nameKey)}
                 sub={mode.mottoKey ? `${t(mode.mottoKey)} · ${base}` : base}
@@ -246,7 +261,7 @@ export function Home({ onStart, onOpenSettings }: HomeProps) {
         </div>
 
         <footer className="bi-ft">
-          <span className="bi-hint">{pulse != null ? t('home.pulse', { n: pulse }) : t(hint)}</span>
+          <span className="bi-hint">{focus ? t('home.invited') : pulse != null ? t('home.pulse', { n: pulse }) : t(hint)}</span>
           <span className="bi-ver">
             CHESSRUN v{APP_VERSION} · <b>SmartKraft</b>
           </span>
@@ -272,25 +287,29 @@ interface CardProps {
   value: number | null
   valueLabel: string
   today?: boolean
+  /** Paylaşım bağlantısıyla gelindi: kart vurgulu */
+  focus?: boolean
   disabled?: boolean
   onClick: () => void
 }
 
-function Card({ glyph, title, sub, value, valueLabel, today, disabled, onClick }: CardProps) {
+function Card({ glyph, title, sub, value, valueLabel, today, focus, disabled, onClick }: CardProps) {
   return (
     <button
       type="button"
-      className={`bi-card ${today ? 'today' : ''} ${disabled ? 'off' : ''}`}
+      className={`bi-card ${today ? 'today' : ''} ${focus ? 'focus' : ''} ${disabled ? 'off' : ''}`}
       disabled={disabled}
       onClick={onClick}
     >
-      <span className="bi-g">{glyph}</span>
+      <span className="bi-g">
+        <PieceIcon glyph={glyph} />
+      </span>
       <span className="bi-t">
         <b>{title}</b>
         <small>{sub}</small>
       </span>
       <span className="bi-hi">
-        {value ?? '—'}
+        {value ?? '-'}
         <em>{valueLabel}</em>
       </span>
     </button>

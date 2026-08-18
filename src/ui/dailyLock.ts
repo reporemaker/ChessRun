@@ -1,11 +1,11 @@
 import { readRuns } from './scores'
 
 /**
- * Günde tek hak — cihaz tarafı.
+ * Günde tek hak - cihaz tarafı.
  *
  * Hak KOŞU BAŞLAYINCA yanar (kapatıp kaçmayı önlemek için); bitmese de
  * ertesi güne kadar kilitli. İki kaynak birlikte okunuyor: kilit anahtarı
- * ve defterdeki günlük kayıt — biri silinse öbürü kalır. Sunucu tarafı
+ * ve defterdeki günlük kayıt - biri silinse öbürü kalır. Sunucu tarafı
  * (jetonla) kalıcılık planıyla birlikte gelecek; localStorage silinince
  * yeni jeton = yeni hak, bunu şimdilik kabul ediyoruz.
  *

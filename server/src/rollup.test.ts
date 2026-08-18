@@ -50,6 +50,11 @@ describe('percentile', () => {
 })
 
 describe('computeTotals', () => {
+  it('oturum = ziyaret oturumları ∪ oturum-sonu olayları (aynı kişinin ikinci açılışı sayılır)', () => {
+    const t = computeTotals('d', [visit({ session_id: 's1' })], [], ['s1', 's2', 's3'])
+    expect(t.visitors).toBe(1)
+    expect(t.sessions).toBe(3)
+  })
   it('ziyaretçi = satır, oturum = farklı session, oyuncu = koşusu olan oturum', () => {
     const t = computeTotals(
       '2026-08-17',
@@ -112,7 +117,7 @@ describe('computeDims', () => {
   })
 })
 
-describe('foldTotals — planın tek değişmezi', () => {
+describe('foldTotals - planın tek değişmezi', () => {
   it('bir haftanın toplamı yedi gününün toplamına eşit', () => {
     const days = Array.from({ length: 7 }, (_, i) =>
       computeTotals(
@@ -125,13 +130,13 @@ describe('foldTotals — planın tek değişmezi', () => {
     expect(week.visitors).toBe(1 + 2 + 3 + 4 + 5 + 6 + 7)
     expect(week.runs).toBe(0 + 1 + 2 + 3 + 4 + 5 + 6)
     expect(week.players).toBe(days.reduce((s, d) => s + d.players, 0))
-    // Ortalama toplam süre / toplam sayı — günlük ortalamaların ortalaması DEĞİL
+    // Ortalama toplam süre / toplam sayı - günlük ortalamaların ortalaması DEĞİL
     const sum = days.reduce((s, d) => s + d.dur_sum_ms, 0)
     const cnt = days.reduce((s, d) => s + d.dur_count, 0)
     expect(week.avgDurationMs).toBe(Math.round(sum / cnt))
   })
 
-  it('medyan yalnızca tek günde — medyanların ortalaması medyan değildir', () => {
+  it('medyan yalnızca tek günde - medyanların ortalaması medyan değildir', () => {
     const one = computeTotals('d', [], [run({ duration_ms: 5 }), run({ duration_ms: 50 }), run({ duration_ms: 500 })])
     expect(foldTotals([one]).medianDurationMs).toBe(50)
     expect(foldTotals([one, one]).medianDurationMs).toBeNull()
@@ -155,7 +160,7 @@ describe('period', () => {
     expect(rangeOf('week', '2026-08-16')).toEqual({ from: '2026-08-10', to: '2026-08-16' })
   })
 
-  it('ay sonunu doğru buluyor — Şubat ve 31 çeken aylar', () => {
+  it('ay sonunu doğru buluyor - Şubat ve 31 çeken aylar', () => {
     expect(rangeOf('month', '2026-02-10')).toEqual({ from: '2026-02-01', to: '2026-02-28' })
     expect(rangeOf('month', '2028-02-10').to).toBe('2028-02-29')
     expect(rangeOf('month', '2026-08-17')).toEqual({ from: '2026-08-01', to: '2026-08-31' })

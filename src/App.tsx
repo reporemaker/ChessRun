@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { minColsOf } from './engine/config'
 import { Game, type GameConfig, type GameHandle } from './components/Game'
 import { DailyGame } from './components/DailyGame'
-import { Home } from './components/Home'
+import { Home, type HomeFocus } from './components/Home'
 import { Page, type PageId } from './components/Pages'
 import { RankingPopup } from './components/RankingPopup'
 import { BadgesPopup } from './components/BadgesPopup'
 import { Settings } from './components/Settings'
 import { claimLeague } from './ui/badges'
-import { fetchAwards } from './ui/leaderboard'
+import { fetchAwards, flushSubmitQueue } from './ui/leaderboard'
+import { RESET_EVENT, pullProfile, pushProfile } from './ui/sync'
 import { useSettings } from './ui/settings'
 import { unlockSound } from './ui/sound'
 import { trackSessionEnd, trackVisit } from './ui/stats'
@@ -28,12 +29,12 @@ function devConfig(mode: string, seedParam: string | null): GameConfig {
 /**
  * Menü, oyun ve iki katman: ayarlar penceresi ile bilgi sayfaları.
  *
- * Oyunun tüm durumu Game içinde yaşıyor ve `key` ile sıfırlanıyor —
+ * Oyunun tüm durumu Game içinde yaşıyor ve `key` ile sıfırlanıyor -
  * yeni bir konfigürasyon seçildiğinde bileşen baştan kuruluyor, yarım
  * kalmış tur zincirleri kendiliğinden iptal oluyor.
  */
 export default function App() {
-  // Geliştirmede ?dev=game ile doğrudan oyuna girilebiliyor — ekran
+  // Geliştirmede ?dev=game ile doğrudan oyuna girilebiliyor - ekran
   // görüntüsüyle doğrulama için. Üretim derlemesinde tamamen kapalı.
   const [config, setConfig] = useState<GameConfig | null>(() =>
     import.meta.env.DEV && window.location.search.includes('dev=game')
@@ -43,7 +44,7 @@ export default function App() {
         )
       : null,
   )
-  // ?dev=settings — ayarlar penceresini açık başlat (yalnızca DEV)
+  // ?dev=settings - ayarlar penceresini açık başlat (yalnızca DEV)
   const [settingsOpen, setSettingsOpen] = useState(
     () => import.meta.env.DEV && window.location.search.includes('dev=settings'),
   )
@@ -54,6 +55,20 @@ export default function App() {
       : null,
   )
   const { lang } = useSettings()
+  /* Paylaşım bağlantısı: ?g=classic|kingRun|trio|daily(&d=gün) → ana sayfada o
+     kart vurgulanır. Adres çubuğu temizlenir ki yenilemede tekrar vurgulamasın. */
+  const [focus] = useState<HomeFocus | null>(() => {
+    const params = new URLSearchParams(window.location.search)
+    const g = params.get('g')
+    if (!g || !['classic', 'kingRun', 'trio', 'daily'].includes(g)) return null
+    const d = params.get('d') ?? undefined
+    try {
+      window.history.replaceState(null, '', window.location.pathname)
+    } catch {
+      // yoksay
+    }
+    return { mode: g as HomeFocus['mode'], day: d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : undefined }
+  })
   const gameRef = useRef<GameHandle>(null)
   // Sıralama kendi penceresi. ?dev=rank örnek veriyle açıyor (yalnızca DEV).
   const demoRank = import.meta.env.DEV && window.location.search.includes('dev=rank')
@@ -70,17 +85,28 @@ export default function App() {
     document.documentElement.lang = lang
   }, [lang])
 
-  /* Ziyaret Game'den bağımsız, burada sayılıyor — siteye girip hiç
+  /* Ziyaret Game'den bağımsız, burada sayılıyor - siteye girip hiç
      oynamayan da ziyaretçidir. Oturum sonu için `visibilitychange` +
      `pagehide` çifti kullanılıyor: `beforeunload`/`unload` mobil
      Safari'de güvenilir tetiklenmiyor. Uç tanımsızken hepsi sessiz. */
   /* Lig rozetleri: bitmiş haftaların birincilikleri sunucudan; kazanılan
-     varsa depoya işlenir ve fişler yeniden okur. Haftada bir değişen veri —
+     varsa depoya işlenir ve fişler yeniden okur. Haftada bir değişen veri -
      açılışta bir kez yeter. */
   useEffect(() => {
+    // Ağ yüzünden gönderilememiş koşular (özellikle günlük) açılışta tekrar denenir
+    void flushSubmitQueue()
     void fetchAwards().then((firsts) => {
       if (firsts && claimLeague(firsts).length > 0) setBadgeVersion((v) => v + 1)
     })
+    // Sunucu profili (rozetler, sayaçlar, defter özeti) yerelle birleşir;
+    // moderatör sıfırlaması da buradan iner. Değişen varsa fişler yeniden okur.
+    void pullProfile().then((r) => {
+      if (r.changed) setBadgeVersion((v) => v + 1)
+    })
+    // Moderatör sıfırlaması bir gönderim cevabıyla da gelebilir - fişler tazelensin
+    const onReset = () => setBadgeVersion((v) => v + 1)
+    window.addEventListener(RESET_EVENT, onReset)
+    return () => window.removeEventListener(RESET_EVENT, onReset)
   }, [])
 
   useEffect(() => {
@@ -100,7 +126,7 @@ export default function App() {
    * Koridor genişliği oyun sürerken değişirse: önce mevcut koşu deftere
    * yazılsın (puan kaybolmuyor, kapanıyor), sonra yeni genişlikte baştan
    * kurulsun. runKey cols'u içerdiği için setConfig Game'i yeniden monte
-   * ediyor — abandon'un bitmesini beklemek şart, yoksa kayıt sökülen
+   * ediyor - abandon'un bitmesini beklemek şart, yoksa kayıt sökülen
    * bileşenle birlikte gider. Hem ayarlar penceresi hem oyun sütunu
    * buradan geçiyor.
    */
@@ -151,6 +177,7 @@ export default function App() {
             setConfig(next)
           }}
           onOpenSettings={() => setSettingsOpen(true)}
+          focus={focus}
         />
       )}
 
@@ -187,7 +214,11 @@ export default function App() {
       {badgesOpen && (
         <BadgesPopup
           onClose={() => setBadgesOpen(false)}
-          onSelect={() => setBadgeVersion((v) => v + 1)}
+          onSelect={() => {
+            setBadgeVersion((v) => v + 1)
+            // Seçilen rozet koşu beklemeden tabloya yansısın
+            void pushProfile(false)
+          }}
         />
       )}
 

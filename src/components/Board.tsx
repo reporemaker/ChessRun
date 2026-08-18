@@ -28,7 +28,7 @@ interface BoardProps {
   phase: Phase
   /** Hız çarpanı: tüm animasyon süreleri bununla ölçeklenir */
   speed: number
-  /** Her artışta tahta bir kez sarsılır — can kaybında */
+  /** Her artışta tahta bir kez sarsılır - can kaybında */
   shakeTick: number
   /** Koşu bitti: tahta CRT gibi çöküp sönüyor (Şah Kaçışı kapanışı) */
   dying?: boolean
@@ -63,7 +63,7 @@ export function Board({
   const cols = colsOf(state.board)
 
   // FLIP: her taşın bir önceki karesini hatırlayıp yeni karesine kaydırarak
-  // götürüyoruz. Ölçüm offsetTop/offsetLeft ile — bunlar transform'dan
+  // götürüyoruz. Ölçüm offsetTop/offsetLeft ile - bunlar transform'dan
   // etkilenmediği için kayma animasyonuyla çakışmıyor.
   useLayoutEffect(() => {
     const root = boardRef.current
@@ -107,7 +107,7 @@ export function Board({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.scrollTick])
 
-  // Can kaybında tahta sarsılır — vuruşun bedensel karşılığı
+  // Can kaybında tahta sarsılır - vuruşun bedensel karşılığı
   useLayoutEffect(() => {
     const el = frameRef.current
     if (!el || shakeTick === 0) return
@@ -207,7 +207,7 @@ export function Board({
                       {GLYPH[cell.type]}
                     </span>
                   )}
-                  {/* Nötr hamle işareti — satranç uygulamalarındaki gibi, renk kodu yok */}
+                  {/* Nötr hamle işareti - satranç uygulamalarındaki gibi, renk kodu yok */}
                   {canMove && !cell && <span className="dot" />}
                 </button>
               )
@@ -233,7 +233,7 @@ export function Board({
 
       <div className="board-fade top" aria-hidden />
       <div className="board-fade bottom" aria-hidden />
-      {/* Ölüm anındaki alarm taraması — yalnızca .dying'de görünür */}
+      {/* Ölüm anındaki alarm taraması - yalnızca .dying'de görünür */}
       <div className="board-sweep" aria-hidden />
     </div>
   )

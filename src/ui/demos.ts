@@ -2,23 +2,23 @@ import type { PieceType, Color } from '../engine/types'
 import type { StringKey } from './i18n'
 
 /**
- * "Nasıl oynanır" mini animasyonları — kare kare (frame) veri.
+ * "Nasıl oynanır" mini animasyonları - kare kare (frame) veri.
  *
  * Her demo 5×5 küçük bir tahta ve bir kare dizisi: taşların yeri, vurgular,
  * kısa altyazı. Oynatıcı (MiniBoard) iki kare arasındaki farkı bulup
  * oyundaki hareket diliyle oynatıyor: taş kayar, yenen taş büyüyüp söner,
  * kaymada tahta bir satır iner. Veri saf; motor kullanılmıyor, çünkü
- * öğretim için "gerçek" değil "okunur" durum gerekiyor — ama her sahne
+ * öğretim için "gerçek" değil "okunur" durum gerekiyor - ama her sahne
  * kurallara ve taş hareketlerine uygun (tur sırası: sen → kayma → rakip).
  *
  * Tahta gösterimi: satır dizisi, her hücre '.' ya da renk+tip ('wN', 'bR').
  * r0 en üst satır. Vurgular (bir karede birden fazla olabilir):
- *   ring   — sıradaki taşın (yeşil halka, oyundaki .player-square)
- *   select — kadrodaki bekleyen taş (sönük halka)
- *   dot    — oynanabilir kare (nötr nokta)
- *   target — yenecek taş / hedef kare (altın halka)
- *   danger — vurulan kare ya da ölüm satırı (kırmızı ×)
- *   glow   — şah çekilen kral (altın parıltı, oyundaki .checked-king)
+ *   ring   - sıradaki taşın (yeşil halka, oyundaki .player-square)
+ *   select - kadrodaki bekleyen taş (sönük halka)
+ *   dot    - oynanabilir kare (nötr nokta)
+ *   target - yenecek taş / hedef kare (altın halka)
+ *   danger - vurulan kare ya da ölüm satırı (kırmızı ×)
+ *   glow   - şah çekilen kral (altın parıltı, oyundaki .checked-king)
  */
 
 export type DemoId =
@@ -175,7 +175,7 @@ const ambushDemo: Demo = {
       captionKey: 'demo.ambushGone',
       hold: 1.5,
     }),
-    // At (3,1) → (1,2): filin (2,3) çaprazında — kendi isteğiyle
+    // At (3,1) → (1,2): filin (2,3) çaprazında - kendi isteğiyle
     F(B('. . . . .', '. . wN . .', '. . . bB .', '. . . . .', '. . . . .'), {
       marks: [...M('ring', [1, 2]), ...M('danger', [1, 2])],
       captionKey: 'demo.ownRisk',

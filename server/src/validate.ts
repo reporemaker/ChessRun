@@ -32,11 +32,11 @@ import {
  *  ediyor; gece açık bırakılan bir koşu 9 saatlik "süre" üretebilir. */
 export const MAX_DURATION_MS = 2 * 60 * 60 * 1000
 
-/** Gövde üst sınırı — ayrıştırmadan ÖNCE bakılıyor */
+/** Gövde üst sınırı - ayrıştırmadan ÖNCE bakılıyor */
 export const MAX_BODY_BYTES = 2048
 
 export function clampInt(value: unknown, min: number, max: number, fallback = 0): number {
-  // null ve '' "değer yok" demek, sıfır demek değil — Number(null) === 0
+  // null ve '' "değer yok" demek, sıfır demek değil - Number(null) === 0
   // olduğu için bu ayrımı elle yapmak gerekiyor.
   if (value === null || value === undefined || value === '') return fallback
   const n = typeof value === 'number' ? value : Number(value)
@@ -70,7 +70,7 @@ export function acceptLang(header: string | null): string {
 
 /**
  * Yönlendiren yalnızca HOST olarak saklanıyor. Yol ve sorgu dizesi başlık,
- * arama terimi ve bazen jeton sızdırır — panelde hiçbir işe yaramazken.
+ * arama terimi ve bazen jeton sızdırır - panelde hiçbir işe yaramazken.
  */
 export function referrerHost(value: unknown, selfHost: string): string {
   const raw = str(value, 512)
@@ -193,7 +193,7 @@ export function cleanSession(raw: unknown): CleanSession | null {
  *
  * Ham UA ASLA saklanmıyor: tek başına en büyük parmak izi katkısı o.
  * Küçük bir alt dizi tablosu üç kovaya indiriyor; kesinlik değil kova
- * istiyoruz. Sıra önemli — Edge kendini Chrome, Chrome kendini Safari
+ * istiyoruz. Sıra önemli - Edge kendini Chrome, Chrome kendini Safari
  * ilan ediyor.
  * ------------------------------------------------------------------ */
 
@@ -214,7 +214,7 @@ export function isBot(ua: string): boolean {
  * UA temizken bile makineyi ele veren iki ucuz işaret. Yeni alan adı
  * Certificate Transparency loglarına düştüğü an headless Chrome'lu
  * tarayıcılar geliyor ve JS çalıştırdıkları için `sendBeacon` ateşleniyor
- * (18 Ağustos: ilk 4 "ziyaretçi"nin 3'ü buydu — IS/FI/US).
+ * (18 Ağustos: ilk 4 "ziyaretçi"nin 3'ü buydu - IS/FI/US).
  *
  * - `Accept-Language` boş: gerçek tarayıcı istisnasız gönderir.
  * - Telefon UA'sı ama `maxTouchPoints === 0`: cihaz emülasyonu.

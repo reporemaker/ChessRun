@@ -1,8 +1,8 @@
-/** Künyede ve paylaşım kartında görünen sürüm — tek kaynak */
+/** Künyede ve paylaşım kartında görünen sürüm - tek kaynak */
 export const APP_VERSION = '1.0'
 
 /**
- * İletişim adresi — tek kaynak. Hakkında sayfasında ve ileride hata
+ * İletişim adresi - tek kaynak. Hakkında sayfasında ve ileride hata
  * bildirimi gibi yerlerde bu kullanılıyor. Oyunun kendi alan adında değil,
  * SmartKraft'ta: ChessRun bir SmartKraft projesi ve posta altyapısı orada.
  */

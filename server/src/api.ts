@@ -9,7 +9,7 @@ import {
   isMetric,
   isPeriod,
 } from '../../shared/events'
-import { bucketOf, daysBetween, previousOf, rangeOf, type Range } from './period'
+import { addDays, bucketOf, daysBetween, previousOf, rangeOf, type Range } from './period'
 import {
   type DailyTotals,
   type DimRow,
@@ -21,15 +21,16 @@ import {
 } from './rollup'
 
 /**
- * Okuma API'si — panelin tükettiği dört uç.
+ * Okuma API'si - panelin tükettiği dört uç.
  *
  * Tazelik kuralı: dünden öncesi `daily_totals`/`daily_dim` toplamlarından,
  * BUGÜN ham tablodan anlık hesaplanıyor. Bugünün taraması tek güne sınırlı,
  * yani panelde "bugün" hiçbir zaman 24 saat bayat değil; geçmiş günler
- * içinse ham tabloya hiç dokunulmuyor — D1'in okuma bütçesi öyle korunuyor.
+ * içinse ham tabloya hiç dokunulmuyor - D1'in okuma bütçesi öyle korunuyor.
  */
 
 type DB = D1Database
+const DAY_RE = /^\d{4}-\d{2}-\d{2}$/
 
 const EMPTY_TOTALS = (day: string): DailyTotals => ({
   day,
@@ -48,7 +49,7 @@ const EMPTY_TOTALS = (day: string): DailyTotals => ({
   score_sum: 0,
 })
 
-/** Bugünün ham satırlarından anlık toplam — henüz cron çalışmadı */
+/** Bugünün ham satırlarından anlık toplam - henüz cron çalışmadı */
 async function liveTotals(db: DB, day: string): Promise<{ totals: DailyTotals; dims: DimRow[] }> {
   const visits = (
     await db
@@ -68,7 +69,10 @@ async function liveTotals(db: DB, day: string): Promise<{ totals: DailyTotals; d
       .bind(day)
       .all<RunRow>()
   ).results
-  return { totals: computeTotals(day, visits, runs), dims: computeDims(day, visits, runs) }
+  const sessions = (
+    await db.prepare(`SELECT session_id FROM session_event WHERE day = ?1`).bind(day).all<{ session_id: string }>()
+  ).results.map((r) => r.session_id)
+  return { totals: computeTotals(day, visits, runs, sessions), dims: computeDims(day, visits, runs) }
 }
 
 /** Aralıktaki günlük toplamlar: geçmiş toplamdan, bugün hamdan, boş günler sıfır */
@@ -91,7 +95,7 @@ export async function summary(db: DB, url: URL, now = Date.now()): Promise<Summa
   const period = url.searchParams.get('period') ?? 'day'
   const at = url.searchParams.get('at') ?? dayKeyUtc(now)
   if (!isPeriod(period)) return bad('period')
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(at)) return bad('at')
+  if (!DAY_RE.test(at)) return bad('at')
 
   const today = dayKeyUtc(now)
   const range = rangeOf(period, at)
@@ -113,6 +117,7 @@ export async function series(db: DB, url: URL, now = Date.now()): Promise<Series
   const at = url.searchParams.get('at') ?? dayKeyUtc(now)
   if (!isMetric(metric)) return bad('metric')
   if (!isPeriod(period)) return bad('period')
+  if (!DAY_RE.test(at)) return bad('at')
 
   const range = rangeOf(period, at)
   const days = await totalsFor(db, range, dayKeyUtc(now))
@@ -137,6 +142,7 @@ export async function breakdown(
   const limit = Math.min(50, Math.max(1, Number(url.searchParams.get('limit') ?? '20') || 20))
   if (!isDimension(dim)) return bad('dim')
   if (!isPeriod(period)) return bad('period')
+  if (!DAY_RE.test(at)) return bad('at')
 
   const today = dayKeyUtc(now)
   const range = rangeOf(period, at)
@@ -170,7 +176,7 @@ export async function breakdown(
     }
   }
 
-  // Ziyaret boyutu mu koşu boyutu mu — payı ona göre hesapla
+  // Ziyaret boyutu mu koşu boyutu mu - payı ona göre hesapla
   const runDim = dim === 'mode' || dim === 'end_reason'
   const rows = [...acc]
     .map(([value, v]) => ({ value, visitors: v.visitors, runs: v.runs }))
@@ -192,8 +198,34 @@ function bad(param: string): Response {
 }
 
 /* ------------------------------------------------------------------ *
- * Gecelik iş — SQL tarafı; hesap rollup.ts'te
+ * Gecelik iş - SQL tarafı; hesap rollup.ts'te
  * ------------------------------------------------------------------ */
+
+/**
+ * Dünle biten, `daily_totals`ta satırı olmayan bütün günleri toplar. Başlangıç:
+ * son toplanan günün ertesi; hiç toplanmadıysa en eski ham gün. Ham satırlar
+ * 35 gün tutulduğu için pencere ona kırpılır (daha eskisi zaten yok).
+ * Kaçan bir cron gecesi böylece ertesi gece kapanıyor; eskiden yalnızca
+ * "dün" toplanıyordu ve kaçan gün sonsuza dek 0 görünüyordu.
+ */
+export async function rollupMissing(db: DB, today: string): Promise<string[]> {
+  const yesterday = addDays(today, -1)
+  const last = await db.prepare(`SELECT MAX(day) AS d FROM daily_totals`).first<{ d: string | null }>()
+  const oldest = await db
+    .prepare(
+      `SELECT MIN(d) AS d FROM (SELECT MIN(day) AS d FROM visit UNION ALL SELECT MIN(day) FROM run_event UNION ALL SELECT MIN(day) FROM session_event)`,
+    )
+    .first<{ d: string | null }>()
+  let start = last?.d ? addDays(last.d, 1) : (oldest?.d ?? yesterday)
+  const floor = addDays(today, -RAW_KEEP_DAYS)
+  if (start < floor) start = floor
+  const done: string[] = []
+  for (let day = start; day <= yesterday; day = addDays(day, 1)) {
+    await rollupDay(db, day)
+    done.push(day)
+  }
+  return done
+}
 
 export async function rollupDay(db: DB, day: string): Promise<void> {
   const { totals, dims } = await liveTotals(db, day)
@@ -235,7 +267,9 @@ export async function rollupDay(db: DB, day: string): Promise<void> {
 }
 
 /** 35 günü aşan ham satırlar gidiyor; toplamlar kalıyor */
-export async function pruneRaw(db: DB, today: string, keepDays = 35): Promise<void> {
+export const RAW_KEEP_DAYS = 35
+
+export async function pruneRaw(db: DB, today: string, keepDays = RAW_KEEP_DAYS): Promise<void> {
   const cutoff = new Date(`${today}T00:00:00Z`)
   cutoff.setUTCDate(cutoff.getUTCDate() - keepDays)
   const day = cutoff.toISOString().slice(0, 10)

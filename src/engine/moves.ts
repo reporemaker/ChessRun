@@ -74,7 +74,7 @@ function step(
 }
 
 /**
- * Bir taşın gidebileceği kareler. Şah mat kuralı yok — bu oyunda şah
+ * Bir taşın gidebileceği kareler. Şah mat kuralı yok - bu oyunda şah
  * kaybedilecek taş değil, ödül hedefi. Ama şah çekildiğinde rakip
  * savunmak zorunda (bkz. ai.ts).
  */

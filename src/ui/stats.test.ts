@@ -80,7 +80,7 @@ describe('endReasonOf', () => {
     expect(endReasonOf([taken, event('gameover')])).toBe('lifeLost')
   })
 
-  it('mat, can kaybının önüne geçiyor — aynı turda ikisi de olabilir', () => {
+  it('mat, can kaybının önüne geçiyor - aynı turda ikisi de olabilir', () => {
     const both: GameEvent[] = [
       { kind: 'lifeLost', reason: 'captured' },
       { kind: 'checkmated' },
@@ -118,7 +118,7 @@ describe('buildRunPayload', () => {
   /**
    * Bu testin asıl işi bir alanı doğrulamak değil, bir alanın YOKLUĞUNU
    * kilitlemek. Cihaz jetonu istatistiğe girdiği an kalıcı, cihaz bazlı bir
-   * davranış profili kurulmuş olur — çerezsiz sayım kararının tüm amacı
+   * davranış profili kurulmuş olur - çerezsiz sayım kararının tüm amacı
    * buydu. Birileri "kolaylık olsun" diye eklerse burada kırılsın.
    */
   it('cihaz jetonu ya da ada benzeyen hiçbir alan taşımıyor', () => {

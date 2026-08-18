@@ -4,7 +4,7 @@ import { fmtDelta } from '../format'
  * Tek sayı + önceki döneme göre delta.
  *
  * Delta yalnızca renkle değil, ok karakteri ve işaretle de veriliyor.
- * `hint` sayının tanımını taşıyor — "ziyaretçi" ile "oturum" arasındaki
+ * `hint` sayının tanımını taşıyor - "ziyaretçi" ile "oturum" arasındaki
  * fark altı ay sonra da bir bakışta anlaşılsın diye tanımlar arayüzde.
  */
 
@@ -14,7 +14,7 @@ interface Props {
   now?: number
   before?: number
   hint: string
-  /** Vurgu KPI'sı — dashboard'da tek tane */
+  /** Vurgu KPI'sı - dashboard'da tek tane */
   primary?: boolean
   /** Yönü olmayan metrik (süre): artış iyi ya da kötü değil, renk verilmez */
   neutral?: boolean

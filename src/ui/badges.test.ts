@@ -16,7 +16,7 @@ describe('tallyEvents', () => {
     expect(tally.squadIntact).toBe(true)
   })
 
-  it('çağrılar arasında biriktiriyor — tur zinciri boyunca çağrılıyor', () => {
+  it('çağrılar arasında biriktiriyor - tur zinciri boyunca çağrılıyor', () => {
     let tally = emptyTally()
     tally = tallyEvents(tally, [{ kind: 'kingBonus', points: 50, lives: 3 }], 'n')
     tally = tallyEvents(tally, [{ kind: 'kingBonus', points: 50, lives: 3 }], 'n')
@@ -33,7 +33,7 @@ describe('tallyEvents', () => {
   /**
    * `before` parametresinin var olma sebebi: `transform` olayı yalnızca
    * HEDEF taşı taşıyor. "Vezirken piyona düştüm" ancak önceki tip
-   * bilinirse anlaşılıyor — Game.tsx bunu ayrı bir ref'te taşıyor çünkü
+   * bilinirse anlaşılıyor - Game.tsx bunu ayrı bir ref'te taşıyor çünkü
    * commit'in kapanışındaki state bir tur zincirinde bayatlıyor.
    */
   it('düşüşü yalnızca önceki tip ağır taşsa işaretliyor', () => {
@@ -41,7 +41,7 @@ describe('tallyEvents', () => {
 
     expect(tallyEvents(emptyTally(), toPawn, 'q').downgraded).toBe(true)
     expect(tallyEvents(emptyTally(), toPawn, 'r').downgraded).toBe(true)
-    // Attan piyona geçmek düşüş değil — at zaten hafif taş
+    // Attan piyona geçmek düşüş değil - at zaten hafif taş
     expect(tallyEvents(emptyTally(), toPawn, 'n').downgraded).toBe(false)
   })
 
@@ -107,7 +107,7 @@ describe('tallyEvents', () => {
     expect(tally.queenCaptures).toBe(1)
   })
 
-  it('harakiri: vezirken piyona düşme — kaleyken değil', () => {
+  it('harakiri: vezirken piyona düşme - kaleyken değil', () => {
     const toPawn: GameEvent[] = [{ kind: 'transform', to: 'p' }]
     expect(tallyEvents(emptyTally(), toPawn, 'q').harakiri).toBe(1)
     expect(tallyEvents(emptyTally(), toPawn, 'r').harakiri).toBe(0)
@@ -140,7 +140,7 @@ describe('tallyEvents', () => {
     expect(tally.squadIntact).toBe(false)
   })
 
-  it('girdiyi değiştirmiyor — yeni nesne döndürüyor', () => {
+  it('girdiyi değiştirmiyor - yeni nesne döndürüyor', () => {
     const before = emptyTally()
     const after = tallyEvents(before, [{ kind: 'kingBonus', points: 50, lives: 3 }], 'n')
     expect(before.kings).toBe(0)

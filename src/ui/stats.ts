@@ -22,7 +22,7 @@ import { APP_VERSION } from './version'
  *
  * `VITE_LEADERBOARD_URL`'den ayrı bir değişken kullanılıyor: üretimde ikisi
  * aynı Worker'ı gösterecek olsa bile bunlar farklı rıza ve dağıtım
- * hikâyeleri — sıralama açıkken istatistiği kapatabilmek gerekiyor.
+ * hikâyeleri - sıralama açıkken istatistiği kapatabilmek gerekiyor.
  *
  * Sunucu sözleşmesi (hepsi her durumda 204 döner):
  *   POST {url}/visit    · POST {url}/run    · POST {url}/session
@@ -59,7 +59,7 @@ function optedOut(): boolean {
 export const statsEnabled = Boolean(ENDPOINT)
 
 /* ------------------------------------------------------------------ *
- * Saf projeksiyonlar — DOM'a dokunmuyorlar, bu yüzden test edilebilirler
+ * Saf projeksiyonlar - DOM'a dokunmuyorlar, bu yüzden test edilebilirler
  * ------------------------------------------------------------------ */
 
 /**
@@ -73,7 +73,7 @@ export const statsEnabled = Boolean(ENDPOINT)
 export interface ClientEnv {
   sessionId: string
   appVersion: string
-  /** Uygulamada seçili dil — başlıklardan gelemeyecek tek sinyal */
+  /** Uygulamada seçili dil - başlıklardan gelemeyecek tek sinyal */
   uiLang: UiLang
   navLang: string
   viewport: Viewport
@@ -97,7 +97,7 @@ export function langTag(value: string): string {
 }
 
 /**
- * Koşunun nasıl bittiği. Motorda böyle bir alan yok — bitiş olayları
+ * Koşunun nasıl bittiği. Motorda böyle bir alan yok - bitiş olayları
  * ayrı ayrı yayılıyor, bu fonksiyon onları tek bir sebebe indiriyor.
  * Sıra önemli: mat ve sıkışma, can kaybından daha spesifik.
  */
@@ -188,7 +188,7 @@ export function readEnv(sessionId: string): ClientEnv {
       (navigator as Navigator & { standalone?: boolean }).standalone === true,
     reducedMotion: media('(prefers-reduced-motion: reduce)'),
     // Yalnızca host anlamlı; yolu ve sorguyu sunucu zaten atıyor ama
-    // göndermemek daha temiz — yol başlık ve arama terimi sızdırabilir
+    // göndermemek daha temiz - yol başlık ve arama terimi sızdırabilir
     referrer: document.referrer,
   }
 }
@@ -228,7 +228,7 @@ export function trackRun(facts: RunFacts): void {
 /**
  * Oturum sonu. `sendBeacon` tam olarak burada doğru: sayfa ölüyor olabilir.
  *
- * `unload`/`beforeunload` kullanılmıyor — mobil Safari'de güvenilir
+ * `unload`/`beforeunload` kullanılmıyor - mobil Safari'de güvenilir
  * tetiklenmiyor. Doğru çift `visibilitychange` + `pagehide`.
  */
 export function trackSessionEnd(): void {

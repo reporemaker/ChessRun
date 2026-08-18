@@ -1,24 +1,25 @@
 /**
- * Ziyaretçi tekilleştirmesi — çerezsiz, IP saklamadan.
+ * Ziyaretçi tekilleştirmesi - çerezsiz, IP saklamadan.
  *
  * `hash = SHA-256(günlük_tuz ‖ ip ‖ ua ‖ "chessrun")`, ilk 16 bayt.
  *
  * **IP yalnızca bu dosyadaki bir yerel değişken olarak var ve hiçbir yere
  * yazılmıyor.** Tuz her gece dönüyor, bir öncekiyse 48 saat sonra
- * siliniyor — o andan itibaren dünkü hash'ler hiçbir IP'ye geri
+ * siliniyor - o andan itibaren dünkü hash'ler hiçbir IP'ye geri
  * bağlanamıyor. Plausible/Fathom'ın modeli bu.
  *
  * Dürüst not: "geri döndürülemez şekilde anonimleştirildiği için kişisel
  * veri değildir" yorumu yaygın ve savunulabilir, ama mahkeme testinden
  * geçmiş değil.
  *
- * İki anahtar tutuluyor. Gece yarısını 00:05'teki cron'dan önce geçen bir
- * istek hâlâ dünkü tuzla geliyor; `yesterday` olmasa o birkaç dakikalık
- * pencerede aynı ziyaretçi iki kez sayılırdı.
+ * Tuz GÜNE bağlı: `salt:<gün>` anahtarı, ilk istekte tembel üretilir, 48
+ * saat sonra KV kendiliğinden siler. Eskiden "bugün/dün" çifti vardı ve
+ * 00:05'teki cron döndürüyordu; gün anahtarı 00:00'da değiştiği için o beş
+ * dakikada aynı ziyaretçi iki kez sayılıyordu ve `yesterday` hiç okunmuyordu
+ * (19 Ağustos denetimi). Güne bağlı anahtarda böyle bir pencere yok ve cron
+ * ölse de sayım bozulmuyor.
  */
 
-const TODAY = 'salt:today'
-const YESTERDAY = 'salt:yesterday'
 const TTL_SECONDS = 172_800 // 48 saat
 
 export interface SaltStore {
@@ -32,26 +33,31 @@ function randomSalt(): string {
   return [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
-/**
- * Bugünün tuzunu döndürür; yoksa üretip yazar.
- *
- * Cron ölse bile toplama çalışmaya devam etsin diye tembel üretim var —
- * tuz yoksa ziyaretçi sayımı tamamen durmuş olurdu.
- */
-export async function currentSalt(store: SaltStore): Promise<string> {
-  const existing = await store.get(TODAY)
-  if (existing) return existing
-  const fresh = randomSalt()
-  await store.put(TODAY, fresh, { expirationTtl: TTL_SECONDS })
-  return fresh
+export function saltKey(day: string): string {
+  return `salt:${day}`
 }
 
-/** Gecelik döndürme: bugünkü dünkü olur, yeni bir bugün üretilir */
-export async function rotateSalt(store: SaltStore): Promise<void> {
-  const today = await store.get(TODAY)
-  if (today) await store.put(YESTERDAY, today, { expirationTtl: TTL_SECONDS })
-  await store.put(TODAY, randomSalt(), { expirationTtl: TTL_SECONDS })
+/**
+ * Günün tuzunu döndürür; yoksa üretip yazar. İki izole aynı anda "yok"
+ * görüp iki farklı tuz yazabilir - o günün ilk saniyesindeki birkaç
+ * ziyaretçi bir kez fazla sayılır, kabul edilebilir (KV son yazan kazanır,
+ * sonraki istekler tek tuzda birleşir).
+ */
+export async function currentSalt(store: SaltStore, day: string): Promise<string> {
+  // İzole başına bellek: KV okuması ziyaret başına değil gün başına
+  // (KV Free 100k okuma/gün; ziyaret beacon'ı onu tüketebilirdi)
+  if (memo && memo.day === day && memo.store === store) return memo.salt
+  const key = saltKey(day)
+  let salt = await store.get(key)
+  if (!salt) {
+    salt = randomSalt()
+    await store.put(key, salt, { expirationTtl: TTL_SECONDS })
+  }
+  memo = { day, salt, store }
+  return salt
 }
+
+let memo: { day: string; salt: string; store: SaltStore } | null = null
 
 export async function hashVisitor(salt: string, ip: string, ua: string): Promise<string> {
   const data = new TextEncoder().encode(`${salt}|${ip}|${ua}|chessrun`)

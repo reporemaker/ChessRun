@@ -5,6 +5,7 @@ import { api } from './api'
 import { PERIOD_LABEL, fmtRange } from './format'
 import { type Route, isFuture, parseHash, shift, toHash, todayUtc } from './period'
 import { Dashboard } from './pages/Dashboard'
+import { League } from './pages/League'
 import { Names } from './pages/Names'
 import { Stats } from './pages/Stats'
 import { useQuery } from './useQuery'
@@ -13,7 +14,7 @@ import './theme.css'
 /**
  * Kabuk: başlık, sayfa sekmeleri, dönem seçici, gezinme.
  *
- * Router kütüphanesi yok — üç sayfa için `location.hash`; oyunun
+ * Router kütüphanesi yok - üç sayfa için `location.hash`; oyunun
  * `App.tsx`'i de sayfaları aynı şekilde `useState` ile tutuyor. Hash'te
  * dönem ve tarih de var: sekme yenilenince görünüm kaybolmuyor, geri tuşu
  * çalışıyor, bir görünüm başkasına gönderilebiliyor.
@@ -22,6 +23,7 @@ const NAV: Array<{ id: Route['page']; label: string }> = [
   { id: 'dashboard', label: 'Özet' },
   { id: 'stats', label: 'İstatistik' },
   { id: 'names', label: 'Adlar' },
+  { id: 'league', label: 'Lig' },
 ]
 const PERIODS: Period[] = ['day', 'week', 'month', 'year']
 
@@ -56,7 +58,7 @@ export default function App() {
             </a>
           ))}
         </nav>
-        <div className="health" title={health.data ? `Son toplama: ${health.data.lastRollupDay ?? '—'} · ham satır: ${health.data.rawRows}` : ''}>
+        <div className="health" title={health.data ? `Son toplama: ${health.data.lastRollupDay ?? '-'} · ham satır: ${health.data.rawRows}` : ''}>
           <span className={`dot ${health.error ? 'bad' : stale ? 'warn' : 'ok'}`} aria-hidden="true" />
           <span className="muted">
             {health.error ? 'Worker yok' : stale ? 'Toplama gecikti' : health.data ? 'Canlı' : '…'}
@@ -64,7 +66,7 @@ export default function App() {
         </div>
       </header>
 
-      {route.page !== 'names' && (
+      {route.page !== 'names' && route.page !== 'league' && (
       <div className="controls">
         <div className="seg" role="tablist" aria-label="Dönem">
           {PERIODS.map((p) => (
@@ -95,6 +97,8 @@ export default function App() {
           <Dashboard period={route.period} at={route.at} />
         ) : route.page === 'stats' ? (
           <Stats period={route.period} at={route.at} />
+        ) : route.page === 'league' ? (
+          <League week={route.week} onWeek={(week) => go({ week })} />
         ) : (
           <Names />
         )}
@@ -107,7 +111,7 @@ export default function App() {
   )
 }
 
-/** Aralık sunucuyla aynı saf fonksiyondan (shared/period) — ekstra istek yok */
+/** Aralık sunucuyla aynı saf fonksiyondan (shared/period) - ekstra istek yok */
 function RangeLabel({ period, at }: { period: Period; at: string }) {
   const r = rangeOf(period, at)
   return <>{fmtRange(r.from, r.to)}</>

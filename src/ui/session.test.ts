@@ -3,7 +3,7 @@ import { IDLE_MS, claimVisit, countRun, sessionRuns, sessionStart, touchSession 
 
 /**
  * `sessionStorage` node ortamında yok. Modül try/catch ile bozulmadan
- * çalışıyor ama 30 dakika kuralını sınamak için çalışan bir depo lazım —
+ * çalışıyor ama 30 dakika kuralını sınamak için çalışan bir depo lazım -
  * en küçük sahtesini kuruyoruz.
  */
 function installStore() {
@@ -38,7 +38,7 @@ describe('touchSession', () => {
     expect(second.id).toBe(first.id)
   })
 
-  it('tam eşikte hâlâ aynı oturum — sınır dahil', () => {
+  it('tam eşikte hâlâ aynı oturum - sınır dahil', () => {
     const first = touchSession(1_000)
     expect(touchSession(1_000 + IDLE_MS).id).toBe(first.id)
   })

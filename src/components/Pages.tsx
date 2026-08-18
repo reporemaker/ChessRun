@@ -35,12 +35,12 @@ interface Section {
   bodyKeys: StringKey[]
   /** Bölümün başındaki ders sahnesi: her ders bir demo (ui/demos.ts) */
   lessons?: DemoId[]
-  /** Motorda henüz olmayan mod — bölüm "yakında" damgasıyla çiziliyor */
+  /** Motorda henüz olmayan mod - bölüm "yakında" damgasıyla çiziliyor */
   soon?: boolean
 }
 
 // Kılavuz düzeni: her bölüm önce EKRAN (dersler, adım adım animasyon),
-// altında KURALLAR (kısa maddeler). Sonda puan tablosu — Atari kılavuzlarının
+// altında KURALLAR (kısa maddeler). Sonda puan tablosu - Atari kılavuzlarının
 // "SCORING" sayfası gibi, sayılar doğrudan motor sabitlerinden.
 const HELP: Section[] = [
   {
@@ -69,7 +69,7 @@ const HELP: Section[] = [
   },
 ]
 
-/** Puan tablosu satırları — etiket anahtarı + motor sabitinden değer */
+/** Puan tablosu satırları - etiket anahtarı + motor sabitinden değer */
 const PIECE_ORDER: PieceType[] = ['p', 'n', 'b', 'r', 'q', 'k']
 
 const ABOUT: Section[] = [
@@ -91,11 +91,11 @@ const ABOUT: Section[] = [
 ]
 
 /**
- * Nasıl oynanır ve Hakkında — ayarlar penceresindeki iki düğmenin hedefi.
+ * Nasıl oynanır ve Hakkında - ayarlar penceresindeki iki düğmenin hedefi.
  *
  * Tam ekran açılıyor: pencerenin içine sığmayacak kadar uzunlar ve okuma
  * sırasında arkadaki tahtanın akması dikkat dağıtıyordu. Tasarım dili yine
- * aynı — monospace, altın yalnızca başlıklarda.
+ * aynı - monospace, altın yalnızca başlıklarda.
  */
 export function Page({ page, onClose }: PageProps) {
   const t = useT()

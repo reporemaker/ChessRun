@@ -37,7 +37,7 @@ describe('langCode', () => {
     expect(langCode('EN')).toBe('en')
   })
 
-  it('harf olmayanı reddediyor — çöp değer kırılımı zehirler', () => {
+  it('harf olmayanı reddediyor - çöp değer kırılımı zehirler', () => {
     expect(langCode('9!')).toBe('')
     expect(langCode('')).toBe('')
     expect(langCode(42)).toBe('')
@@ -136,7 +136,7 @@ describe('cleanRun', () => {
     expect(dirty?.speed).toBe('normal')
   })
 
-  it('süreyi iki saate kırpıyor — arka plandaki sekme saati şişiriyor', () => {
+  it('süreyi iki saate kırpıyor - arka plandaki sekme saati şişiriyor', () => {
     expect(cleanRun({ ...valid, durationMs: 9 * 60 * 60 * 1000 })?.durationMs).toBe(MAX_DURATION_MS)
     expect(cleanRun({ ...valid, durationMs: -5 })?.durationMs).toBe(0)
   })
@@ -171,7 +171,7 @@ describe('cleanVisit', () => {
 })
 
 describe('cleanSession', () => {
-  it('oturum süresini bir güne kırpıyor — koşudan farklı tavan', () => {
+  it('oturum süresini bir güne kırpıyor - koşudan farklı tavan', () => {
     const clean = cleanSession({ sessionId: 's', durationMs: 5 * 24 * 3600 * 1000, runs: 3 })
     expect(clean?.durationMs).toBe(24 * 3600 * 1000)
     expect(clean?.runs).toBe(3)

@@ -4,7 +4,7 @@ import type { StringKey } from './i18n'
 
 /**
  * Ana sayfadaki üç serbest kartın kaynağı. Dördüncü kart Günün Mücadelesi
- * (`mode: 'daily'`) — kendi motoru ve ekranı var (engine/daily.ts,
+ * (`mode: 'daily'`) - kendi motoru ve ekranı var (engine/daily.ts,
  * components/DailyGame.tsx), bu listeye girmez: haftalık lig sekmeleri ve
  * serbest kartlar yalnızca buradan çizilir.
  *
@@ -19,7 +19,7 @@ export interface ModeInfo {
   nameKey: StringKey
   lineKey: StringKey
   ready: boolean
-  /** Kartın alt satırına sabitlenen slogan — varsa her zaman görünüyor */
+  /** Kartın alt satırına sabitlenen slogan - varsa her zaman görünüyor */
   mottoKey?: StringKey
   /** Bu modun kendi varsayılan koridor genişliği */
   defaultCols: number

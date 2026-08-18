@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { ApiError } from './api'
 
 /**
- * Küçük veri kancası — kütüphane yok.
+ * Küçük veri kancası - kütüphane yok.
  *
  * Üç durum: yükleniyor / hata / veri. Eski veri yeni istek gelene kadar
  * ekranda kalıyor (dönem değişince sayfa boşalıp titremiyor). Yarış
@@ -28,7 +28,7 @@ export function useQuery<T>(key: string, fetcher: () => Promise<T>): Query<T> {
         setState((s) => ({
           ...s,
           loading: false,
-          error: err instanceof ApiError ? err.message : 'Bağlantı yok — Worker çalışıyor mu?',
+          error: err instanceof ApiError ? err.message : 'Bağlantı yok - Worker çalışıyor mu?',
         })),
     )
     return () => {

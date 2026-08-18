@@ -1,11 +1,11 @@
 /**
- * Oturum kimliği — istatistiğin tek gruplama anahtarı.
+ * Oturum kimliği - istatistiğin tek gruplama anahtarı.
  *
  * **`localStorage` değil `sessionStorage`.** Sekme başına yaşıyor, sekmeyle
  * ölüyor; yani yapısal olarak günleri aşamıyor ve cihazı takip etmiyor.
  * Cihaz jetonu (`chessrun:identity`) burada bilerek kullanılmıyor: o bir
  * kimlik iddiası ve sıralama tablosuna ait. İstatistiğe girseydi kalıcı,
- * cihaz bazlı bir davranış profili kurmuş olurduk — çerezsiz sayım
+ * cihaz bazlı bir davranış profili kurmuş olurduk - çerezsiz sayım
  * kararının tüm amacı buydu.
  *
  * Üstüne 30 dakikalık hareketsizlik kuralı var. Eşik keyfi değil: dışarıyla
@@ -24,7 +24,7 @@ export const IDLE_MS = 30 * 60 * 1000
 
 export interface Session {
   id: string
-  /** Bu oturum yeni mi doğdu — ziyaret olayı yalnızca o zaman gönderiliyor */
+  /** Bu oturum yeni mi doğdu - ziyaret olayı yalnızca o zaman gönderiliyor */
   fresh: boolean
 }
 
@@ -89,7 +89,7 @@ export function touchSession(now: number = Date.now()): Session {
  * Ziyaret olayı bu oturumda daha önce gönderildi mi?
  *
  * Aynı sekmede sert yenileme oturumu öldürmüyor, bu yüzden `fresh` tek
- * başına yetmez — ayrı bir bayrak gerekiyor. Sunucudaki `(gün, hash)`
+ * başına yetmez - ayrı bir bayrak gerekiyor. Sunucudaki `(gün, hash)`
  * tekilleştirmesi ikinci savunma hattı ve birden çok sekmeyi karşılıyor.
  */
 export function claimVisit(): boolean {

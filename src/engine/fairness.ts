@@ -7,7 +7,7 @@ import type { Board, Color, GameState, Pos } from './types'
  * Bir hamlenin ardından oyuncunun yenip yenmeyeceği.
  *
  * İki tehlike birden ölçülür:
- *  1. Hamleden *sonraki* konumda rakip taşların vurduğu kareler — hamle öncesi
+ *  1. Hamleden *sonraki* konumda rakip taşların vurduğu kareler - hamle öncesi
  *     tehdit haritası yanıltıcı olur, çünkü oyuncunun terk ettiği kare
  *     kapalı bir hattı açabilir.
  *  2. En alt satır: kayma hemen hamlenin ardından geldiği için oraya inmek
@@ -53,7 +53,7 @@ export function safeMoves(state: GameState): Pos[] {
 }
 
 /**
- * Vurulmayan kareler — Şah Kaçışı'nda hamle *kuralı* bu.
+ * Vurulmayan kareler - Şah Kaçışı'nda hamle *kuralı* bu.
  *
  * `safeMoves`'tan farkı en alt satır: gerçek satrançta oraya inmek yasak
  * değil, sadece ölümcül. Şah Kaçışı'nda bunu bilerek serbest bırakıyoruz;

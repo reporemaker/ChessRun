@@ -4,17 +4,17 @@
  * Bu dosyanın **hiç bağımlılığı yok** ve olamaz: üç ayrı derleme grafiği
  * (kökteki oyun, `server/`, `sub/`) onu göreli yolla içeri alıyor. React,
  * i18n ya da motor tipi import ettiği an Worker'ın içine arayüz sürüklemiş
- * oluruz — npm workspaces kurmadan tip paylaşabilmemizin tek sebebi bu
+ * oluruz - npm workspaces kurmadan tip paylaşabilmemizin tek sebebi bu
  * dosyanın yalıtık kalması.
  *
  * `erasableSyntaxOnly` açık olduğu için `enum` yok; her sabit liste
  * `as const` dizi + türetilmiş birleşim olarak yazılıyor. Böylece hem tip
- * hem de çalışma zamanı doğrulama listesi tek yerden geliyor — Worker'ın
+ * hem de çalışma zamanı doğrulama listesi tek yerden geliyor - Worker'ın
  * beyaz liste doğrulaması aynı diziyi kullanıyor.
  */
 
 /* ------------------------------------------------------------------ *
- * Sabit listeler — hem tip hem doğrulama kaynağı
+ * Sabit listeler - hem tip hem doğrulama kaynağı
  * ------------------------------------------------------------------ */
 
 export const MODES = ['classic', 'kingRun', 'trio', 'daily'] as const
@@ -27,7 +27,7 @@ export const SPEEDS = ['slow', 'normal', 'fast'] as const
 export type Speed = (typeof SPEEDS)[number]
 
 /**
- * Koşunun nasıl bittiği. Motorda böyle bir alan yok — `finishRun`'da
+ * Koşunun nasıl bittiği. Motorda böyle bir alan yok - `finishRun`'da
  * `state.events` üstünden türetiliyor. Panelin üreteceği en faydalı oyun
  * tasarımı sayısı bu, ve sıralama tablosunun taşıması için bir sebep yok.
  */
@@ -45,7 +45,7 @@ export type Device = (typeof DEVICES)[number]
 
 /**
  * Kırılım boyutları. Yeni bir boyut eklemek toplama işinde tek satır;
- * API ve panelde sıfır değişiklik — ikisi de `daily_dim` üstünden jenerik
+ * API ve panelde sıfır değişiklik - ikisi de `daily_dim` üstünden jenerik
  * çalışıyor.
  */
 export const DIMENSIONS = [
@@ -67,11 +67,11 @@ export type Dimension = (typeof DIMENSIONS)[number]
 export const PERIODS = ['day', 'week', 'month', 'year'] as const
 export type Period = (typeof PERIODS)[number]
 
-export const METRICS = ['visitors', 'sessions', 'players', 'runs'] as const
+export const METRICS = ['visitors', 'sessions', 'players', 'runs', 'runs_daily'] as const
 export type Metric = (typeof METRICS)[number]
 
 /* ------------------------------------------------------------------ *
- * Toplama yükleri — oyundan Worker'a
+ * Toplama yükleri - oyundan Worker'a
  *
  * Hiçbirinde cihaz jetonu YOK ve olmayacak. Sıralama tablosu jetona
  * ihtiyaç duyuyor çünkü o bir kimlik iddiası; istatistik duymuyor.
@@ -81,7 +81,7 @@ export type Metric = (typeof METRICS)[number]
 
 /** Her yükte ortak: hangi oturum, hangi sürüm */
 export interface BasePayload {
-  /** sessionStorage'da yaşayan sekme kimliği — cihaz değil, oturum */
+  /** sessionStorage'da yaşayan sekme kimliği - cihaz değil, oturum */
   sessionId: string
   appVersion: string
 }
@@ -93,7 +93,7 @@ export interface VisitPayload extends BasePayload {
   navLang: string
   viewport: Viewport
   touch: boolean
-  /** Ana ekrana eklenmiş mi — service worker'ı sürdürmeye değer mi sorusu */
+  /** Ana ekrana eklenmiş mi - service worker'ı sürdürmeye değer mi sorusu */
   standalone: boolean
   reducedMotion: boolean
   /** document.referrer; Worker yalnızca host kısmını saklıyor */
@@ -127,7 +127,7 @@ export interface SessionPayload extends BasePayload {
 }
 
 /* ------------------------------------------------------------------ *
- * Okuma yanıtları — Worker'dan panele
+ * Okuma yanıtları - Worker'dan panele
  * ------------------------------------------------------------------ */
 
 export interface SummaryTotals {
@@ -147,7 +147,7 @@ export interface SummaryResponse extends SummaryTotals {
   period: Period
   from: string
   to: string
-  /** Önceki eşdeğer dönem — her KPI'nın deltası bedavaya geliyor */
+  /** Önceki eşdeğer dönem - her KPI'nın deltası bedavaya geliyor */
   previous: SummaryTotals
 }
 
@@ -166,7 +166,7 @@ export interface BreakdownRow {
   value: string
   visitors: number
   runs: number
-  /** 0–1 arası pay; toplam sıfırsa 0 */
+  /** 0-1 arası pay; toplam sıfırsa 0 */
   share: number
 }
 
@@ -182,12 +182,12 @@ export interface HealthResponse {
   lastRollupDay: string | null
   rawRows: number
   oldestRawDay: string | null
-  /** Günlük tuz yerinde mi — yoksa ziyaretçi tekilleştirmesi bozulur */
+  /** Günlük tuz yerinde mi - yoksa ziyaretçi tekilleştirmesi bozulur */
   salted: boolean
 }
 
 /* ------------------------------------------------------------------ *
- * Yardımcılar — üç taraf da aynı gün anahtarını üretmeli
+ * Yardımcılar - üç taraf da aynı gün anahtarını üretmeli
  * ------------------------------------------------------------------ */
 
 /** UTC gün anahtarı: 2026-08-17. Sunucu tarafı her şey UTC. */

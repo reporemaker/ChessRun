@@ -84,7 +84,7 @@ describe('oyun tekrarlanabilirliği', () => {
     expect(play(hashSeed('2026-08-18')).frames[0]).not.toBe(play(monday).frames[0])
   })
 
-  it('tohumsuz oyun sistem üretecini kullanır — akış tohuma bağlı değil', () => {
+  it('tohumsuz oyun sistem üretecini kullanır - akış tohuma bağlı değil', () => {
     const state = createGame({ playerColor: 'w', cols: 8 })
     expect(state.seed).toBeNull()
     expect(state.rng.seed).toBeNull()

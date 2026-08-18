@@ -18,7 +18,9 @@ import {
   dailyMoves,
   dailyStriker,
   hasKing,
+  hasSafeExit,
   openingIsFair,
+  rescueEntryRow,
   rowIndexAt,
   spawnDailyRow,
 } from './daily'
@@ -46,7 +48,7 @@ function setup(
   }
 }
 
-describe('günlük mücadele — kuruluş', () => {
+describe('günlük mücadele - kuruluş', () => {
   it('sekiz sütun, atla başlar, alt satırlar boş', () => {
     const state = createDaily({ seed: 42 })
     expect(state.board[0].cells).toHaveLength(DAILY_COLS)
@@ -67,7 +69,7 @@ describe('günlük mücadele — kuruluş', () => {
     expect(shape(a)).not.toBe(shape(c))
   })
 
-  it('satır üretimi yalnızca (tohum, indeks)e bağlı — piyon ve vezir yok', () => {
+  it('satır üretimi yalnızca (tohum, indeks)e bağlı - piyon ve vezir yok', () => {
     for (let index = 0; index < 400; index++) {
       const row = spawnDailyRow(99, index, 'b')
       const again = spawnDailyRow(99, index, 'b')
@@ -130,7 +132,7 @@ describe('günlük mücadele — kuruluş', () => {
   })
 })
 
-describe('günlük mücadele — hamle', () => {
+describe('günlük mücadele - hamle', () => {
   it('en alt satır oynanabilir, güvenlik süzülmez', () => {
     const state = setup({ row: 5, col: 3 }, 'r', [[6, 0, 'r']])
     const moves = dailyMoves(state)
@@ -214,7 +216,7 @@ describe('günlük mücadele — hamle', () => {
   })
 })
 
-describe('günlük mücadele — vezir (mantar) kuralı', () => {
+describe('günlük mücadele - vezir (mantar) kuralı', () => {
   it('şahı at ile yiyince vezir olur, at hatırlanır', () => {
     const state = setup({ row: 6, col: 3 }, 'n', [[4, 4, 'k']])
     const next = applyDailyMove(state, { row: 4, col: 4 })
@@ -278,7 +280,12 @@ describe('günlük mücadele — vezir (mantar) kuralı', () => {
     expect(next.base).toBeNull()
     expect(next.board[3].cells[3]?.type).toBe('n')
     expect(next.events.some((e) => e.kind === 'shrink' && e.to === 'n')).toBe(true)
-    // Mantar gitti: bir sonraki vuruş ölüm — (1,2)ye at hamlesi, (1,0)daki kale vuruyor
+    // Vuran kale (3,0) mantarı yedi ve harcandı: tahtadan kalktı
+    expect(next.board[3].cells[0]).toBeNull()
+    const shrink = next.events.find((e) => e.kind === 'shrink') as { by: Pos | null; piece: PieceType | null }
+    expect(shrink.by).toEqual({ row: 3, col: 0 })
+    expect(shrink.piece).toBe('r')
+    // Mantar gitti: bir sonraki vuruş ölüm - (1,2)ye at hamlesi, (1,0)daki kale vuruyor
     next.board[1].cells[0] = makePiece('r', 'b')
     const again = applyDailyMove(next, { row: 1, col: 2 })
     expect(again.status).toBe('gameover')
@@ -287,5 +294,48 @@ describe('günlük mücadele — vezir (mantar) kuralı', () => {
   it('vezirken düşmek yine ölüm', () => {
     const state = setup({ row: ROWS - 1, col: 3 }, 'q', [], { base: 'n' })
     expect(applyDailyScroll(state).status).toBe('gameover')
+  })
+})
+
+describe('günlük mücadele - her yeni satırda en az bir çıkış', () => {
+  it('giren satır son çıkışı kapatıyorsa suçlu taş silinir', () => {
+    // At (4,4): çıkış kareleri 2,3,5,6. sütunlarda; 0. satırda dört kale hepsini vuruyor
+    const state = setup({ row: 4, col: 4 }, 'n', [
+      [0, 2, 'r'],
+      [0, 3, 'r'],
+      [0, 5, 'r'],
+      [0, 6, 'r'],
+    ])
+    expect(hasSafeExit(state.board, state.player, 'w', 'b')).toBe(false)
+    const changed = rescueEntryRow(state.board, state.player, 'w', 'b')
+    expect(changed).toBe(true)
+    expect(hasSafeExit(state.board, state.player, 'w', 'b')).toBe(true)
+    const left = state.board[0].cells.filter(Boolean).length
+    expect(left).toBe(3)
+  })
+
+  it('sebep satır değilse (satırsız da çıkış yoksa) dokunmaz', () => {
+    // At (4,4); çıkışları 3./5. satırlardaki kaleler kapatıyor, 0. satırdaki fil masum
+    const state = setup({ row: 4, col: 4 }, 'n', [
+      [7, 2, 'r'],
+      [7, 3, 'r'],
+      [7, 5, 'r'],
+      [7, 6, 'r'],
+      [0, 0, 'b'],
+    ])
+    expect(hasSafeExit(state.board, state.player, 'w', 'b')).toBe(false)
+    expect(rescueEntryRow(state.board, state.player, 'w', 'b')).toBe(false)
+    expect(state.board[0].cells[0]?.type).toBe('b')
+  })
+
+  it('kayma sırasında devreye girer ve rescue olayı üretir', () => {
+    // Oyuncu (3,4) at; giren satır (incoming) dört kale ile tüm çıkışları kapatacak
+    const state = setup({ row: 3, col: 4 }, 'n', [])
+    const incoming = emptyRow(DAILY_COLS)
+    for (const col of [2, 3, 5, 6]) incoming.cells[col] = makePiece('r', 'b')
+    const next = applyDailyScroll({ ...state, incoming })
+    expect(next.status).toBe('playing')
+    expect(next.events.some((e) => e.kind === 'rescue')).toBe(true)
+    expect(hasSafeExit(next.board, next.player, 'w', 'b')).toBe(true)
   })
 })

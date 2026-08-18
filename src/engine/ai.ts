@@ -7,11 +7,11 @@ import type { Board, Color, Pos } from './types'
 export interface EnemyMove {
   from: Pos
   to: Pos
-  /** Yenen oyuncu taşının kadro içindeki sırası — hiçbiri yenmiyorsa null */
+  /** Yenen oyuncu taşının kadro içindeki sırası - hiçbiri yenmiyorsa null */
   capturedIndex: number | null
 }
 
-/** Puanlama ağırlıkları — rakibin ne kadar agresif oynadığını buradan ayarla */
+/** Puanlama ağırlıkları - rakibin ne kadar agresif oynadığını buradan ayarla */
 const SCORE_CAPTURE_PLAYER = 1000
 const SCORE_SETS_UP_THREAT = 50
 const SCORE_KING_FLEES = 30
@@ -23,7 +23,7 @@ const KING_PANIC_RADIUS = 3
  * Üçlüde oyuncunun asıl savunması taşlarının birbirini kollaması. Rakip
  * bunu hiç hesaba katmazsa oyuncunun kurduğu savunma hiçbir işe yaramıyor
  * ve kadro kuramı çöküyor; ceza yeterince büyük ki korunmasız bir taş
- * varken rakip korunanı seçmesin, ama yasak da değil — bedelini ödemeyi
+ * varken rakip korunanı seçmesin, ama yasak da değil - bedelini ödemeyi
  * göze alabilir.
  */
 const SCORE_DEFENDED_TARGET = -400
@@ -32,9 +32,9 @@ const SCORE_DEFENDED_TARGET = -400
  * Rakip her turda tek bir taş oynar.
  *
  * Şah çekildiyse gerçek satrançtaki gibi başka hiçbir şey yapamaz: sadece
- * şahı kurtaran hamleler oynanabilir — şahı kaçırmak, çeken taşı (yani
+ * şahı kurtaran hamleler oynanabilir - şahı kaçırmak, çeken taşı (yani
  * oyuncuyu) yemek ya da araya girip hattı kapatmak. Hiçbiri mümkün değilse
- * mat olmuştur: şahı kurtarmak yerine başka bir taşını rastgele oynar —
+ * mat olmuştur: şahı kurtarmak yerine başka bir taşını rastgele oynar -
  * kaçınılmaz sonu beklerken donup kalmaz.
  *
  * Şah çekilmediğinde öncelik sırası:
@@ -63,7 +63,7 @@ export function chooseEnemyMove(
     return index < 0 ? null : index
   }
 
-  /** En yakın oyuncu taşına uzaklık — rakip kadroyu topluca sıkıştırır */
+  /** En yakın oyuncu taşına uzaklık - rakip kadroyu topluca sıkıştırır */
   const nearest = (pos: Pos): number =>
     players.reduce((best, target) => Math.min(best, chebyshev(pos, target)), Infinity)
 

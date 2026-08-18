@@ -3,7 +3,7 @@ import type { GameEvent } from '../engine/types'
 /**
  * Ses dosyası yok: her efekt WebAudio osilatörüyle anlık üretiliyor.
  *
- * Sebep sadece boyut değil — kare dalga ve sert zarflar, tahtanın
+ * Sebep sadece boyut değil - kare dalga ve sert zarflar, tahtanın
  * yanıp sönme animasyonuyla aynı 8-bit dili konuşuyor. Örneklenmiş
  * "gerçekçi" sesler bu görüntünün yanında yabancı duruyordu.
  */
@@ -13,7 +13,7 @@ interface Blip {
   freq: number
   /** Süre (saniye) */
   dur: number
-  /** Bitiş frekansı — verilirse frekans kayar (slide) */
+  /** Bitiş frekansı - verilirse frekans kayar (slide) */
   to?: number
   type?: OscillatorType
   gain?: number
@@ -49,7 +49,7 @@ export function setMuted(value: boolean): void {
 
 /**
  * Tarayıcılar AudioContext'i ancak kullanıcı etkileşiminden sonra
- * çalıştırıyor — ilk dokunuşta çağrılması gerekiyor.
+ * çalıştırıyor - ilk dokunuşta çağrılması gerekiyor.
  */
 export function unlockSound(): void {
   if (muted) return

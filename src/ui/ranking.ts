@@ -10,7 +10,7 @@ import { type RunRecord, bestOf, isoWeekKey, readRuns, runsOfMode, runsOfWeek } 
  *
  * Sunucu yokken dürüst davranıyoruz: "sıran" ve "toplam oyuncu" bilinmiyor,
  * o yüzden `null` dönüyor ve arayüz onları tire gösteriyor. Bilinen tek şey
- * kendi skorun ve kendi koşuların — liste de onlardan kuruluyor.
+ * kendi skorun ve kendi koşuların - liste de onlardan kuruluyor.
  * Sunucu bağlandığında yalnızca bu dosya değişiyor.
  */
 
@@ -19,11 +19,11 @@ export interface RankRow {
   name: string
   score: number
   distance: number
-  /** Bu satır oyuncunun kendisi mi — listede altın gösteriliyor */
+  /** Bu satır oyuncunun kendisi mi - listede altın gösteriliyor */
   me: boolean
   /** ISO zaman damgası, React anahtarı olarak da kullanılıyor */
   at: string
-  /** Oyuncunun seçtiği rozet (adın önünde) — sunucu da bu kimliği gönderecek */
+  /** Oyuncunun seçtiği rozet (adın önünde) - sunucu da bu kimliği gönderecek */
   badge?: BadgeId
   /** Kademe rengi için */
   badgeTier?: 'black' | 'bronze' | 'silver' | 'gold'
@@ -40,7 +40,7 @@ function selectedBadgeGlyph(): { id: BadgeId; tier: 'black' | 'bronze' | 'silver
 export interface RankingView {
   /** Sunucu yoksa null: gerçek bir sıra bilinmiyor */
   rank: number | null
-  /** Kendi en iyi skorun — sunucu olmadan da bilinen tek gerçek sayı */
+  /** Kendi en iyi skorun - sunucu olmadan da bilinen tek gerçek sayı */
   score: number
   /** Sunucu yoksa null */
   players: number | null
@@ -48,7 +48,7 @@ export interface RankingView {
   pending: boolean
   rows: RankRow[]
   /**
-   * Geçen haftanın ilk üçü — Pazartesi 00:00'da kazananlar iz bırakmadan
+   * Geçen haftanın ilk üçü - Pazartesi 00:00'da kazananlar iz bırakmadan
    * silinmesin. Sunucu (Faz 9) gelene kadar yok; şimdilik yalnızca demo.
    */
   lastWeek?: { week: string; rows: Array<Pick<RankRow, 'place' | 'name' | 'score' | 'badge' | 'badgeTier'>> }
@@ -60,7 +60,7 @@ const LIST_LIMIT = 12
  * Yalnızca haftalık lig. "Tüm zamanlar" tablosu bilerek yok: birkaç ay
  * sonra donar, ilk aylarda skor yapan üstte kalır, yeni oyuncu hiç
  * göremez. Haftalık her Pazartesi herkese aynı şansı veriyor. Kişisel "en
- * iyin" oyun ekranında zaten var — ligin işi değil.
+ * iyin" oyun ekranında zaten var - ligin işi değil.
  */
 export function readRanking(mode?: GameMode, now: Date = new Date()): RankingView {
   const stored = readRuns()
@@ -69,12 +69,12 @@ export function readRanking(mode?: GameMode, now: Date = new Date()): RankingVie
   const best = bestOf(runs)
   const identity = getIdentity()
 
-  // Seçili rozet adın önünde — sunucu görünümünde diğer oyuncularınki de var
+  // Seçili rozet adın önünde - sunucu görünümünde diğer oyuncularınki de var
   const myBadge = selectedBadgeGlyph()
 
   // Yerel listede herkes zaten sensin: her satırı "sen" diye işaretlemek
   // tabloyu baştan sona altın yapıyor ve hiçbir şey söylemiyor. O yüzden
-  // vurgu kapalı ve satırlar tarihle etiketleniyor — bu hâliyle liste
+  // vurgu kapalı ve satırlar tarihle etiketleniyor - bu hâliyle liste
   // "kendi en iyi koşuların" oluyor. Sunucu görünümü `fetchRanking`'te.
   const rows: RankRow[] = runs
     .slice()
@@ -102,11 +102,11 @@ export function readRanking(mode?: GameMode, now: Date = new Date()): RankingVie
 
 /**
  * Mod verilmeden sorulduğunda (ayarlar, ana sayfa) hangi ligin sırası?
- * Bu hafta en iyi koşunun modu — oyuncunun bu hafta "yarıştığı" lig.
+ * Bu hafta en iyi koşunun modu - oyuncunun bu hafta "yarıştığı" lig.
  * Hiç koşu yoksa Av.
  */
 export function weekMode(now: Date = new Date()): GameMode {
-  // Günlük mücadele haftalık lig değil — bu haftanın ligi üç serbest moddan biri
+  // Günlük mücadele haftalık lig değil - bu haftanın ligi üç serbest moddan biri
   const best = bestOf(runsOfWeek(readRuns(), isoWeekKey(now)).filter((run) => run.mode !== 'daily'))
   return best?.mode ?? 'classic'
 }
@@ -130,7 +130,7 @@ function entryToRow(entry: WeeklyEntry, me: boolean): RankRow {
 
 /**
  * Sunucudan haftanın tablosu. Yerel görünüm (`readRanking`) anında çiziliyor,
- * bu cevap gelince yerini alıyor. Sunucu yoksa ya da ulaşılamazsa `null` —
+ * bu cevap gelince yerini alıyor. Sunucu yoksa ya da ulaşılamazsa `null` -
  * çağıran yerel görünümde kalıyor ve "sunucu bağlanana kadar" notu duruyor.
  *
  * "Sen" satırı kısa jetonla eşleşiyor: ad tekil değil, jeton tekil.
@@ -148,7 +148,7 @@ export async function fetchRanking(mode: GameMode, now: Date = new Date()): Prom
   return {
     rank: data.me?.place ?? null,
     // Sunucu bu hafta için bir skor biliyorsa o; bilmiyorsa (henüz
-    // gönderilmedi / ağ yoktu) yerel en iyi — sıfır göstermek yalan olur.
+    // gönderilmedi / ağ yoktu) yerel en iyi - sıfır göstermek yalan olur.
     score: data.me?.score ?? local.score,
     players: data.players,
     pending: false,

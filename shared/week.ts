@@ -25,7 +25,7 @@ export function weekStartUtc(week: string): number {
   return jan4 - (jan4Day - 1) * DAY + (n - 1) * 7 * DAY
 }
 
-/** Önceki ISO hafta — yıl sınırını takvim çözüyor (52/53) */
+/** Önceki ISO hafta - yıl sınırını takvim çözüyor (52/53) */
 export function previousWeek(week: string): string {
   return isoWeekUtc(weekStartUtc(week) - DAY)
 }

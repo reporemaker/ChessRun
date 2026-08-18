@@ -17,14 +17,14 @@ export type Phase =
  *
  * Eski değerlerde bir tur 1220ms sürüyordu: 20 turluk ortalama bir oyunun
  * neredeyse tamamı animasyon izlemekle geçiyordu. Kaydırma hareketi
- * okunaklı kaldığı sürece hızlı olmalı — bu bir runner, satranç değil.
+ * okunaklı kaldığı sürece hızlı olmalı - bu bir runner, satranç değil.
  */
 export const PIECE_SLIDE_MS = 150
 
 /** Tahtanın bir satır ilerleme süresi */
 export const BOARD_SCROLL_MS = 190
 
-/** Fazlar arası nefes payı — hamleler birbirine karışmasın */
+/** Fazlar arası nefes payı - hamleler birbirine karışmasın */
 export const SETTLE_MS = 40
 
 /**
@@ -89,7 +89,7 @@ export function readSpeed(): SpeedKey {
     const stored = localStorage.getItem(SPEED_STORAGE_KEY)
     if (stored && stored in SPEEDS) return stored as SpeedKey
   } catch {
-    // depolama kapalı — varsayılanla devam
+    // depolama kapalı - varsayılanla devam
   }
   return 'normal'
 }
@@ -102,7 +102,7 @@ export function storeSpeed(speed: SpeedKey): void {
   }
 }
 
-/** Bir turun toplam süresi — HUD'da hız etiketinin yanında gösteriliyor */
+/** Bir turun toplam süresi - HUD'da hız etiketinin yanında gösteriliyor */
 export function turnDuration(factor: number): number {
   return Math.round(
     (PHASE_MS.playerMove + PHASE_MS.scroll + PHASE_MS.enemyMove) * factor,

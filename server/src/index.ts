@@ -1,10 +1,12 @@
 import { dayKeyUtc, type Device } from '../../shared/events'
+import { PROFILE_MAX_BYTES } from '../../shared/leaderboard'
 import { verifyAccess } from './access'
-import { awards, bannedWords, cleanSubmit, daily, dailyStart, pulse, submitRun, weekly } from './lb'
-import { actOnName, getWords, listNames, setWords } from './moderation'
-import { breakdown, pruneRaw, rollupDay, series, summary } from './api'
+import { awards, bannedWords, cleanSubmit, daily, dailyStart, profileGet, profilePut, pruneLeague, pulse, recoveryFetch, recoveryPut, submitRun, weekly } from './lb'
+import { sharePageResponse } from './share'
+import { actOnName, getWords, league, listNames, setWords } from './moderation'
+import { breakdown, pruneRaw, rollupDay, rollupMissing, series, summary } from './api'
 import { addDays } from './period'
-import { currentSalt, hashVisitor, rotateSalt } from './salt'
+import { currentSalt, hashVisitor, saltKey } from './salt'
 import {
   MAX_BODY_BYTES,
   acceptLang,
@@ -22,15 +24,15 @@ import {
  * ChessRun istatistik Worker'ı.
  *
  * Tek betik, iki alan adı:
- *   apex/collect/*        herkese açık toplama — oyunla AYNI ORIGIN
- *   apex/lb/*             haftalık sıralama — herkese açık, Access'in ARKASINDA DEĞİL
- *   stats.<alan>/*        panel + /api/* — Cloudflare Access arkasında
+ *   apex/collect/*        herkese açık toplama - oyunla AYNI ORIGIN
+ *   apex/lb/*             haftalık sıralama - herkese açık, Access'in ARKASINDA DEĞİL
+ *   stats.<alan>/*        panel + /api/* - Cloudflare Access arkasında
  *
  * Aynı origin olması tesadüf değil, planın en önemli yönlendirme kararı:
  * `sendBeacon` preflight yapamaz, çapraz origin'de oturum olayları iOS'ta
  * sessizce kaybolur. Aynı origin'de CORS diye bir şey yok.
  *
- * Toplama uçları HER DURUMDA 204 dönüyor — doğrulama başarısız olsa bile.
+ * Toplama uçları HER DURUMDA 204 dönüyor - doğrulama başarısız olsa bile.
  * Şema şeklini sızdırmamak ve istemciyi yeniden denemeye itmemek için.
  */
 
@@ -53,10 +55,14 @@ function noContent(): Response {
   return new Response(null, NO_CONTENT)
 }
 
-/** Gövde ayrıştırmadan ÖNCE boyut kapısı — en ucuz koruma */
+/** Gövde ayrıştırmadan ÖNCE boyut kapısı - en ucuz koruma */
 async function readBody(request: Request, max = MAX_BODY_BYTES): Promise<unknown> {
-  const declared = Number(request.headers.get('content-length') ?? '0')
-  if (declared > max) return null
+  // Content-Length yoksa (chunked) okumadan reddet: aksi hâlde sınır ancak
+  // gövde belleğe alındıktan sonra uygulanırdı. Tarayıcının fetch/sendBeacon'ı
+  // dizgi gövdede başlığı her zaman gönderiyor.
+  const header = request.headers.get('content-length')
+  const declared = header == null ? NaN : Number(header)
+  if (!Number.isFinite(declared) || declared > max) return null
 
   const text = await request.text()
   if (text.length > max) return null
@@ -84,7 +90,7 @@ function factsOf(request: Request): RequestFacts {
   const ua = request.headers.get('user-agent') ?? ''
   const agent = parseAgent(ua)
   return {
-    // Ülke ve saat dilimi Cloudflare'dan bedava geliyor — GeoIP veritabanı
+    // Ülke ve saat dilimi Cloudflare'dan bedava geliyor - GeoIP veritabanı
     // yok, IP saklamaya gerek yok. Şehir BİLEREK alınmıyor: şehir +
     // tarayıcı + işletim sistemi + saat dilimi bir haneyi tekilleştirir.
     country: countryCode(cf?.country as string | undefined),
@@ -111,7 +117,7 @@ async function collectVisit(request: Request, env: Env, host: string): Promise<R
 
   const now = Date.now()
   const day = dayKeyUtc(now)
-  const salt = await currentSalt(env.SALT)
+  const salt = await currentSalt(env.SALT, day)
   const hash = await hashVisitor(salt, facts.ip, facts.ua)
 
   // Gün başına tek satır. Tek IP'den gelen sel de tek satır üretiyor,
@@ -234,17 +240,24 @@ export default {
         if (path === '/collect/visit') return await collectVisit(request, env, url.hostname)
         if (path === '/collect/run') return await collectRun(request, env)
         if (path === '/collect/session') return await collectSession(request, env)
-      } catch {
+      } catch (err) {
         // Yazma başarısız olsa bile istemciye 204 dönüyoruz: istatistik
-        // kaybı kabul edilebilir, oyunun etkilenmesi değil. Hata Workers
-        // observability'ye düşüyor.
+        // kaybı kabul edilebilir, oyunun etkilenmesi değil. Yakalanan hata
+        // Workers Logs'a KENDİLİĞİNDEN düşmez - console.error şart.
+        console.error(JSON.stringify({ msg: 'collect failed', path, err: String(err) }))
         return noContent()
       }
       return noContent()
     }
 
+    // Paylaşım bağlantısı: botlara dilinde og etiketleri, insana oyuna yönlendirme
+    if (path === '/s' || path === '/s/') {
+      if (request.method !== 'GET') return new Response('method', { status: 405 })
+      return sharePageResponse(url)
+    }
+
     if (path.startsWith('/lb/')) {
-      // Sıralama apex'te ve herkese açık — Access'in arkasına GİRMEMELİ.
+      // Sıralama apex'te ve herkese açık - Access'in arkasına GİRMEMELİ.
       // Yazma ucu istatistikle aynı kuralı taşıyor: her durumda 204.
       const now = Date.now()
       try {
@@ -258,20 +271,37 @@ export default {
           if (request.method !== 'POST') return new Response('method', { status: 405 })
           return await dailyStart(env.DB, await readBody(request), env.DAILY_SECRET, now)
         }
+        // Kalıcılık: kurtarma kodu (kör blob) ve profil - bkz. shared/leaderboard
+        if (path === '/lb/recovery') {
+          if (request.method !== 'POST') return noContent()
+          return await recoveryPut(env.DB, await readBody(request, 4096), now, env.DAILY_SECRET)
+        }
+        if (path === '/lb/recovery/fetch') {
+          if (request.method !== 'POST') return new Response('method', { status: 405 })
+          return await recoveryFetch(env.DB, await readBody(request), env.DAILY_SECRET)
+        }
+        if (path === '/lb/profile') {
+          if (request.method === 'POST') {
+            return await profilePut(env.DB, await readBody(request, PROFILE_MAX_BYTES + 4096), now, await bannedWords(env.DB, now))
+          }
+          if (request.method !== 'GET') return new Response('method', { status: 405 })
+          return await profileGet(env.DB, request.headers.get('x-chessrun-token'))
+        }
         if (request.method !== 'GET') return new Response('method', { status: 405 })
         if (path === '/lb/daily') return await daily(env.DB, url, request.headers.get('x-chessrun-token'), env.DAILY_SECRET, now)
         if (path === '/lb/weekly') return await weekly(env.DB, url, request.headers.get('x-chessrun-token'), now)
         if (path === '/lb/pulse') return await pulse(env.DB, url, now)
         if (path === '/lb/awards') return await awards(env.DB, request.headers.get('x-chessrun-token'), now)
-      } catch {
-        if (path === '/lb/runs') return noContent()
+      } catch (err) {
+        console.error(JSON.stringify({ msg: 'lb failed', path, err: String(err) }))
+        if (path === '/lb/runs' || path === '/lb/recovery') return noContent()
         return new Response('unavailable', { status: 503 })
       }
       return new Response('not found', { status: 404 })
     }
 
     if (path.startsWith('/api/')) {
-      // Çift kilit: Access rotanın önünde, ama Worker da doğruluyor —
+      // Çift kilit: Access rotanın önünde, ama Worker da doğruluyor -
       // yanlış bir rota ya da workers.dev sızıntısı veriyi açmasın.
       if (env.SKIP_ACCESS !== '1') {
         const who = env.ACCESS_TEAM && env.ACCESS_AUD
@@ -282,20 +312,28 @@ export default {
 
       // Moderasyon uçları yazıyor; geri kalan her şey salt okunur
       if (request.method === 'POST') {
-        if (path === '/api/names/act') return await actOnName(env.DB, await readBody(request))
+        if (path === '/api/names/act') return await actOnName(env.DB, await readBody(request), Date.now())
         if (path === '/api/words') return await setWords(env.DB, await readBody(request, 32_768), Date.now())
         return new Response('method', { status: 405 })
       }
       if (request.method !== 'GET') return new Response('method', { status: 405 })
 
-      if (path === '/api/names') return await listNames(env.DB, url)
+      if (path === '/api/names') return await listNames(env.DB, url, Date.now())
+      if (path === '/api/league') return await league(env.DB, url, Date.now())
       if (path === '/api/words') return await getWords(env.DB)
       if (path === '/api/health') return Response.json(await health(env))
-      // Yalnızca yerel: geçmiş günleri elle topla (tohum verisi için).
-      // SKIP_ACCESS üretimde asla 1 olmayacağı için orada yok sayılır.
-      if (path === '/api/rollup' && env.SKIP_ACCESS === '1') {
-        const from = url.searchParams.get('from') ?? addDays(dayKeyUtc(Date.now()), -1)
-        const to = url.searchParams.get('to') ?? addDays(dayKeyUtc(Date.now()), -1)
+      // Geçmiş günleri elle topla (Access arkasında; kaçan cron gecesi için).
+      // Ham satırlar 35 gün tutulduğu için pencere ona kırpılıyor.
+      if (path === '/api/rollup') {
+        const today = dayKeyUtc(Date.now())
+        const floor = addDays(today, -35)
+        const yesterday = addDays(today, -1)
+        const dayRe = /^\d{4}-\d{2}-\d{2}$/
+        let from = url.searchParams.get('from') ?? yesterday
+        let to = url.searchParams.get('to') ?? yesterday
+        if (!dayRe.test(from) || !dayRe.test(to)) return new Response('bad request', { status: 400 })
+        if (from < floor) from = floor
+        if (to > yesterday) to = yesterday
         let n = 0
         for (let day = from; day <= to; day = addDays(day, 1)) {
           await rollupDay(env.DB, day)
@@ -313,16 +351,28 @@ export default {
   },
 
   /**
-   * 00:05 UTC. Sıra önemli: önce tuz döner (bugünün ziyaretleri yeni
-   * tuzla), sonra DÜN toplanır (artık yeni satır gelmiyor), sonra 35 günü
-   * aşan ham satırlar gider. Toplamlar kalıyor — "yıllık"ı mümkün kılan
-   * onlar.
+   * 00:05 UTC. Önce dünle biten ve henüz toplanmamış GÜNLERİN HEPSİ toplanır
+   * (bir gece kaçarsa o gün panelde sonsuza dek 0 kalmasın - 19 Ağustos
+   * denetimi), sonra 35 günü aşan ham satırlar gider. Toplamlar kalıyor -
+   * "yıllık"ı mümkün kılan onlar. Tuz artık güne bağlı, döndürme yok.
+   * Lig budaması bağımsız try'da: biri düşerse öbürü çalışsın.
    */
   async scheduled(_event: ScheduledController, env: Env): Promise<void> {
-    await rotateSalt(env.SALT)
-    const today = dayKeyUtc(Date.now())
-    await rollupDay(env.DB, addDays(today, -1))
-    await pruneRaw(env.DB, today)
+    const now = Date.now()
+    const today = dayKeyUtc(now)
+    try {
+      await rollupMissing(env.DB, today)
+      await pruneRaw(env.DB, today)
+    } catch (err) {
+      console.error('rollup', err)
+    }
+    // Lig: geçen haftanın ilk üçünü arşivle, 8 haftadan eski hafta ve 35
+    // günden eski gün satırlarını sil. Oyuncu satırı süreye göre silinmez.
+    try {
+      await pruneLeague(env.DB, now)
+    } catch (err) {
+      console.error('pruneLeague', err)
+    }
   },
 }
 
@@ -343,6 +393,6 @@ async function health(env: Env) {
     lastRollupDay: rollup?.d ?? null,
     rawRows: raw?.n ?? 0,
     oldestRawDay: raw?.oldest ?? null,
-    salted: Boolean(await env.SALT.get('salt:today')),
+    salted: Boolean(await env.SALT.get(saltKey(dayKeyUtc(Date.now())))),
   }
 }

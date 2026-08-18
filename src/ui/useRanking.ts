@@ -4,7 +4,7 @@ import { leaderboardEnabled } from './leaderboard'
 import { type RankingView, fetchRanking, readRanking, weekMode } from './ranking'
 
 export type RankingStatus =
-  /** Sunucu tanımlı değil — liste kendi koşuların */
+  /** Sunucu tanımlı değil - liste kendi koşuların */
   | 'local'
   /** Sunucu cevabı bekleniyor; yerel görünüm çiziliyor */
   | 'loading'
@@ -14,7 +14,7 @@ export type RankingStatus =
   | 'offline'
 
 /**
- * Sıralamanın tek React girişi — ayarlar özeti, oyun sonu kartı, ana sayfa
+ * Sıralamanın tek React girişi - ayarlar özeti, oyun sonu kartı, ana sayfa
  * satırı ve sıralama penceresi aynı kancayı kullanıyor.
  *
  * Yerel görünüm anında (senkron), sunucu görünümü gelince yerini alıyor.

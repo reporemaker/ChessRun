@@ -4,7 +4,7 @@
  * Access rotanın ÖNÜNDE duruyor, ama yalnızca ona güvenmek yetmez: Worker
  * yanlışlıkla başka bir rotadan ya da `workers.dev` üstünden erişilebilir
  * olursa Access baypas edilir. Bu yüzden Worker her /api isteğinde
- * `Cf-Access-Jwt-Assertion` başlığını kendi de doğruluyor — çift kilit.
+ * `Cf-Access-Jwt-Assertion` başlığını kendi de doğruluyor - çift kilit.
  *
  * Yerel geliştirmede (`SKIP_ACCESS=1`) atlanıyor; wrangler dev'de Access yok.
  */
@@ -79,13 +79,19 @@ export async function verifyAccess(
 
   const audOk = Array.isArray(payload.aud) ? payload.aud.includes(aud) : payload.aud === aud
   if (!audOk) return null
-  if (payload.exp * 1000 < Date.now()) return null
+  // exp eksik/sayı değilse NaN karşılaştırması false döner ve geçerdi - açıkça iste
+  if (typeof payload.exp !== 'number' || !Number.isFinite(payload.exp) || payload.exp * 1000 < Date.now()) return null
   if (payload.iss !== `https://${team}.cloudflareaccess.com`) return null
 
   const data = new TextEncoder().encode(`${h}.${p}`)
-  const sig = b64url(s)
+  let sig: Uint8Array
+  try {
+    sig = b64url(s)
+  } catch {
+    return null // bozuk imza: 500 değil 403
+  }
   for (const key of await certsOf(team)) {
-    if (await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, sig, data)) {
+    if (await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, sig as unknown as BufferSource, data)) {
       return payload.email ?? 'unknown'
     }
   }

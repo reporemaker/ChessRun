@@ -7,14 +7,14 @@ import { getIdentity, runPayload, signPayload } from './identity'
  *
  * Her koşu imzalanıp saklanıyor; rekorlar, haftalık yarışma ve günlük
  * meydan okuma bu tek defterden hesaplanıyor. Sunucu yokken yarışma
- * "kendi rekorunu geç" demek — sunucu bağlandığı an aynı kayıtlar global
+ * "kendi rekorunu geç" demek - sunucu bağlandığı an aynı kayıtlar global
  * tabloya gidiyor (bkz. leaderboard.ts).
  */
 export interface RunRecord {
   mode: GameMode
   score: number
   distance: number
-  /** Koridor genişliği — rekorlar genişliğe göre de tutuluyor */
+  /** Koridor genişliği - rekorlar genişliğe göre de tutuluyor */
   cols: number
   level: number
   /** ISO zaman damgası */
@@ -23,7 +23,7 @@ export interface RunRecord {
   week: string
   /** Günlük meydan okumaysa günün anahtarı: 2026-08-16 */
   daily?: string
-  /** Koşunun yerel takvim günü — günlük çarpan hangi güne bakıyor */
+  /** Koşunun yerel takvim günü - günlük çarpan hangi güne bakıyor */
   day?: string
   /** Günlük çarpan uygulandıysa: ham puan ve çarpan (`score` çarpılmış hâl) */
   rawScore?: number
@@ -49,12 +49,12 @@ const RUNS_KEY = 'chessrun:runs'
 const MAX_RUNS = 300
 
 /* ------------------------------------------------------------------ *
- * Saf yardımcılar — depolamaya dokunmadıkları için doğrudan test edilir
+ * Saf yardımcılar - depolamaya dokunmadıkları için doğrudan test edilir
  * ------------------------------------------------------------------ */
 
 /**
  * ISO 8601 hafta anahtarı. Haftanın perşembesi hangi yıldaysa hafta o yıla
- * aittir — yılbaşına denk gelen haftaların iki yıla bölünmesini bu engelliyor.
+ * aittir - yılbaşına denk gelen haftaların iki yıla bölünmesini bu engelliyor.
  */
 export function isoWeekKey(date: Date): string {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
@@ -92,7 +92,7 @@ export function weekEnd(date: Date): Date {
 }
 
 /**
- * Günün mücadelesi puanı (o günün en iyi günlük koşusu) — diğer oyunlara
+ * Günün mücadelesi puanı (o günün en iyi günlük koşusu) - diğer oyunlara
  * çarpan için. Oynanmadıysa null.
  */
 export function dailyScoreOf(runs: RunRecord[], day: string): number | null {
@@ -158,7 +158,7 @@ export function dailyRuns(runs: RunRecord[], day: string, mode?: GameMode): RunR
 
 /**
  * Gün serisi: bugünden geriye doğru kaç gün üst üste günlük oynandı.
- * Bugün henüz oynanmadıysa seri dünden sayılır — gün bitmeden seri kırılmaz.
+ * Bugün henüz oynanmadıysa seri dünden sayılır - gün bitmeden seri kırılmaz.
  */
 export function currentStreak(runs: RunRecord[], now: Date = new Date()): number {
   const played = new Set(runs.map((run) => run.daily).filter(Boolean) as string[])
@@ -222,6 +222,60 @@ function writeRuns(runs: RunRecord[]): void {
   }
 }
 
+/**
+ * İki defterin birleşimi: koşu `at` (ISO zaman) ile tekil - aynı anda iki
+ * koşu olamaz. Zamana göre sıralı, en yeni MAX_RUNS kalır. Saf.
+ */
+export function mergeRuns(a: RunRecord[], b: RunRecord[]): RunRecord[] {
+  const byAt = new Map<string, RunRecord>()
+  for (const run of [...b, ...a]) if (run && typeof run.at === 'string') byAt.set(run.at, run)
+  return [...byAt.values()].sort((x, y) => x.at.localeCompare(y.at)).slice(-MAX_RUNS)
+}
+
+/** Sunucu profilindeki defter özetini yerele işler; değiştiyse true */
+export function mergeIntoRuns(remote: unknown): boolean {
+  if (!Array.isArray(remote)) return false
+  const num = (v: unknown) => typeof v === 'number' && Number.isFinite(v) && v >= 0
+  const modes = new Set(['classic', 'kingRun', 'trio', 'daily'])
+  // Sunucu verisi istemci yazımı: bozuk kayıt defteri (ve onu okuyan
+  // ekranları) çökertmesin - alan alan doğrula, tanınmayanı at
+  const incoming = (remote as RunRecord[]).filter(
+    (r) =>
+      r &&
+      typeof r === 'object' &&
+      typeof r.at === 'string' &&
+      /^\d{4}-\d{2}-\d{2}T/.test(r.at) &&
+      typeof r.week === 'string' &&
+      /^\d{4}-W\d{2}$/.test(r.week) &&
+      modes.has(r.mode) &&
+      num(r.score) &&
+      num(r.distance) &&
+      num(r.cols) &&
+      num(r.level),
+  )
+  if (incoming.length === 0) return false
+  const local = readRuns()
+  const merged = mergeRuns(local, incoming)
+  if (merged.length === local.length && merged.every((r, i) => r.at === local[i]?.at)) return false
+  writeRuns(merged)
+  return true
+}
+
+/** Profil için özet: son PROFILE_RUNS koşu (tam defter değil, boyut için) */
+export const PROFILE_RUNS = 100
+export function runsForProfile(): RunRecord[] {
+  return readRuns().slice(-PROFILE_RUNS)
+}
+
+/** Moderatör sıfırlaması */
+export function wipeRuns(): void {
+  try {
+    localStorage.removeItem(RUNS_KEY)
+  } catch {
+    // yoksay
+  }
+}
+
 export interface RunInput {
   mode: GameMode
   score: number
@@ -250,7 +304,7 @@ export async function recordRun(input: RunInput, now = new Date()): Promise<RunR
 
   // İmzalanan alan listesi bilerek genişletilmiyor: rozet sayaçları
   // eklenseydi daha önce imzalanmış her kayıt doğrulanamaz hale gelirdi,
-  // karşılığında hiçbir şey kazanılmazdı — imza skoru cihaza bağlamak için.
+  // karşılığında hiçbir şey kazanılmazdı - imza skoru cihaza bağlamak için.
   const payload = runPayload([
     identity.token,
     input.mode,

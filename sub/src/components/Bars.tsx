@@ -2,12 +2,12 @@ import type { BreakdownRow, Dimension } from '@shared/events'
 import { fmtInt, fmtPct, fmtValue } from '../format'
 
 /**
- * Yatay bar listesi — her kırılımın ortak gövdesi.
+ * Yatay bar listesi - her kırılımın ortak gövdesi.
  *
  * Ülke, dil, tarayıcı, cihaz, mod, bitiş sebebi… hepsi farklı veriyle
  * aynı bileşen; `daily_dim`'in tek şekilde olması burada karşılığını
  * buluyor. Sayı ve yüzde barın DIŞINDA: bar yalnızca görsel karşılaştırma,
- * bilgi metinde — renk tek taşıyıcı değil.
+ * bilgi metinde - renk tek taşıyıcı değil.
  */
 
 interface Props {

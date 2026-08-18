@@ -1,5 +1,5 @@
 /**
- * Ad filtresi — istemci ve sunucu aynı işlevi çalıştırıyor.
+ * Ad filtresi - istemci ve sunucu aynı işlevi çalıştırıyor.
  *
  * Amaç mükemmel süzgeç değil, ucuz süzgeç: bariz küfrü ve hakareti daha
  * yazılırken çeviriyor, kalanı paneldeki "Adlar" sayfası (sıfırla · gizle ·
@@ -41,7 +41,7 @@ export function normalizeName(raw: string): string[] {
     .filter(Boolean)
 }
 
-/** Kök liste — beş dil, yalnızca bariz olanlar. Panelden genişletilir. */
+/** Kök liste - beş dil, yalnızca bariz olanlar. Panelden genişletilir. */
 export const BASE_BANNED: readonly string[] = [
   // tr
   'orospu', 'sikt', 'sikerim', 'sikik', 'pezevenk', 'yarrak', 'amcik', 'gotveren', 'ibne', 'kahpe', 'sürtük',

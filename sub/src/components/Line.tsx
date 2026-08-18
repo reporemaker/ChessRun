@@ -2,7 +2,7 @@ import { useId, useState } from 'react'
 import { fmtBucket, fmtInt } from '../format'
 
 /**
- * Zaman serisi — el yapımı SVG.
+ * Zaman serisi - el yapımı SVG.
  *
  * Panelin ihtiyacı tam iki işaret (çizgi + bar listesi); bunun için bir
  * grafik kütüphanesi (~90 KB) panelin tamamından büyük olurdu. Prop şekli
@@ -21,7 +21,7 @@ export interface Point {
 interface Props {
   points: Point[]
   label: string
-  /** Bugünden sonraki kovalar soluk çizilir — henüz veri gelmedi, sıfır değil */
+  /** Bugünden sonraki kovalar soluk çizilir - henüz veri gelmedi, sıfır değil */
   today?: string
 }
 
@@ -38,7 +38,7 @@ export function Line({ points, label, today }: Props) {
   }
 
   const max = Math.max(1, ...points.map((p) => p.value))
-  // Eksen üstü "güzel" tavan: 1–2–5 dizisi
+  // Eksen üstü "güzel" tavan: 1-2-5 dizisi
   const mag = 10 ** Math.floor(Math.log10(max))
   const nice = [1, 2, 5, 10].map((k) => k * mag).find((v) => v >= max) ?? max
   const ticks = [0, 0.5, 1].map((f) => Math.round(nice * f))

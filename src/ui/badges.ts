@@ -6,24 +6,24 @@ import type { StringKey } from './i18n'
 import type { Lifetime } from './lifetime'
 
 /**
- * Rozetler — görev listesi değil, **keşif haritası**.
+ * Rozetler - görev listesi değil, **keşif haritası**.
  *
  * Kılavuz kareleri kaldırdığımızdan beri oyunu öğreten iki şey vardı: nasıl
  * oynanır sayfası ve ilk oyunda bir kez çıkan bağlamsal ipuçları. İpuçları
  * bir daha görünmüyor. Rozetler üçüncü katman: kilitli rozet listesi
  * "oyunun yapabildiği ama senin henüz yapmadığın şeyler" haritası oluyor.
  *
- * Bu yüzden "100 oyun oyna" tipi öğütücü rozet yok — hiçbir şey öğretmiyor.
+ * Bu yüzden "100 oyun oyna" tipi öğütücü rozet yok - hiçbir şey öğretmiyor.
  * Öğreten beş rozetin koşulu baştan açık; ustalık ve süreklilik rozetleri
  * sürpriz değeri için gizli (bkz. `secret`).
  */
 
 export type BadgeId =
-  // figür aileleri — kümülatif
+  // figür aileleri - kümülatif
   | 'rook'
   | 'knight'
   | 'bishop'
-  // figür aileleri — tek koşu
+  // figür aileleri - tek koşu
   | 'pawn'
   | 'queen'
   | 'king'
@@ -41,7 +41,7 @@ export type BadgeId =
   | 'sevenDays'
   | 'thirtyDays'
   | 'narrow'
-  // haftalık lig — sunucu (Faz 9)
+  // haftalık lig - sunucu (Faz 9)
   | 'weekFirst'
   | 'weekKing'
   | 'emperor'
@@ -79,20 +79,20 @@ export interface RunTally {
   mated: boolean
   /** Hiç dönüşüm oldu mu (Av) */
   transformed: boolean
-  /** Vezir/kaleyken piyona düşüldü mü — dönüşümün riskli yüzü */
+  /** Vezir/kaleyken piyona düşüldü mü - dönüşümün riskli yüzü */
   downgraded: boolean
   /** Üçlü: hiç taş kaybedilmedi mi */
   squadIntact: boolean
   /* --- Figür rozetleri için (17 Ağustos 2026 ölçümüyle açıldı) --- */
-  /** Yenen rakip taşlar, tipe göre — kale/at/fil kümülatif aileleri buradan */
+  /** Yenen rakip taşlar, tipe göre - kale/at/fil kümülatif aileleri buradan */
   captured: Record<PieceType, number>
-  /** Hangi taş olarak kaç hamle yapıldı — "piyonken 5 adım" buradan */
+  /** Hangi taş olarak kaç hamle yapıldı - "piyonken 5 adım" buradan */
   steps: Record<PieceType, number>
-  /** Vezirken yenen taş — Üçlü'nün vezir ailesi (Av'da vezir yeyince dönüşür) */
+  /** Vezirken yenen taş - Üçlü'nün vezir ailesi (Av'da vezir yeyince dönüşür) */
   queenCaptures: number
-  /** Vezirken piyon yiyip piyona düşme — Harakiri */
+  /** Vezirken piyon yiyip piyona düşme - Harakiri */
   harakiri: number
-  /** Üçlü: kadro tam bütünken kat edilen mesafe — Silahşörler */
+  /** Üçlü: kadro tam bütünken kat edilen mesafe - Silahşörler */
   noLossDistance: number
 }
 
@@ -120,13 +120,13 @@ const HEAVY: PieceType[] = ['q', 'r']
 
 /**
  * Bir turun olaylarını sayaçlara işler. `before` dönüşümün *hangi taştan*
- * olduğunu bilmek için gerekiyor — olay yalnızca hedefi taşıyor.
+ * olduğunu bilmek için gerekiyor - olay yalnızca hedefi taşıyor.
  */
 export function tallyEvents(
   tally: RunTally,
   events: GameEvent[],
   before: PieceType,
-  /** Kayma anındaki mesafe — kadro bütünken kat edilen yol için */
+  /** Kayma anındaki mesafe - kadro bütünken kat edilen yol için */
   distance = 0,
 ): RunTally {
   const next: RunTally = { ...tally, captured: { ...tally.captured }, steps: { ...tally.steps } }
@@ -171,7 +171,7 @@ export function tallyEvents(
 
 /**
  * Oyuncu hamle yaptı: hangi taş olarak? Sessiz hamle olay üretmediği için
- * bunu olaylardan çıkaramıyoruz — Game.runTurn hamleden hemen sonra çağırıyor.
+ * bunu olaylardan çıkaramıyoruz - Game.runTurn hamleden hemen sonra çağırıyor.
  */
 export function tallyStep(tally: RunTally, as: PieceType): RunTally {
   return { ...tally, steps: { ...tally.steps, [as]: tally.steps[as] + 1 } }
@@ -181,7 +181,7 @@ export interface BadgeContext {
   state: GameState
   /** Bu koşunun sayaçları */
   tally: RunTally
-  /** Bu koşudan ÖNCEKİ ömür boyu toplamlar — kümülatif = life + tally */
+  /** Bu koşudan ÖNCEKİ ömür boyu toplamlar - kümülatif = life + tally */
   life: Lifetime
   /** Günlük seri (defter ve ömür boyu deponun büyüğü) */
   streak: number
@@ -199,7 +199,7 @@ export interface Badge {
   tiers: Tier[]
   /** Şu anki değer (kümülatif ya da bu koşu / en iyi). Sunucu rozetinde null. */
   value: (context: BadgeContext) => number | null
-  /** Sunucu gerektiriyor — Faz 9'a kadar kilitli */
+  /** Sunucu gerektiriyor - Faz 9'a kadar kilitli */
   server?: boolean
 }
 
@@ -213,7 +213,7 @@ const NARROW_COLS = COL_CHOICES[0]
 const inMode = (context: BadgeContext, mode: GameMode) => context.state.mode === mode
 
 export const BADGES: Badge[] = [
-  /* --- Figür aileleri — kümülatif (siyah 1 · bronz 50 · gümüş 250 · altın 1000) --- */
+  /* --- Figür aileleri - kümülatif (siyah 1 · bronz 50 · gümüş 250 · altın 1000) --- */
   {
     id: 'rook',
     glyph: '♜',
@@ -248,7 +248,7 @@ export const BADGES: Badge[] = [
     value: (c) => c.life.total.captured.b + c.tally.captured.b,
   },
 
-  /* --- Figür aileleri — tek koşu (en iyi koşun) --- */
+  /* --- Figür aileleri - tek koşu (en iyi koşun) --- */
   {
     id: 'pawn',
     glyph: '♟',
@@ -297,7 +297,7 @@ export const BADGES: Badge[] = [
   /* --- Kümülatif ustalık --- */
   {
     id: 'harakiri',
-    glyph: '†', // hançer — piyon glifi Piyon ailesinin
+    glyph: '†', // hançer - piyon glifi Piyon ailesinin
     section: 'skill',
     reveal: 'firstOpen',
     nameKey: 'badge.harakiri',
@@ -318,7 +318,7 @@ export const BADGES: Badge[] = [
     value: (c) => c.life.total.kings + c.tally.kings,
   },
 
-  /* --- Tek koşu ustalık — kademesiz, hepsi açık --- */
+  /* --- Tek koşu ustalık - kademesiz, hepsi açık --- */
   {
     id: 'chain',
     glyph: '⚡\uFE0E', // FE0E: emoji değil metin çizimi
@@ -332,7 +332,7 @@ export const BADGES: Badge[] = [
   },
   {
     id: 'hunter',
-    glyph: '◎', // hedef — vezir glifi Vezir ailesinin
+    glyph: '◎', // hedef - vezir glifi Vezir ailesinin
     section: 'skill',
     reveal: 'open',
     nameKey: 'badge.hunter',
@@ -365,7 +365,7 @@ export const BADGES: Badge[] = [
   },
   {
     id: 'transform',
-    glyph: '⟳', // döngü — at glifi At ailesinin
+    glyph: '⟳', // döngü - at glifi At ailesinin
     section: 'skill',
     reveal: 'open',
     nameKey: 'badge.transform',
@@ -375,7 +375,7 @@ export const BADGES: Badge[] = [
     value: (c) => (c.tally.transformed ? 1 : 0),
   },
 
-  /* --- Süreklilik — hepsi açık --- */
+  /* --- Süreklilik - hepsi açık --- */
   {
     id: 'sevenDays',
     glyph: '▲',
@@ -410,7 +410,7 @@ export const BADGES: Badge[] = [
     value: (c) => (colsOf(c.state.board) <= NARROW_COLS ? c.state.distance : 0),
   },
 
-  /* --- Haftalık lig — sunucu (Faz 9) --- */
+  /* --- Haftalık lig - sunucu (Faz 9) --- */
   {
     id: 'weekFirst',
     glyph: '①',
@@ -425,7 +425,7 @@ export const BADGES: Badge[] = [
   },
   {
     id: 'weekKing',
-    glyph: '♔', // içi boş şah — dolu ♚ Şah ailesinin
+    glyph: '♔', // içi boş şah - dolu ♚ Şah ailesinin
     section: 'league',
     reveal: 'hidden',
     nameKey: 'badge.weekKing',
@@ -453,7 +453,7 @@ export function badgeOf(id: BadgeId): Badge {
   return BADGES.find((badge) => badge.id === id) ?? BADGES[0]
 }
 
-/** Sunucudan gelen serbest metin bir rozet kimliği mi — bilinmeyen glif çizilmesin */
+/** Sunucudan gelen serbest metin bir rozet kimliği mi - bilinmeyen glif çizilmesin */
 export function isBadgeId(value: string): value is BadgeId {
   return BADGES.some((badge) => badge.id === value)
 }
@@ -469,7 +469,7 @@ export function tierIndex(badge: Badge, value: number | null): number {
 }
 
 /* ------------------------------------------------------------------ *
- * Depolama — kazanılan kademe ve kazanıldığı an; seçili rozet
+ * Depolama - kazanılan kademe ve kazanıldığı an; seçili rozet
  * ------------------------------------------------------------------ */
 
 const STORAGE_KEY = 'chessrun:badges'
@@ -512,6 +512,58 @@ function writeBadges(earned: EarnedBadges): void {
   }
 }
 
+/**
+ * İki rozet kaydının birleşimi - sunucu profili ile yerel kopya arasında.
+ * Rozet başına en yüksek kademe kalır; aynı kademede en erken tarih. Saf.
+ * Bilinmeyen rozet kimlikleri (eski/yeni sürüm farkı) atlanır.
+ */
+export function mergeBadges(a: EarnedBadges, b: EarnedBadges): EarnedBadges {
+  const out: EarnedBadges = {}
+  for (const badge of BADGES) {
+    const x = a[badge.id]
+    const y = b[badge.id]
+    if (!x && !y) continue
+    if (!x || !y) {
+      out[badge.id] = x ?? y
+      continue
+    }
+    if (x.tier !== y.tier) out[badge.id] = x.tier > y.tier ? x : y
+    else out[badge.id] = x.at <= y.at ? x : y
+  }
+  return out
+}
+
+/** Sunucudan gelen kaydı yerele işler; bir şey değiştiyse true */
+export function mergeIntoBadges(remote: unknown): boolean {
+  if (!remote || typeof remote !== 'object') return false
+  const local = readBadges()
+  const incoming: EarnedBadges = {}
+  for (const [id, v] of Object.entries(remote as Record<string, unknown>)) {
+    const badge = BADGES.find((b) => b.id === id)
+    if (!badge) continue
+    if (v && typeof v === 'object' && typeof (v as EarnedTier).tier === 'number' && typeof (v as EarnedTier).at === 'string') {
+      // Sunucu verisi istemci yazımı: kademe tam sayı ve tanımlı aralıkta olsun
+      const tier = Math.floor((v as EarnedTier).tier)
+      if (!Number.isFinite(tier) || tier < 0) continue
+      incoming[id as BadgeId] = { tier: Math.min(tier, badge.tiers.length - 1), at: (v as EarnedTier).at.slice(0, 32) }
+    }
+  }
+  const merged = mergeBadges(local, incoming)
+  if (JSON.stringify(merged) === JSON.stringify(local)) return false
+  writeBadges(merged)
+  return true
+}
+
+/** Moderatör sıfırlaması: kazanılanlar ve seçim gider */
+export function wipeBadges(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem(SELECTED_KEY)
+  } catch {
+    // yoksay
+  }
+}
+
 /** Yeni kazanılan kademe: hangi rozet, hangi kademe */
 export interface BadgeAward {
   id: BadgeId
@@ -541,7 +593,7 @@ export function claimBadges(context: BadgeContext, now = new Date()): BadgeAward
 }
 
 /* ------------------------------------------------------------------ *
- * Lig rozetleri — sunucunun "birincilik" listesinden türetiliyor
+ * Lig rozetleri - sunucunun "birincilik" listesinden türetiliyor
  * ------------------------------------------------------------------ */
 
 export interface WeekFirst {
@@ -586,7 +638,7 @@ export function leagueAwards(firsts: WeekFirst[]): BadgeId[] {
 
 /**
  * Sunucudan gelen birincilikleri depoya işler; yeni kazanılanları döndürür.
- * Sunucu rozetleri tek kademeli — kazanıldıysa kademe 0. Alınmış rozet geri
+ * Sunucu rozetleri tek kademeli - kazanıldıysa kademe 0. Alınmış rozet geri
  * alınmıyor: sunucu bir hafta ulaşılamasa da oyuncu kürsüsünü kaybetmez.
  */
 export function claimLeague(firsts: WeekFirst[], now = new Date()): BadgeAward[] {
@@ -601,7 +653,7 @@ export function claimLeague(firsts: WeekFirst[], now = new Date()): BadgeAward[]
   return fresh
 }
 
-/** Oyuncunun sıralamada gösterdiği rozet — yalnızca kazanılmış olan seçilebilir */
+/** Oyuncunun sıralamada gösterdiği rozet - yalnızca kazanılmış olan seçilebilir */
 export function readSelectedBadge(): BadgeId | null {
   try {
     const id = localStorage.getItem(SELECTED_KEY) as BadgeId | null
@@ -622,7 +674,7 @@ export function selectBadge(id: BadgeId | null): void {
   }
 }
 
-/** Seçili rozetin glifi ve kademesi — sıralama satırı ve künye için */
+/** Seçili rozetin glifi ve kademesi - sıralama satırı ve künye için */
 export function selectedBadgeView(): { id: BadgeId; glyph: string; tier: Tier } | null {
   const id = readSelectedBadge()
   if (!id) return null

@@ -2,15 +2,15 @@ import type { GameMode, PieceType } from '../engine/types'
 import type { RunTally } from './badges'
 
 /**
- * Ömür boyu sayaçlar — kümülatif rozet aileleri için.
+ * Ömür boyu sayaçlar - kümülatif rozet aileleri için.
  *
  * Koşu defteri (`chessrun:runs`) son 300 koşuyu tutuyor; "1000 kale yedin"
  * gibi sayılar oradan hesaplanamaz. Bu depo koşu bittikçe (doğal ya da yarıda)
  * toplamları biriktiriyor. Geriye dönük değil: sayaçlar açıldığı günden
- * başlıyor — 17 Ağustos 2026'da kullanıcıyla kabul edildi.
+ * başlıyor - 17 Ağustos 2026'da kullanıcıyla kabul edildi.
  *
  * İki grup: `total` (tüm koşuların toplamı) ve `best` (tek koşudaki en iyi
- * — tek-koşu rozet ailelerinin ilerlemesi buradan okunuyor).
+ * - tek-koşu rozet ailelerinin ilerlemesi buradan okunuyor).
  */
 
 const STORAGE_KEY = 'chessrun:lifetime'
@@ -18,7 +18,7 @@ const STORAGE_KEY = 'chessrun:lifetime'
 const ZERO: Record<PieceType, number> = { p: 0, n: 0, b: 0, r: 0, q: 0, k: 0 }
 
 export interface Lifetime {
-  /** Sayaçların açıldığı gün — "bugünden başlar" dürüstlüğü için görünür */
+  /** Sayaçların açıldığı gün - "bugünden başlar" dürüstlüğü için görünür */
   since: string
   runs: number
   runsByMode: Record<GameMode, number>
@@ -115,6 +115,92 @@ export function readLifetime(): Lifetime {
   }
 }
 
+/**
+ * İki sayaç kaydının birleşimi - sunucu profili ile yerel kopya. Sayaçlar
+ * tek yönlü büyüdüğü için alan alan en büyük kalır; `since` en erken;
+ * seri için son günü daha ileri olan kayıt kazanır. Saf.
+ */
+export function mergeLifetime(a: Lifetime, b: Lifetime): Lifetime {
+  const maxRec = <K extends string>(x: Record<K, number>, y: Record<K, number>): Record<K, number> => {
+    const out = { ...x }
+    for (const k of Object.keys(y) as K[]) out[k] = Math.max(x[k] ?? 0, y[k] ?? 0)
+    return out
+  }
+  const streak =
+    (a.streak.lastDay ?? '') === (b.streak.lastDay ?? '')
+      ? { current: Math.max(a.streak.current, b.streak.current), best: Math.max(a.streak.best, b.streak.best), lastDay: a.streak.lastDay }
+      : {
+          ...((a.streak.lastDay ?? '') > (b.streak.lastDay ?? '') ? a.streak : b.streak),
+          best: Math.max(a.streak.best, b.streak.best),
+        }
+  return {
+    since: a.since <= b.since ? a.since : b.since,
+    runs: Math.max(a.runs, b.runs),
+    runsByMode: maxRec(a.runsByMode, b.runsByMode),
+    total: {
+      ...maxRec(
+        { kings: a.total.kings, harakiri: a.total.harakiri, stuckUsed: a.total.stuckUsed, mated: a.total.mated, distance: a.total.distance },
+        { kings: b.total.kings, harakiri: b.total.harakiri, stuckUsed: b.total.stuckUsed, mated: b.total.mated, distance: b.total.distance },
+      ),
+      captured: maxRec(a.total.captured, b.total.captured),
+      steps: maxRec(a.total.steps, b.total.steps),
+    },
+    streak,
+    best: maxRec(a.best, b.best),
+  }
+}
+
+/** Sunucudan gelen kaydı yerele işler; bir şey değiştiyse true */
+export function mergeIntoLifetime(remote: unknown): boolean {
+  if (!remote || typeof remote !== 'object') return false
+  const local = readLifetime()
+  // Sunucu verisi istemci yazımı: yalnızca bilinen alanlar, yalnızca sayı.
+  // `numRec` şablondaki anahtarları alır, geri kalanı ve sayı olmayanı atar.
+  const base = emptyLifetime()
+  const r = remote as Partial<Lifetime>
+  const n = (v: unknown, fallback: number) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : fallback)
+  const numRec = <K extends string>(tpl: Record<K, number>, src: unknown): Record<K, number> => {
+    const out = { ...tpl }
+    if (src && typeof src === 'object') for (const k of Object.keys(tpl) as K[]) out[k] = n((src as Record<K, unknown>)[k], tpl[k])
+    return out
+  }
+  const rs = (r.streak ?? {}) as Partial<Lifetime['streak']>
+  const rt = (r.total ?? {}) as Partial<Lifetime['total']>
+  const incoming: Lifetime = {
+    since: typeof r.since === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(r.since) ? r.since : base.since,
+    runs: n(r.runs, 0),
+    runsByMode: numRec(base.runsByMode, r.runsByMode),
+    total: {
+      captured: numRec(ZERO, rt.captured),
+      steps: numRec(ZERO, rt.steps),
+      kings: n(rt.kings, 0),
+      harakiri: n(rt.harakiri, 0),
+      stuckUsed: n(rt.stuckUsed, 0),
+      mated: n(rt.mated, 0),
+      distance: n(rt.distance, 0),
+    },
+    streak: {
+      current: n(rs.current, 0),
+      best: n(rs.best, 0),
+      lastDay: typeof rs.lastDay === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(rs.lastDay) ? rs.lastDay : null,
+    },
+    best: numRec(base.best, r.best),
+  }
+  const merged = mergeLifetime(local, incoming)
+  if (JSON.stringify(merged) === JSON.stringify(local)) return false
+  write(merged)
+  return true
+}
+
+/** Moderatör sıfırlaması */
+export function wipeLifetime(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY)
+  } catch {
+    // yoksay
+  }
+}
+
 function write(lifetime: Lifetime): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(lifetime))
@@ -126,7 +212,7 @@ function write(lifetime: Lifetime): void {
 export interface RunFacts {
   mode: GameMode
   distance: number
-  /** Günlük meydan okumaysa gün anahtarı — seri buradan ilerliyor */
+  /** Günlük meydan okumaysa gün anahtarı - seri buradan ilerliyor */
   daily?: string
 }
 

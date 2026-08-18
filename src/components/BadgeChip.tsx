@@ -3,7 +3,7 @@ import { useT } from '../ui/text'
 import { BadgeGlyph } from './BadgeGlyph'
 
 interface Props {
-  /** Değişimi yeniden okutmak için — App'in tuttuğu sayaç */
+  /** Değişimi yeniden okutmak için - App'in tuttuğu sayaç */
   version: number
   onOpen: () => void
   /** Sınıf öneki: pop (pencere) / gv (oyun sütunu) */

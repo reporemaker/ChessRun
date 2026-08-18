@@ -58,7 +58,7 @@ function typeAt(state: GameState, pos: Pos): PieceType | undefined {
   return state.board[pos.row].cells[pos.col]?.type
 }
 
-describe('Üçlü — kadro', () => {
+describe('Üçlü - kadro', () => {
   it('vezir, kale ve filden oluşan üç taşla başlıyor', () => {
     const state = createGame({ playerColor: 'w', mode: 'trio', cols: 8, seed: 7 })
 
@@ -113,7 +113,7 @@ describe('Üçlü — kadro', () => {
   })
 })
 
-describe('Üçlü — kayma ve kayıp', () => {
+describe('Üçlü - kayma ve kayıp', () => {
   it('oynanmayan taşlar da bir satır düşüyor', () => {
     const state = trioState([
       { pos: { row: 2, col: 0 }, type: 'r' },
@@ -188,7 +188,7 @@ describe('Üçlü — kayma ve kayıp', () => {
   })
 })
 
-describe('Üçlü — puan', () => {
+describe('Üçlü - puan', () => {
   it('dönüşüm yok: yediği taşa dönüşmüyor', () => {
     const state = trioState([{ pos: { row: 4, col: 4 }, type: 'q' }])
     put(state, { row: 2, col: 4 }, 'p')
@@ -216,7 +216,7 @@ describe('Üçlü — puan', () => {
     expect(threat?.kind === 'threat' && threat.count).toBeLessThanOrEqual(TRIO_THREAT_CAP)
   })
 
-  it('aynı tehdidi sürdürmek puan getirmiyor — puan kurmaktan geliyor', () => {
+  it('aynı tehdidi sürdürmek puan getirmiyor - puan kurmaktan geliyor', () => {
     const state = trioState([{ pos: { row: 4, col: 0 }, type: 'r' }])
     put(state, { row: 0, col: 0 }, 'p')
 
@@ -243,7 +243,7 @@ describe('Üçlü — puan', () => {
   })
 })
 
-describe('Üçlü — şah yemek kadroyu tamamlıyor', () => {
+describe('Üçlü - şah yemek kadroyu tamamlıyor', () => {
   it('eksik taş geri geliyor', () => {
     const state = trioState([
       { pos: { row: 4, col: 4 }, type: 'q' },
@@ -320,7 +320,7 @@ describe('Üçlü — şah yemek kadroyu tamamlıyor', () => {
   })
 })
 
-describe('Üçlü — sıkışma', () => {
+describe('Üçlü - sıkışma', () => {
   it('seçili taşın kilitlenmesi sıkışma değil', () => {
     const state = trioState([
       { pos: { row: 0, col: 0 }, type: 'b' },
@@ -370,7 +370,7 @@ describe('Üçlü — sıkışma', () => {
   })
 })
 
-describe('Üçlü — bütünlük', () => {
+describe('Üçlü - bütünlük', () => {
   it('kadro ile aktif taş hiçbir fazda ayrışmıyor', () => {
     for (let seed = 0; seed < 60; seed++) {
       let state = createGame({ playerColor: 'w', mode: 'trio', cols: 8, seed })

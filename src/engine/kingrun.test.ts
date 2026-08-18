@@ -86,7 +86,7 @@ describe('vurulan kareye girilemez', () => {
     expect(moves).not.toContain(key({ row: 7, col: 4 }))
   })
 
-  it('korunmasız taşı yer, korunanı yiyemez — gerçek satranç şahı', () => {
+  it('korunmasız taşı yer, korunanı yiyemez - gerçek satranç şahı', () => {
     const undefended = kingRunState()
     put(undefended, { row: 5, col: 3 }, 'p')
     expect(legalMoves(undefended).map(key)).toContain(key({ row: 5, col: 3 }))
@@ -97,7 +97,7 @@ describe('vurulan kareye girilemez', () => {
     expect(legalMoves(defended).map(key)).not.toContain(key({ row: 5, col: 3 }))
   })
 
-  it('yediği taşa dönüşmez — baştan sona şah kalır', () => {
+  it('yediği taşa dönüşmez - baştan sona şah kalır', () => {
     const state = kingRunState()
     put(state, { row: 5, col: 3 }, 'q')
 
@@ -108,7 +108,7 @@ describe('vurulan kareye girilemez', () => {
     expect(next.score).toBe(9)
   })
 
-  it('en alt satır yasak değil, sadece ölümcül — risk oyuncunun', () => {
+  it('en alt satır yasak değil, sadece ölümcül - risk oyuncunun', () => {
     const state = kingRunState({ player: { row: ROWS - 2, col: 3 } })
 
     expect(legalMoves(state).map(key)).toContain(key({ row: ROWS - 1, col: 3 }))
@@ -127,14 +127,14 @@ describe('bitiş koşulları', () => {
 
   /**
    * Belirlenimci oyuncu: her zaman ulaşabildiği en üst kareye basar.
-   * Tohum sabit olduğu için testin sonucu da sabit — `Math.random` ile
+   * Tohum sabit olduğu için testin sonucu da sabit - `Math.random` ile
    * oynayan bir bot, mat oranını ölçülemez hale getirip testi sallıyordu.
    */
   function climb(options: Pos[]): Pos {
     return [...options].sort((a, b) => a.row - b.row || a.col - b.col)[0]
   }
 
-  it('koşu matla ya da düşerek biter — şah asla yenilerek kaybetmez', () => {
+  it('koşu matla ya da düşerek biter - şah asla yenilerek kaybetmez', () => {
     // Kuralın bütünü bu testte: oyuncu hep vurulmayan kareye indiği ve
     // kaymayla doğan pusular temizlendiği için rakip onu *yiyemez*.
     // Geriye iki gerçek ölüm kalıyor: mat ve tahtadan düşmek.

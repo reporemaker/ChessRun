@@ -8,7 +8,7 @@
  *   - sunucuda doğrulanabilir skor (imza tek başına yetmiyor, bkz. README).
  *
  * Üreteç mulberry32: 32 bitlik durum, tek çarpma-kaydırma zinciri, iyi
- * dağılım. Kriptografik değil — burada gereken tek şey tekrarlanabilirlik.
+ * dağılım. Kriptografik değil - burada gereken tek şey tekrarlanabilirlik.
  */
 export interface Rng {
   (): number
@@ -32,7 +32,7 @@ export function createRng(seed: number): Rng {
 /** Tohumsuz oyunlar için sistem üreteci */
 export const systemRng: Rng = Object.assign(() => Math.random(), { seed: null })
 
-/** Metinden 32 bitlik tohum (FNV-1a) — "2026-08-16" gibi anahtarlar için */
+/** Metinden 32 bitlik tohum (FNV-1a) - "2026-08-16" gibi anahtarlar için */
 export function hashSeed(text: string): number {
   let hash = 0x811c9dc5
   for (let i = 0; i < text.length; i++) {
@@ -51,7 +51,7 @@ export function pick<T>(rng: Rng, items: readonly T[]): T {
   return items[below(rng, items.length)]
 }
 
-/** Fisher-Yates — kaynağı bozmaz */
+/** Fisher-Yates - kaynağı bozmaz */
 export function shuffled<T>(rng: Rng, items: readonly T[]): T[] {
   const out = [...items]
   for (let i = out.length - 1; i > 0; i--) {

@@ -8,7 +8,10 @@
  */
 // v2 (18 Ağustos): API yolları önbellek dışına alındı; eski önbellekte
 // takılı /lb cevapları activate'te silinsin diye ad yükseltildi.
-const CACHE = 'chessrun-v2'
+// v3 (19 Ağustos): manifest/ikonlar değişti (hash'siz dosyalar ancak ad
+// yükseltmesiyle tazelenir); gezinme yalnızca başarılı, yönlendirmesiz
+// cevabı saklar (404/5xx/opaqueredirect '/' olarak kalmasın).
+const CACHE = 'chessrun-v3'
 
 /** Canlı veri: asla önbellekten verilmez, SW hiç karışmaz */
 const NETWORK_ONLY = ['/lb/', '/collect/', '/api/']
@@ -43,8 +46,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone()
-          void caches.open(CACHE).then((cache) => cache.put('/', copy))
+          if (response.ok && !response.redirected && response.type === 'basic') {
+            const copy = response.clone()
+            void caches.open(CACHE).then((cache) => cache.put('/', copy))
+          }
           return response
         })
         .catch(() => caches.match('/').then((hit) => hit ?? Response.error())),

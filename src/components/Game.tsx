@@ -1,4 +1,4 @@
-import { type Ref, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import { type CSSProperties, type Ref, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { COL_CHOICES, ROWS, STUCK_RIGHTS, STUCK_SCORE, levelOf } from '../engine/config'
 import {
   applyBoardRefresh,
@@ -42,8 +42,8 @@ import {
 import { applyDailyBonus, dailyBonus } from '@shared/leaderboard'
 import { useRanking } from '../ui/useRanking'
 import { setCols, setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
-import { shareRun, shareText } from '../ui/share'
-import { feedbackHref } from '../ui/feedback'
+import type { ShareInput } from '../ui/share'
+import { FeedbackLinks } from './FeedbackLinks'
 import { endReasonOf, trackRun } from '../ui/stats'
 import { type Translate, useT } from '../ui/text'
 import { playEvents, playSound, unlockSound } from '../ui/sound'
@@ -75,7 +75,7 @@ export interface GameConfig {
 /**
  * App'in oyuna dışarıdan dokunabildiği tek yer. Koridor genişliği oyun
  * sürerken değişirse App önce `abandon()` ile mevcut koşuyu deftere
- * yazdırıyor, sonra yeni genişlikte yeniden kuruyor — puan kaybolmuyor,
+ * yazdırıyor, sonra yeni genişlikte yeniden kuruyor - puan kaybolmuyor,
  * kapanıyor.
  */
 export interface GameHandle {
@@ -111,10 +111,10 @@ interface RunResult {
   isWeekBest: boolean
   allTime: number
   weekBest: number
-  /** Arcade tablosu ve sıra — Şah Kaçışı kapanışında gösteriliyor */
+  /** Arcade tablosu ve sıra - Şah Kaçışı kapanışında gösteriliyor */
   table: RunRecord[]
   rank: number
-  /** Bu koşuda kazanılan rozet kademeleri — kapanış özeti */
+  /** Bu koşuda kazanılan rozet kademeleri - kapanış özeti */
   badges: BadgeAward[]
 }
 
@@ -140,15 +140,14 @@ export function Game({
   const [tip, setTip] = useState<TipId | null>(null)
   const [hiScore, setHiScore] = useState(() => readStanding(config.mode).allTime?.score ?? 0)
   const [result, setResult] = useState<RunResult | null>(null)
-  const [shared, setShared] = useState<'shared' | 'copied' | 'failed' | null>(null)
   const [stuckBanner, setStuckBanner] = useState(false)
   // Sağ sütun: koridor seçimi onay bekliyor (pencereyle aynı akış)
   const [pendingCols, setPendingCols] = useState<number | null>(null)
   const [identity, setIdentity] = useState(() => getIdentity())
-  // Sıralama özeti — koşu bitince (result değişince) tazeleniyor
+  // Sıralama özeti - koşu bitince (result değişince) tazeleniyor
   const { view: ranking, status: rankStatus } = useRanking(config.mode, result)
 
-  /* Reklam yalnızca gerçek bir slot tanımlıysa çiziliyor — tanımsızken
+  /* Reklam yalnızca gerçek bir slot tanımlıysa çiziliyor - tanımsızken
      yer tutucu kutu göstermiyoruz. */
   const AD_SLOT = import.meta.env.VITE_AD_SLOT as string | undefined
 
@@ -162,7 +161,7 @@ export function Game({
     storeSpeed(next)
   }
 
-  // Devam eden tur zincirini iptal etmek için — yeni oyun ya da bileşenin
+  // Devam eden tur zincirini iptal etmek için - yeni oyun ya da bileşenin
   // sökülmesi yarım kalmış bir zincirin state yazmasını engeller
   const turnRef = useRef(0)
   useEffect(() => () => void turnRef.current++, [])
@@ -174,7 +173,7 @@ export function Game({
      çalışırdı. Doğrusu ref + restart()'ta tek satır.
 
      performance.now(), Date.now() değil: monoton, saat düzeltmelerinden
-     etkilenmiyor. Kusuru sekme arka plandayken de işlemesi — gece açık
+     etkilenmiyor. Kusuru sekme arka plandayken de işlemesi - gece açık
      kalan bir koşu şişik süre üretir; sunucu kırpıyor, panel medyanı da
      gösteriyor.
 
@@ -183,8 +182,8 @@ export function Game({
      dayanıyor. */
   const runStart = useRef(performance.now())
   /* Günlük çarpan: koşu BAŞINDA sabitlenir (bugün günün mücadelesi
-     oynandıysa onun puanı → 1 + min(puan,500)/1000). Yalnızca mücadeleden
-     sonraki koşular alır — koşu başlarken kayıt varsa zaten sonrasındayız.
+     oynandıysa onun puanı → 1 + puan/1000, üst sınır yok). Yalnızca mücadeleden
+     sonraki koşular alır - koşu başlarken kayıt varsa zaten sonrasındayız.
      Sunucu aynı çarpanı kendi kaydından uygular; buradaki gösterim ve
      yerel defter içindir. Günlük modun kendisi çarpan almaz. */
   const runDay = useRef(dayKey())
@@ -196,7 +195,7 @@ export function Game({
   // commit'i birkaç kez çağırıyor), bu yüzden tipi commit'in kendisi taşıyor.
   const prevType = useRef<PieceType>(game.playerType)
   // Motor gameover'ı bir kez yayıyor (cloneState events'i sıfırlıyor) ama o
-  // garanti üç dosya ötede yaşıyor — tek satırlık sigorta.
+  // garanti üç dosya ötede yaşıyor - tek satırlık sigorta.
   const finished = useRef(false)
   // Kümülatif rozetler = koşu öncesi ömür boyu + bu koşunun sayaçları.
   // Ömür boyu koşu başında bir kez okunuyor; koşu bitince kendisi güncelleniyor.
@@ -282,7 +281,7 @@ export function Game({
 
   /**
    * Koşuyu deftere yazar, sıralamaya ve istatistiğe bildirir. Hem doğal
-   * bitişte (finishRun) hem yarıda bırakmada (abandon) aynı yol —
+   * bitişte (finishRun) hem yarıda bırakmada (abandon) aynı yol -
    * ikisinin de kaydı ve sayacı aynı olmalı, yalnızca bitiş sebebi farklı.
    */
   async function recordAndReport(state: GameState, endReason: EndReason): Promise<RunRecord> {
@@ -380,7 +379,7 @@ export function Game({
     turnRef.current++
     unlockSound()
     const next = createGame(config)
-    // Koşunun ikinci doğum yeri — bileşen yeniden monte olmadığı için
+    // Koşunun ikinci doğum yeri - bileşen yeniden monte olmadığı için
     // ölçüm ref'lerini burada elle sıfırlamak zorundayız
     runStart.current = performance.now()
     runDay.current = dayKey()
@@ -395,7 +394,6 @@ export function Game({
     setGhostRow(null)
     setFlash(null)
     setResult(null)
-    setShared(null)
     setHiScore(readStanding(config.mode).allTime?.score ?? 0)
   }
 
@@ -509,34 +507,24 @@ export function Game({
     void runTurn(moved, true)
   }
 
-  async function onShare() {
-    if (!config.daily) return
-    setShared(
-      await shareRun(
-        shareText({
-          mode: game.mode,
-          day: config.daily,
-          score: game.score,
-          distance: game.distance,
-          chain: game.chain,
-          streak: Math.max(currentStreak(readRuns()), lifetimeStreak()),
-          mated: game.events.some((event) => event.kind === 'checkmated'),
-        }, t),
-      ),
-    )
+  /** Paylaşım girdisi: kapanıştaki SharePanel resim + metin + bağlantıyı bundan üretir */
+  const shareInput: ShareInput = {
+    mode: game.mode,
+    day: config.daily ?? runDay.current,
+    score: applyDailyBonus(game.score, dailyToday.current),
+    distance: game.distance,
+    captures: (Object.values(tally.current.captured) as number[]).reduce((a, b) => a + b, 0),
+    chain: game.chain,
+    streak: Math.max(currentStreak(readRuns()), lifetimeStreak()),
+    name: identity.name,
+    lang: settings.lang,
+    mated: game.events.some((event) => event.kind === 'checkmated'),
   }
 
   const canAct = phase === 'input' && game.status === 'playing'
   const over = game.status === 'gameover'
   // Arcade kapanış üç modda da: tahta kırmızı alarmla söner, sonra tablo açılır
   const arcadeOutro = over
-  const shareLabel =
-    shared === 'copied'
-      ? t('game.shareCopied')
-      : shared === 'shared'
-        ? t('game.shareDone')
-        : t('game.share')
-
   const lives =
     game.mode === 'trio' ? String(game.squad.length) : '♥'.repeat(Math.min(game.lives, 5))
   const livesLabel = game.mode === 'trio' ? t('hud.pieces') : t('hud.lives')
@@ -588,7 +576,7 @@ export function Game({
       {game.mode !== 'kingRun' && (
         <>
           {' · ♚ '}
-          <b>{kingDistance == null ? '—' : kingDistance}</b> {t('hud.moves')}
+          <b>{kingDistance == null ? '-' : kingDistance}</b> {t('hud.moves')}
         </>
       )}
       {' · '}
@@ -610,7 +598,7 @@ export function Game({
         {config.daily && <span>{t('game.daily')}</span>}
         {bonus > 1 && <span className="gv-bonus">{t('game.bonus', { x: bonus.toFixed(2) })}</span>}
         <span className="gv-sp" />
-        <span>{t('home.rank')} —</span>
+        <span>{t('home.rank')} -</span>
       </div>
 
       {/* ---- mobil üst köşeler ---- */}
@@ -626,7 +614,7 @@ export function Game({
       </div>
 
       {/* ---- tahta ---- */}
-      <div className="gv-board">
+      <div className="gv-board" style={{ '--cols': String(colsOf(game.board)) } as CSSProperties}>
         <Board
           state={game}
           moves={moves}
@@ -677,8 +665,7 @@ export function Game({
             chain={game.mode === 'classic' ? game.chain : undefined}
             badges={result?.badges}
             daily={config.daily}
-            shareLabel={shareLabel}
-            onShare={() => void onShare()}
+            share={shareInput}
             onRestart={restart}
             onExit={onExit}
           />
@@ -766,7 +753,7 @@ export function Game({
         <div className="gv-set">
           <span className="gv-lb">{t('settings.title')}</span>
 
-          {/* Hız yalnızca oyunda var — o yüzden pencerede yok, burada ilk */}
+          {/* Hız yalnızca oyunda var - o yüzden pencerede yok, burada ilk */}
           <span className="gv-field">
             <span className="gv-tx">{t('hud.speed')}</span>
             <span className="gv-seg">
@@ -888,7 +875,7 @@ export function Game({
 
         <div className="gv-hr" />
 
-        {/* Künye: sürüm · cihaz · ad (kalemle düzenlenir) — pencereyle aynı */}
+        {/* Künye: sürüm · cihaz · ad (kalemle düzenlenir) - pencereyle aynı */}
         <div className="gv-meta">
           <span className="gv-chip">
             v<b>{APP_VERSION}</b>
@@ -911,7 +898,7 @@ export function Game({
           <span className="gv-lb">{t('settings.ranking')}</span>
           <span className="gv-rank-row">
             <span className="gv-cell">
-              <span className="gv-n md gold">{ranking.rank == null ? '—' : `#${ranking.rank}`}</span>
+              <span className="gv-n md gold">{ranking.rank == null ? '-' : `#${ranking.rank}`}</span>
               <span className="gv-lb">{t('settings.rankMine')}</span>
             </span>
             <span className="gv-cell">
@@ -919,7 +906,7 @@ export function Game({
               <span className="gv-lb">{t('settings.scoreMine')}</span>
             </span>
             <span className="gv-cell">
-              <span className="gv-n md">{ranking.players ?? '—'}</span>
+              <span className="gv-n md">{ranking.players ?? '-'}</span>
               <span className="gv-lb">{t('settings.players')}</span>
             </span>
           </span>
@@ -931,7 +918,7 @@ export function Game({
         </button>
 
         {/* Nasıl oynanır tek başına tam genişlik düğme; altında Hakkında +
-            Öneri iki düğme yan yana — üçü aynı düğme dilinde */}
+            Öneri iki düğme yan yana - üçü aynı düğme dilinde */}
         <div className="gv-btns one">
           <button type="button" onClick={() => onOpenPage('help')}>
             {t('settings.howTo')}
@@ -941,7 +928,7 @@ export function Game({
           <button type="button" onClick={() => onOpenPage('about')}>
             {t('settings.about')}
           </button>
-          <a href={feedbackHref(settings.lang, config.mode)}>{t('settings.feedback')}</a>
+          <FeedbackLinks lang={settings.lang} mode={config.mode} />
         </div>
 
         {AD_SLOT && <div className="gv-ad">REKLAM</div>}
@@ -962,7 +949,7 @@ function statusHint(
   return ''
 }
 
-/** Dokunmatik cihazlarda kısa titreşim — desteklenmiyorsa sessizce geçer */
+/** Dokunmatik cihazlarda kısa titreşim - desteklenmiyorsa sessizce geçer */
 function buzz(pattern: number | number[]): void {
   try {
     navigator.vibrate?.(pattern)

@@ -31,31 +31,43 @@ crons = ["5 0 * * *"]
 # Toplama APEX'te, yani oyunla aynı origin. Bu tesadüf değil: sendBeacon
 # preflight yapamaz, çapraz origin'de oturum olayları iOS'ta sessizce
 # kaybolur. Panel ayrı alan adında çünkü Access politikaları alan adı
-# başına tanımlanıyor — tek alan adında "collect hariç" muafiyeti bir
+# başına tanımlanıyor - tek alan adında "collect hariç" muafiyeti bir
 # politika düzenlemesi uzaklıkta ya oyunu bozar ya veriyi açar.
 #
 [[routes]]
 pattern = "chessrun.app/collect/*"
 zone_name = "chessrun.app"
 
-# Haftalık sıralama — apex'te, herkese açık, Access'in arkasında DEĞİL.
+# Paylaşım bağlantıları (chessrun.app/s/?g=…): botlara og etiketleri, insana
+# yönlendirme. Apex'te, herkese açık.
+[[routes]]
+pattern = "chessrun.app/s/*"
+zone_name = "chessrun.app"
+
+# Haftalık sıralama - apex'te, herkese açık, Access'in arkasında DEĞİL.
 # Panel alan adına taşınsaydı oyuncular Access duvarına çarpardı.
 [[routes]]
 pattern = "chessrun.app/lb/*"
 zone_name = "chessrun.app"
 
 # Custom Domain (rota değil): Cloudflare DNS kaydını ve sertifikayı kendisi
-# açıyor — elle AAAA 100:: kaydı gerekmiyor. Access hâlâ bu hostname'in önünde.
+# açıyor - elle AAAA 100:: kaydı gerekmiyor. Access hâlâ bu hostname'in önünde.
 [[routes]]
 pattern = "1403.chessrun.app"
 custom_domain = true
 
-# Panel derlemesi Worker ile birlikte yayınlanıyor — ayrı hosting yok.
+# Panel derlemesi Worker ile birlikte yayınlanıyor - ayrı hosting yok.
 # `cd sub && npm run build` sonrası wrangler deploy ikisini birden yollar.
 [assets]
 directory = "../sub/dist"
 binding = "ASSETS"
 not_found_handling = "single-page-application"
+# ÖNEMLİ (19 Ağustos denetimi): compat 2025-04-01+ ile tarayıcı GEZİNMELERİ
+# (Sec-Fetch-Mode: navigate) önce varlık katmanına düşer ve eşleşme yoksa SPA
+# index.html döner - Worker hiç çalışmaz. Paylaşım linkine tıklayan insan
+# apex'te panelin boş sayfasını görüyordu (bot'lar og sayfasını alıyordu).
+# Bu yollar HER ZAMAN önce Worker'a gelsin.
+run_worker_first = ["/s/*", "/lb/*", "/collect/*", "/api/*"]
 
 [vars]
 STATS_HOST = "1403.chessrun.app"

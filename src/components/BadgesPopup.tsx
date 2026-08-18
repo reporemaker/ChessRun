@@ -29,19 +29,19 @@ const SECTIONS: Array<{ id: BadgeSection; key: 'badges.pieces' | 'badges.skill' 
 ]
 
 /**
- * Rozet penceresi — sıralama gibi kendi sahnesi.
+ * Rozet penceresi - sıralama gibi kendi sahnesi.
  *
  * Bölümler: figürler · ustalık · süreklilik · haftalık lig. Satır: glif
  * (kademe rengi) · ad · kademe noktaları · ilerleme · seç. Görünürlük
  * politikaları rozetler.md'den: `afterFirst` aileler ilk kademe kazanılana
  * kadar hiç listelenmiyor; `firstOpen` ilk eşiği gösterip üst kademeleri
- * saklıyor; `hidden` "?" — kazanılınca açılıyor. Lig rozetleri sunucudan
+ * saklıyor; `hidden` "?" - kazanılınca açılıyor. Lig rozetleri sunucudan
  * (`claimLeague`); sunucu tanımlı değilse "yakında" ve sayım dışı. Eski not:
  * kadar kilitli.
  *
  * Değerler `chessrun:lifetime`'dan (kümülatif toplamlar ve tek-koşu en
  * iyiler); oyun sürerken pencere açılırsa mevcut koşunun sayaçları henüz
- * eklenmemiştir — koşu bitince eklenir, bilinçli sadeleştirme.
+ * eklenmemiştir - koşu bitince eklenir, bilinçli sadeleştirme.
  */
 export function BadgesPopup({ onClose, onSelect }: Props) {
   const t = useT()
@@ -179,7 +179,7 @@ function BadgeRow({
   const isOnce = badge.thresholds.length === 1
 
   // Gizli: kazanılana kadar ad ve koşul "?".
-  // firstOpen: ilk kademe kazanılınca üst kademelerin eşiği saklanıyor —
+  // firstOpen: ilk kademe kazanılınca üst kademelerin eşiği saklanıyor -
   // oyuncu "devamı var" görür (noktalar), sayıyı görmez.
   const fullyHidden = badge.reveal === 'hidden' && !earned
   const nextHidden = badge.reveal === 'firstOpen' && have >= 0 && !maxed
