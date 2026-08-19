@@ -6,6 +6,10 @@ import {
   PROFILE_MAX_BYTES,
   RECOVERY_BLOB_MAX,
   RECOVERY_LOOKUP_RE,
+  BURST_MAX_RUNS,
+  BURST_WINDOW_MS,
+  plausibleScoreMax,
+  shortOf,
   type AwardsResponse,
   type BadgeTier,
   type ProfileData,
@@ -61,10 +65,7 @@ export function acceptedWeeks(nowMs: number): string[] {
   return [...new Set([isoWeekUtc(nowMs - day), isoWeekUtc(nowMs), isoWeekUtc(nowMs + day)])]
 }
 
-export function shortOf(token: string): string {
-  const clean = token.replace(/-/g, '')
-  return `${clean.slice(0, 4)}…${clean.slice(-2)}`
-}
+export { shortOf }
 
 /**
  * Ad hijyeni - istemcideki `cleanName` ile aynı kurallar, sunucuda tekrar:
@@ -135,6 +136,8 @@ export function cleanSubmit(raw: unknown, nowMs: number, extraBanned: readonly s
   const score = clampInt(body.score, 0, LB_LIMITS.scoreMax)
   const distance = clampInt(body.distance, 0, LB_LIMITS.distanceMax)
   if (score === 0 && distance === 0) return null
+  // Makullük: satır başına motorun veremeyeceği kadar puan → sahte, atılır
+  if (score > plausibleScoreMax(body.mode, distance)) return null
 
   const daily = str(body.daily, 10)
   if (daily && !acceptedDay(daily, nowMs)) return null
@@ -198,6 +201,8 @@ interface PlayerState {
   rejected_name: string | null
   rename_day: string | null
   rename_count: number
+  burst_start: number | null
+  burst_count: number
 }
 
 export const TOKEN_RE = /^[a-zA-Z0-9-]{16,64}$/
@@ -213,9 +218,11 @@ export interface PlayerWish {
 }
 
 interface PlayerResolution {
-  /** Yazılacak satır (INSERT ya da UPDATE); yasaklıysa null */
+  /** Yazılacak satır (INSERT ya da UPDATE); yasaklıysa ya da dakikalık sınır aşıldıysa null */
   statement: D1PreparedStatement | null
   banned: boolean
+  /** Dakikada BURST_MAX_RUNS'tan çok koşu: bu koşu yazılmaz (sessiz) */
+  throttled?: boolean
   /** Sunucunun listede göstereceği ad */
   name: string
   /** İstemcinin adı bu istekte reddedildi mi (filtre / rezerve / moderatör) */
@@ -241,7 +248,7 @@ async function resolvePlayer(
 ): Promise<PlayerResolution> {
   const today = dayKeyUtc(nowMs)
   const player = await db
-    .prepare(`SELECT name, status, rejected_name, rename_day, rename_count FROM lb_player WHERE token_hash = ?1`)
+    .prepare(`SELECT name, status, rejected_name, rename_day, rename_count, burst_start, burst_count FROM lb_player WHERE token_hash = ?1`)
     .bind(hash)
     .first<PlayerState>()
 
@@ -258,13 +265,32 @@ async function resolvePlayer(
       // takılıp bütün batch'i (koşuyla birlikte) düşürmesin
       statement: db
         .prepare(
-          `INSERT OR IGNORE INTO lb_player (token_hash, short, name, badge, badge_tier, first_seen, last_seen, runs, last_rejected)
-           VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6, ?7, ?8)`,
+          `INSERT OR IGNORE INTO lb_player (token_hash, short, name, badge, badge_tier, first_seen, last_seen, runs, last_rejected, burst_start, burst_count)
+           VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6, ?7, ?8, ?6, ?7)`,
         )
         .bind(hash, short, name, wish.badge, wish.badgeTier, nowMs, runInc, rejected ? raw : null),
       banned: false,
       name,
       rejected,
+    }
+  }
+
+  // Dakikalık pencere: koşu sayan isteklerde sayaç; sınır aşıldıysa bu koşu düşer
+  let burstStart = player.burst_start ?? 0
+  let burstCount = player.burst_count ?? 0
+  if (countRun) {
+    if (nowMs - burstStart < BURST_WINDOW_MS) burstCount += 1
+    else {
+      burstStart = nowMs
+      burstCount = 1
+    }
+    if (burstCount > BURST_MAX_RUNS) {
+      // Sayaç yine yazılsın ki panel "şüpheli" görsün; koşu yazılmasın
+      await db
+        .prepare(`UPDATE lb_player SET burst_start = ?2, burst_count = ?3 WHERE token_hash = ?1`)
+        .bind(hash, burstStart, burstCount)
+        .run()
+      return { statement: null, banned: false, throttled: true, name: player.name, rejected: false }
     }
   }
 
@@ -289,10 +315,12 @@ async function resolvePlayer(
       .prepare(
         `UPDATE lb_player SET name = ?2, badge = ?3, badge_tier = ?4, last_seen = ?5, runs = runs + ?8,
            rename_day = ?6, rename_count = ?7,
-           last_rejected = CASE WHEN ?9 IS NULL THEN last_rejected ELSE ?9 END
+           last_rejected = CASE WHEN ?9 IS NULL THEN last_rejected ELSE ?9 END,
+           short = ?10, burst_start = ?11, burst_count = ?12
          WHERE token_hash = ?1`,
       )
-      .bind(hash, name, wish.badge, wish.badgeTier, nowMs, renameDay, renameCount, runInc, rejected ? raw : null),
+      // short = ?10: eski 4+2 kısa hâl ilk yazımda 6+2'ye yenilenir (migration yok)
+      .bind(hash, name, wish.badge, wish.badgeTier, nowMs, renameDay, renameCount, runInc, rejected ? raw : null, short, burstStart, burstCount),
     banned: false,
     name,
     rejected,

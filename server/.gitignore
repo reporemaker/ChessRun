@@ -1,3 +1,5 @@
 node_modules
 .wrangler
 *.tsbuildinfo
+# D1 yedekleri (npm run backup) - depoya girmez
+backups/

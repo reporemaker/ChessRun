@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { hasBannedWord, normalizeName } from '../../shared/names'
+import { plausibleScoreMax } from '../../shared/leaderboard'
 import { acceptedWeeks, cleanName, cleanSubmit, isoWeekUtc, playedAtOf, previousWeek, shortOf, weekStartUtc } from './lb'
 
 // 2026-08-18 Salı 02:00 UTC → ISO hafta 34
@@ -39,7 +40,7 @@ describe('acceptedWeeks / previousWeek', () => {
 
 describe('shortOf', () => {
   it('uuid tireleri atıp 4…2 veriyor', () => {
-    expect(shortOf('a1b2c3d4-e5f6-7890-abcd-ef1234567890')).toBe('a1b2…90')
+    expect(shortOf('a1b2c3d4-e5f6-7890-abcd-ef1234567890')).toBe('a1b2c3…90')
   })
 })
 
@@ -123,6 +124,18 @@ describe('cleanSubmit', () => {
     })
   })
 
+  it('makullük: satır başına motorun veremeyeceği puan atılır (mod bazlı tavan)', () => {
+    // GOOD: 1234 puan / 56 satır ≈ 22/satır - Av tavanı 80/satır → kabul
+    expect(cleanSubmit(GOOD, NOW)).not.toBeNull()
+    expect(cleanSubmit({ ...GOOD, score: 80 * 57 }, NOW)).not.toBeNull()
+    expect(cleanSubmit({ ...GOOD, score: 80 * 57 + 1 }, NOW)).toBeNull()
+    expect(cleanSubmit({ ...GOOD, score: 999_999, distance: 3 }, NOW)).toBeNull()
+    // Günlükte bir kayma aralığında çok yeme olabilir - tavan çok daha gevşek
+    expect(cleanSubmit({ ...GOOD, mode: 'daily', daily: '2026-08-18', score: 500 * 7, distance: 6 }, NOW)).not.toBeNull()
+    expect(cleanSubmit({ ...GOOD, mode: 'daily', daily: '2026-08-18', score: 1000 * 7 + 1, distance: 6 }, NOW)).toBeNull()
+    expect(plausibleScoreMax('trio', 0)).toBe(100)
+  })
+
   it('jeton, mod, hafta bozuksa null', () => {
     expect(cleanSubmit({ ...GOOD, token: 'kısa' }, NOW)).toBeNull()
     expect(cleanSubmit({ ...GOOD, token: 'a'.repeat(20) + '<script>' }, NOW)).toBeNull()
@@ -133,7 +146,8 @@ describe('cleanSubmit', () => {
   })
 
   it('sayıları kelepçeliyor, sıfır koşuyu atıyor', () => {
-    expect(cleanSubmit({ ...GOOD, score: 5_000_000 }, NOW)?.score).toBe(1_000_000)
+    // Kelepçe makullük tavanının altında kalmalı: uzun koşu (100k satır) ile
+    expect(cleanSubmit({ ...GOOD, score: 5_000_000, distance: 100_000 }, NOW)?.score).toBe(1_000_000)
     expect(cleanSubmit({ ...GOOD, cols: 99 }, NOW)?.cols).toBe(8)
     expect(cleanSubmit({ ...GOOD, cols: 1 }, NOW)?.cols).toBe(4)
     expect(cleanSubmit({ ...GOOD, score: -5 }, NOW)).toBeNull()

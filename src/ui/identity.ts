@@ -12,6 +12,7 @@
  * doğrulanmasıyla olur (bkz. README, sıradaki adımlar).
  */
 
+import { shortOf } from '@shared/leaderboard'
 import { hasBannedWord } from '@shared/names'
 import type { PieceType } from '../engine/types'
 import { type Lang, translate } from './i18n'
@@ -189,10 +190,9 @@ export function exportSecret(): Uint8Array {
   return secretBytes()
 }
 
-/** Jetonun gösterilebilir kısa hâli: `a1b2…9f` */
+/** Jetonun gösterilebilir kısa hâli: `a1b2c3…9f` (tek kaynak shared/leaderboard.shortOf) */
 export function shortToken(token: string): string {
-  const clean = token.replace(/-/g, '')
-  return `${clean.slice(0, 4)}…${clean.slice(-2)}`
+  return shortOf(token)
 }
 
 /* ------------------------------------------------------------------ *

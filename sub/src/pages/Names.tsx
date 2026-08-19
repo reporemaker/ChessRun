@@ -21,7 +21,7 @@ import { useQuery } from '../useQuery'
  * değişir.
  */
 
-type Filter = PlayerStatus | 'orphan' | ''
+type Filter = PlayerStatus | 'orphan' | 'suspect' | ''
 const STATUS_LABEL: Record<PlayerStatus, string> = { ok: 'açık', shadow: 'gizli', banned: 'yasaklı' }
 const FILTERS: Array<{ id: Filter; label: string; title?: string }> = [
   { id: '', label: 'Hepsi' },
@@ -29,6 +29,7 @@ const FILTERS: Array<{ id: Filter; label: string; title?: string }> = [
   { id: 'shadow', label: 'Gizli' },
   { id: 'banned', label: 'Yasaklı' },
   { id: 'orphan', label: 'Öksüz', title: '1 yıldır koşu yok ve hiç birincilik yok - elle silinecek adaylar' },
+  { id: 'suspect', label: '⚠ Şüpheli', title: 'Puan/satır mod eşiğinin üstünde ya da dakikada 8+ koşu - elle bak, gerekirse Gizle' },
 ]
 
 const CONFIRM: Partial<Record<NameAction, (row: PlayerRow) => string>> = {
@@ -115,7 +116,7 @@ export function Names() {
           <div className="chart-empty">{list.error}</div>
         ) : rows && rows.length === 0 ? (
           <div className="chart-empty">
-            {status === 'orphan' ? 'Öksüz aday yok (1 yıldır koşusuz ve birinciliksiz oyuncu)' : debounced || status ? 'Eşleşen oyuncu yok' : 'Henüz oyuncu yok - ilk koşu gelince burada görünür'}
+            {status === 'orphan' ? 'Öksüz aday yok (1 yıldır koşusuz ve birinciliksiz oyuncu)' : status === 'suspect' ? 'Şüpheli oyuncu yok - puan/satır eşiğin altında, dakikalık sınıra dayanan yok' : debounced || status ? 'Eşleşen oyuncu yok' : 'Henüz oyuncu yok - ilk koşu gelince burada görünür'}
           </div>
         ) : (
           <table className="names-table">
@@ -135,6 +136,15 @@ export function Names() {
               {(rows ?? []).map((row) => (
                 <tr key={row.hash} className={row.status !== 'ok' ? `st-${row.status}` : ''}>
                   <td className="name">
+                    {row.suspect && (
+                      <span
+                        className="suspect"
+                        title={`Şüpheli: ${row.suspect.ratio >= 1 ? `puan/satır eşiğin ${row.suspect.ratio}× üstünde` : ''}${row.suspect.ratio >= 1 && row.suspect.burst ? ' · ' : ''}${row.suspect.burst ? 'dakikada 8+ koşu' : ''} - curl ile yazılmış olabilir; bak, gerekirse Gizle`}
+                        aria-label="şüpheli"
+                      >
+                        ⚠{' '}
+                      </span>
+                    )}
                     {row.name}
                     {row.rejectedName && (
                       <span className="muted rejected" title="Sıfırlandı - bu ad artık kabul edilmiyor">
@@ -205,6 +215,8 @@ export function Names() {
         <dl>
           <dt>Sıfırla</dt>
           <dd>Ad "Oyuncu a1b2…9f" olur; eski ad kayda geçer ve oyuncu aynı adı yollamaya devam etse de kabul edilmez. Yeni bir ad seçerse geçer.</dd>
+          <dt>⚠ Şüpheli</dt>
+          <dd>Sunucu iki ucuz frenle işaretler: haftalık satırlarından birinde puan/satır mod eşiğinin üstünde (Av/Kaçış 8, Üçlü 12, Günlük 60 - gerçek oyunda görülenin ~2 katı) ya da son dakikada 8+ koşu (sınır aşımı zaten düşürülür). Motorun veremeyeceği puan (satır başına 80/100/1000 üstü) hiç yazılmaz. Kesin kanıt değil, bakılacak aday.</dd>
           <dt>Gizle</dt>
           <dd>Oyuncu haftalık listede görünmez ama kendi sırasını görmeye devam eder - gölgeleme, itiraz doğurmasın diye.</dd>
           <dt>Yasakla</dt>

@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
 import type { ResumeTicket } from '../ui/resume'
+import { useEscape } from '../ui/escape'
 import { useT } from '../ui/text'
 
 /**
@@ -16,13 +16,7 @@ interface Props {
 export function ResumePrompt({ ticket, onResume, onSkip }: Props) {
   const t = useT()
   const game = ticket.data.game
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onSkip()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onSkip])
+  useEscape(onSkip)
 
   return (
     <div className="pop-back" role="presentation">

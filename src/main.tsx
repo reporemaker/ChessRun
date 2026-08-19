@@ -3,6 +3,14 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 
+// Tek origin: Pages'in *.pages.dev adresi (ve önizlemeleri) apex'e. Orada
+// /lb ve /collect çalışmaz (Worker rotaları apex'te), kimlik/skor ayrı
+// düşer, SEO ikilenir. Üretimde ilk iş yönlendirme - React bile kurulmadan.
+// Geliştirme/önizleme (localhost) etkilenmez.
+if (import.meta.env.PROD && /\.pages\.dev$/.test(window.location.hostname)) {
+  window.location.replace(`https://chessrun.app${window.location.pathname}${window.location.search}${window.location.hash}`)
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

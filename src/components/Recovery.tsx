@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Identity } from '../ui/identity'
 import { readRuns } from '../ui/scores'
 import { type RestoreResult, createRecoveryCode, readRecoveryCode, restoreFromCode } from '../ui/sync'
+import { reloadSafely } from '../ui/reload'
 import { useT } from '../ui/text'
 
 interface Props {
@@ -69,7 +70,8 @@ export function Recovery({ identity }: Props) {
     const outcome = await restoreFromCode(input)
     setBusy(null)
     setResult(outcome)
-    if (outcome === 'ok') setTimeout(() => window.location.reload(), 900)
+    // Süren koşu varsa önce deftere (App'in kancası: abandon), sonra yenile
+    if (outcome === 'ok') setTimeout(() => void reloadSafely(), 900)
   }
 
   return (
@@ -100,8 +102,8 @@ export function Recovery({ identity }: Props) {
       )}
       {failed && <small className="pop-err">{failed === 'noplayer' ? t('recovery.needRun') : t('recovery.offline')}</small>}
       {confirmRenew && (
-        <div className="pop-warn" role="alertdialog" aria-live="polite">
-          <b>{t('recovery.renew.title')}</b>
+        <div className="pop-warn" role="alertdialog" aria-live="polite" aria-labelledby="rec-renew-ttl">
+          <b id="rec-renew-ttl">{t('recovery.renew.title')}</b>
           <p>{t('recovery.renew.body')}</p>
           <div className="pop-warn-act">
             <button type="button" onClick={() => setConfirmRenew(false)}>
@@ -152,8 +154,8 @@ export function Recovery({ identity }: Props) {
       </form>
 
       {confirm && (
-        <div className="pop-warn" role="alertdialog" aria-live="polite">
-          <b>{t('recovery.confirm.title')}</b>
+        <div className="pop-warn" role="alertdialog" aria-live="polite" aria-labelledby="rec-confirm-ttl">
+          <b id="rec-confirm-ttl">{t('recovery.confirm.title')}</b>
           <p>{t('recovery.confirm.body', { name: identity.name })}</p>
           <div className="pop-warn-act">
             <button type="button" onClick={() => setConfirm(false)}>

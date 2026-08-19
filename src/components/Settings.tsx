@@ -7,6 +7,7 @@ import { platformOf, promptInstall, useInstallState } from '../ui/install'
 import { GLYPH } from '../ui/pieces'
 import { useRanking } from '../ui/useRanking'
 import { setCols, setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
+import { useEscape } from '../ui/escape'
 import { useT } from '../ui/text'
 import { APP_VERSION } from '../ui/version'
 import { BadgeChip } from './BadgeChip'
@@ -91,12 +92,9 @@ export function Settings({
 
   useEffect(() => {
     closeRef.current?.focus()
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [])
+  // Escape yalnızca en üstteki pencereyi kapatır (ui/escape yığını)
+  useEscape(onClose)
 
   const langName = LANGS.find((entry) => entry.code === settings.lang)?.name ?? ''
 
@@ -198,8 +196,8 @@ export function Settings({
           {/* Koridor uyarısı: oyun sürerken genişlik değişecekse. Puan
               kaybolmuyor, kapanıyor - mevcut koşu deftere yazılıyor. */}
           {pendingCols != null && game && (
-            <div className="pop-warn" role="alertdialog" aria-live="polite">
-              <b>{t('corridor.restart.title')}</b>
+            <div className="pop-warn" role="alertdialog" aria-live="polite" aria-labelledby="corridor-warn-ttl">
+              <b id="corridor-warn-ttl">{t('corridor.restart.title')}</b>
               <p>{t('corridor.restart.body', { score: game.score(), n: pendingCols })}</p>
               <div className="pop-warn-act">
                 <button type="button" onClick={() => setPendingCols(null)}>

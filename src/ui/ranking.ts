@@ -1,7 +1,7 @@
-import type { WeeklyEntry } from '@shared/leaderboard'
+import { type WeeklyEntry, shortMatches } from '@shared/leaderboard'
 import type { GameMode } from '../engine/types'
 import { type BadgeId, badgeOf, isBadgeId, readBadges, readSelectedBadge } from './badges'
-import { getIdentity, shortToken } from './identity'
+import { getIdentity } from './identity'
 import { fetchWeekly, leaderboardEnabled } from './leaderboard'
 import { type RunRecord, bestOf, isoWeekKey, readRuns, runsOfMode, runsOfWeek } from './scores'
 
@@ -141,8 +141,9 @@ export async function fetchRanking(mode: GameMode, now: Date = new Date()): Prom
   const data = await fetchWeekly(mode, week)
   if (!data) return null
 
-  const mine = shortToken(getIdentity().token)
-  const rows = data.entries.map((entry) => entryToRow(entry, entry.token === mine))
+  // "ben": tablodaki kısa hâl eski (4+2) ya da yeni (6+2) olabilir - ikisini de tanı
+  const token = getIdentity().token
+  const rows = data.entries.map((entry) => entryToRow(entry, shortMatches(entry.token, token)))
   const local = readRanking(mode, now)
 
   return {
@@ -154,7 +155,7 @@ export async function fetchRanking(mode: GameMode, now: Date = new Date()): Prom
     pending: false,
     rows,
     lastWeek: data.lastWeek
-      ? { week: data.lastWeek.week, rows: data.lastWeek.entries.map((entry) => entryToRow(entry, entry.token === mine)) }
+      ? { week: data.lastWeek.week, rows: data.lastWeek.entries.map((entry) => entryToRow(entry, shortMatches(entry.token, token))) }
       : undefined,
   }
 }

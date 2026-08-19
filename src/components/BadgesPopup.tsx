@@ -14,6 +14,7 @@ import { getIdentity } from '../ui/identity'
 import { readLifetime } from '../ui/lifetime'
 import { leaderboardEnabled } from '../ui/leaderboard'
 import { syncEnabled } from '../ui/sync'
+import { useEscape } from '../ui/escape'
 import { useT } from '../ui/text'
 import { BadgeGlyph } from './BadgeGlyph'
 import { Recovery } from './Recovery'
@@ -59,12 +60,9 @@ export function BadgesPopup({ onClose, onSelect }: Props) {
 
   useEffect(() => {
     closeRef.current?.focus()
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [])
+  // Escape yalnızca en üstteki pencereyi kapatır (ui/escape yığını)
+  useEscape(onClose)
 
   /** Depodaki değer: koşu dışında bağlam olmadığı için ömür boyu depodan */
   function valueOf(badge: Badge): number | null {

@@ -61,7 +61,7 @@ export const api = {
   breakdowns: (dims: Dimension[], period: Period, at: string, limit = 12) =>
     get<BreakdownsResponse>('breakdowns', { dims: dims.join(','), period, at, limit }),
   /* --- Adlar (Faz 9 moderasyon) --- */
-  names: (q: string, status: PlayerStatus | 'orphan' | '' = '', limit = 60) =>
+  names: (q: string, status: PlayerStatus | 'orphan' | 'suspect' | '' = '', limit = 60) =>
     get<NamesResponse>('names', { q, status, limit }),
   /** delete → null döner (satır gitti) */
   act: (hash: string, action: NameAction) => post<PlayerRow | null>('names/act', { hash, action }),

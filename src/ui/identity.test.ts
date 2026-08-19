@@ -27,7 +27,7 @@ describe('cihaz kimliği ve imza', () => {
     const renamed = renameIdentity('Gölge Vezir')
     expect(renamed?.name).toBe('Gölge Vezir')
     expect(renamed?.token).toBe(first.token) // ad değişti, kimlik aynı
-    expect(shortToken(first.token)).toMatch(/^\w{4}…\w{2}$/)
+    expect(shortToken(first.token)).toMatch(/^\w{6}…\w{2}$/)
   })
 
   /**

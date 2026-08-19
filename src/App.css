@@ -1054,6 +1054,37 @@
   white-space: nowrap;
 }
 
+/* Kurtarma kodu hatırlatması: ipucu satırında altın, tıklanır; × bir daha göstermez */
+.bi-remind {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bi-remind-go,
+.bi-remind-x {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  color: var(--arc-gold);
+  text-align: left;
+  cursor: pointer;
+}
+
+.bi-remind-go {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(255, 210, 63, 0.45);
+}
+
+.bi-remind-x {
+  flex: 0 0 auto;
+  font-size: 14px;
+  color: #8ea0b8;
+}
+
 .bi-ver b {
   font-weight: 400;
   color: var(--arc-gold);

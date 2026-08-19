@@ -143,6 +143,7 @@ main { display: grid; gap: var(--gap); }
 .words-box { width: 100%; padding: 8px 10px; font-family: var(--mono); font-size: 13px; line-height: 1.5; color: var(--text); background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; resize: vertical; }
 button.primary { padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--bg); background: var(--gold); }
 .bad-text { color: var(--danger); font-size: 12px; }
+.suspect { color: var(--danger); cursor: help; }
 .card + .card { margin-top: var(--gap); }
 @media (max-width: 720px) {
   .names-table:not(.league-table) th:nth-child(3), .names-table:not(.league-table) td:nth-child(3),

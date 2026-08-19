@@ -1,9 +1,11 @@
 import { MODES, isMode } from '../../shared/events'
 import {
   type BadgeTier,
+  BURST_MAX_RUNS,
   LB_LIMITS,
   NAME_ACTIONS,
   ORPHAN_AFTER_MS,
+  SUSPECT_PER_ROW,
   type LeagueBoard,
   type LeagueResponse,
   type NameActionBody,
@@ -47,6 +49,10 @@ interface DbPlayer {
   reset_at: number | null
   firsts: number
   recovery: number
+  /** En yüksek puan/satır'ın mod eşiğine (SUSPECT_PER_ROW) oranı; haftalık satırı yoksa null */
+  suspect_ratio: number | null
+  burst_start: number | null
+  burst_count: number
 }
 
 function toRow(p: DbPlayer): PlayerRow {
@@ -65,15 +71,30 @@ function toRow(p: DbPlayer): PlayerRow {
     resetAt: p.reset_at,
     firsts: p.firsts,
     recovery: p.recovery > 0,
+    suspect: suspectOf(p),
   }
 }
+
+/** ⚠ işareti: puan/satır eşiğin üstünde ya da son pencerede dakikalık sınıra dayandı */
+function suspectOf(p: DbPlayer): PlayerRow['suspect'] {
+  const ratio = p.suspect_ratio ?? 0
+  const burst = (p.burst_count ?? 0) >= BURST_MAX_RUNS
+  if (ratio < 1 && !burst) return null
+  return { ratio: Math.round(ratio * 10) / 10, burst }
+}
+
+/* Puan/satır eşiği mod bazlı (shared SUSPECT_PER_ROW) - SQL'e CASE olarak iniyor */
+const SUSPECT_SQL = `(SELECT MAX(w.score * 1.0 / MAX(w.distance, 1) / CASE w.mode ${Object.entries(SUSPECT_PER_ROW)
+  .map(([mode, per]) => `WHEN '${mode}' THEN ${per}`)
+  .join(' ')} ELSE 1e9 END) FROM lb_weekly w WHERE w.token_hash = p.token_hash)`
 
 /* Alt sorgular satır başına: oyuncu sayısı küçük (yüzler), panel sayfası
    200 satırla sınırlı - JOIN karmaşasına değmez. */
 const COLS = `p.token_hash, p.short, p.name, p.status, p.badge, p.badge_tier, p.runs, p.first_seen, p.last_seen, p.rejected_name, p.last_rejected,
   (SELECT reset_at FROM lb_profile f WHERE f.token_hash = p.token_hash) AS reset_at,
   (SELECT COUNT(*) FROM lb_award a WHERE a.token_hash = p.token_hash AND a.place = 1) AS firsts,
-  (SELECT COUNT(*) FROM lb_recovery r WHERE r.token_hash = p.token_hash) AS recovery`
+  (SELECT COUNT(*) FROM lb_recovery r WHERE r.token_hash = p.token_hash) AS recovery,
+  ${SUSPECT_SQL} AS suspect_ratio, p.burst_start, p.burst_count`
 
 export async function listNames(db: D1Database, url: URL, nowMs: number): Promise<Response> {
   const q = str(url.searchParams.get('q'), 40).trim()
@@ -90,6 +111,10 @@ export async function listNames(db: D1Database, url: URL, nowMs: number): Promis
   if (status === 'shadow' || status === 'banned' || status === 'ok') {
     binds.push(status)
     where.push(`p.status = ?${binds.length}`)
+  } else if (status === 'suspect') {
+    // Şüpheli: puan/satır eşiğin üstünde ya da dakikalık sınıra dayanmış
+    binds.push(BURST_MAX_RUNS)
+    where.push(`(COALESCE(${SUSPECT_SQL}, 0) >= 1 OR p.burst_count >= ?${binds.length})`)
   } else if (status === 'orphan') {
     // Öksüz adayı: 1 yıldır koşu yok VE hiç birincilik yok. Elle silinir,
     // otomatik değil - sunucu "dönmeyecek" ile "ara verdi"yi ayırt edemez.

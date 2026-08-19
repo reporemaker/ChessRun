@@ -5,6 +5,7 @@ import { type RankingView, demoRanking } from '../ui/ranking'
 import { useRanking } from '../ui/useRanking'
 import { formatRemaining, isoWeekKey, weekEnd } from '../ui/scores'
 import { useSettings } from '../ui/settings'
+import { useEscape } from '../ui/escape'
 import { useT } from '../ui/text'
 import { BadgeGlyph } from './BadgeGlyph'
 
@@ -43,12 +44,9 @@ export function RankingPopup({ onClose, mode: initialMode, demo = false, refresh
 
   useEffect(() => {
     closeRef.current?.focus()
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [])
+  // Escape yalnızca en üstteki pencereyi kapatır (ui/escape yığını)
+  useEscape(onClose)
 
   const now = new Date()
   const week = isoWeekKey(now)

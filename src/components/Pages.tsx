@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { getIdentity, shortToken } from '../ui/identity'
 import type { StringKey } from '../ui/i18n'
 import type { DemoId } from '../ui/demos'
@@ -19,6 +18,7 @@ import {
   TRIO_THREAT_SCORE,
 } from '../engine/config'
 import type { PieceType } from '../engine/types'
+import { useEscape } from '../ui/escape'
 import { useT } from '../ui/text'
 import { APP_VERSION, CONTACT_MAIL } from '../ui/version'
 
@@ -102,13 +102,8 @@ export function Page({ page, onClose }: PageProps) {
   const identity = getIdentity()
   const sections = page === 'help' ? HELP : ABOUT
 
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  // Escape yalnızca en üstteki pencereyi kapatır (ui/escape yığını)
+  useEscape(onClose)
 
   return (
     <div className="page" role="dialog" aria-modal="true">

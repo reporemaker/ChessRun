@@ -282,6 +282,9 @@ export default {
           return await profileGet(env.DB, request.headers.get('x-chessrun-token'))
         }
         if (request.method !== 'GET') return new Response('method', { status: 405 })
+        // Açık sağlık ucu (Access yok): dış izleyici (UptimeRobot vb.) buraya
+        // vurur. Gece toplaması 2 günden eskiyse 503 → alarm. Veri sızdırmaz.
+        if (path === '/lb/health') return await publicHealth(env, now)
         if (path === '/lb/daily') return await daily(env.DB, url, request.headers.get('x-chessrun-token'), env.DAILY_SECRET, now)
         if (path === '/lb/weekly') return await weekly(env.DB, url, request.headers.get('x-chessrun-token'), now)
         if (path === '/lb/pulse') return await pulse(env.DB, url, now)
@@ -373,6 +376,29 @@ export default {
 
 function json(body: unknown): Response {
   return body instanceof Response ? body : Response.json(body)
+}
+
+/**
+ * Herkese açık sağlık: yalnızca "çalışıyor mu" ve "cron işledi mi". Dün
+ * toplanmamışsa (kaçan gece, düşen cron) 503 - izleme servisi bunu
+ * kesinti sayar ve haber verir. Ayrıntı (/api/health) Access arkasında.
+ */
+async function publicHealth(env: Env, nowMs: number): Promise<Response> {
+  try {
+    const rollup = await env.DB.prepare(`SELECT MAX(day) AS d FROM daily_totals`).first<{ d: string | null }>()
+    const yesterday = addDays(dayKeyUtc(nowMs), -1)
+    // Toplama 00:05 UTC'de; gün değişiminin ilk saatlerinde bir önceki gün de kabul
+    const grace = nowMs - Date.parse(`${dayKeyUtc(nowMs)}T00:00:00Z`) < 2 * 60 * 60_000
+    const last = rollup?.d ?? null
+    const ok = last != null && (last >= yesterday || (grace && last >= addDays(yesterday, -1)))
+    return Response.json(
+      { ok, rollup: last },
+      { status: ok ? 200 : 503, headers: { 'cache-control': 'no-store' } },
+    )
+  } catch (err) {
+    console.error(JSON.stringify({ msg: 'health failed', err: String(err) }))
+    return Response.json({ ok: false }, { status: 503, headers: { 'cache-control': 'no-store' } })
+  }
 }
 
 async function health(env: Env) {

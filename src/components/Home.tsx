@@ -13,6 +13,7 @@ import {
   readRuns,
 } from '../ui/scores'
 import { type DailyInfo, fetchDaily, fetchPulse, leaderboardEnabled } from '../ui/leaderboard'
+import { readRecoveryCode, syncEnabled } from '../ui/sync'
 import { useRanking } from '../ui/useRanking'
 import { lifetimeStreak } from '../ui/lifetime'
 import { useSettings } from '../ui/settings'
@@ -31,7 +32,37 @@ export interface HomeFocus {
 interface HomeProps {
   onStart: (config: GameConfig) => void
   onOpenSettings: () => void
+  /** Kurtarma kodu hatırlatması buraya götürür (rozetler penceresinin altı) */
+  onOpenBadges?: () => void
   focus?: HomeFocus | null
+}
+
+const RECOVERY_HINT_KEY = 'chessrun:recovery-hint'
+/** Kaç koşudan sonra bir kez hatırlatılsın */
+const RECOVERY_HINT_AFTER_RUNS = 3
+
+/**
+ * Kod oluşturmadan veri kaybeden oyuncu için tek çözüm önceden hatırlatmak:
+ * ilk birkaç koşudan sonra, sunucu varsa ve kod yoksa, ana sayfa ipucu
+ * satırında BİR KEZ «kurtarma kodu al →» (tıklanınca rozetler penceresi).
+ * Görüldü işareti localStorage'da; kapatınca/tıklayınca bir daha çıkmaz.
+ */
+function shouldRemindRecovery(runCount: number): boolean {
+  if (!syncEnabled || runCount < RECOVERY_HINT_AFTER_RUNS) return false
+  try {
+    if (readRecoveryCode()) return false
+    return localStorage.getItem(RECOVERY_HINT_KEY) == null
+  } catch {
+    return false
+  }
+}
+
+function markRecoveryReminded(): void {
+  try {
+    localStorage.setItem(RECOVERY_HINT_KEY, new Date().toISOString())
+  } catch {
+    // yoksay
+  }
 }
 
 /** Geri sayım: saat:dakika:saniye - dile bağlı olmayan tek biçim */
@@ -48,7 +79,7 @@ function clockOf(ms: number): string {
  * duruyor, saydam ama gövdeli. Dört kart: bir günün oyunu, üç serbest mod.
  * Masaüstünde iki sütuna açılıyor, mobilde tek sütun kalıyor.
  */
-export function Home({ onStart, onOpenSettings, focus = null }: HomeProps) {
+export function Home({ onStart, onOpenSettings, onOpenBadges, focus = null }: HomeProps) {
   const t = useT()
   // Koridor genişliği ayarlar penceresinden geliyor: ana sayfa artık
   // yalnızca "hangi oyunu oynayacağım" sorusunu soruyor
@@ -105,6 +136,12 @@ export function Home({ onStart, onOpenSettings, focus = null }: HomeProps) {
   }, [day])
 
   const runs = useMemo(() => readRuns(), [])
+  const [remind, setRemind] = useState(() => shouldRemindRecovery(runs.length))
+  function dismissRemind(open: boolean) {
+    markRecoveryReminded()
+    setRemind(false)
+    if (open) onOpenBadges?.()
+  }
   const streak = useMemo(() => Math.max(currentStreak(runs), lifetimeStreak()), [runs])
   /* Günün Mücadelesi: tohum ve tek hak SUNUCUDA (tohum sırdan türer, hak
      jetona bağlı). Sunucu cevap verene dek kart "…" gösterir; sunucu
@@ -261,7 +298,18 @@ export function Home({ onStart, onOpenSettings, focus = null }: HomeProps) {
         </div>
 
         <footer className="bi-ft">
-          <span className="bi-hint">{focus ? t('home.invited') : pulse != null ? t('home.pulse', { n: pulse }) : t(hint)}</span>
+          {remind && !focus ? (
+            <span className="bi-hint bi-remind">
+              <button type="button" className="bi-remind-go" onClick={() => dismissRemind(true)}>
+                {t('home.recoveryHint')}
+              </button>
+              <button type="button" className="bi-remind-x" onClick={() => dismissRemind(false)} aria-label={t('common.close')}>
+                ×
+              </button>
+            </span>
+          ) : (
+            <span className="bi-hint">{focus ? t('home.invited') : pulse != null ? t('home.pulse', { n: pulse }) : t(hint)}</span>
+          )}
           <span className="bi-ver">
             CHESSRUN v{APP_VERSION} · <b>SmartKraft</b>
           </span>

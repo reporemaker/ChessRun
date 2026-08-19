@@ -16,6 +16,7 @@ import { fetchDaily, leaderboardEnabled } from './ui/leaderboard'
 import { type PlayMode, type Route, parseRoute, pathOf, routeOfMode } from './ui/route'
 import { type ResumeTicket, clearResume, readResume, resumeMatches } from './ui/resume'
 import { ResumePrompt } from './components/ResumePrompt'
+import { setBeforeReload } from './ui/reload'
 import { unlockSound } from './ui/sound'
 import { trackSessionEnd, trackVisit } from './ui/stats'
 import { dailySeed, dayKey } from './ui/scores'
@@ -202,6 +203,12 @@ export default function App() {
     })
   }
 
+  // Kimlik geri yüklenince sayfa yenilenmeden süren koşu deftere (bkz. ui/reload)
+  useEffect(() => {
+    setBeforeReload(() => gameRef.current?.abandon())
+    return () => setBeforeReload(null)
+  }, [])
+
   useEffect(() => {
     if (route.kind === 'daily' && !config && !offer) launchDailyFromRoute()
     // Yalnızca açılışta: rota ilk değerinden sonra değişmiyor
@@ -341,6 +348,7 @@ export default function App() {
         <Home
           onStart={enterGame}
           onOpenSettings={() => setSettingsOpen(true)}
+          onOpenBadges={() => setBadgesOpen(true)}
           focus={focus}
         />
       )}

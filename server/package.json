@@ -11,7 +11,8 @@
     "migrate:local": "wrangler d1 migrations apply chessrun --local",
     "migrate": "wrangler d1 migrations apply chessrun --remote",
     "deploy": "wrangler deploy",
-    "types": "wrangler types"
+    "types": "wrangler types",
+    "backup": "sh scripts/backup.sh"
   },
   "devDependencies": {
     "oxlint": "^1.75.0",

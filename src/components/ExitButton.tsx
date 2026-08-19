@@ -1,4 +1,5 @@
-import { type ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useState } from 'react'
+import { useEscape } from '../ui/escape'
 import { useT } from '../ui/text'
 
 /**
@@ -23,14 +24,8 @@ export function ExitButton({ active, onExit, className, children, ariaLabel }: P
   const t = useT()
   const [ask, setAsk] = useState(false)
 
-  useEffect(() => {
-    if (!ask) return
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setAsk(false)
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [ask])
+  // Onay açıkken Escape = KAL (yığında en üstte; altındaki pencereyi kapatmaz)
+  useEscape(() => setAsk(false), ask)
 
   return (
     <>

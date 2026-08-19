@@ -845,8 +845,8 @@ export function Game({
               ))}
             </span>
             {pendingCols != null && (
-              <span className="gv-warn" role="alertdialog" aria-live="polite">
-                <b>{t('corridor.restart.title')}</b>
+              <span className="gv-warn" role="alertdialog" aria-live="polite" aria-labelledby="gv-corridor-ttl">
+                <b id="gv-corridor-ttl">{t('corridor.restart.title')}</b>
                 <span>{t('corridor.restart.body', { score: game.score, n: pendingCols })}</span>
                 <span className="gv-warn-act">
                   <button type="button" onClick={() => setPendingCols(null)}>

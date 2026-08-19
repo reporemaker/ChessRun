@@ -33,6 +33,32 @@ export const LB_LIMITS = {
 } as const
 
 /* ------------------------------------------------------------------ *
+ * Sahtecilik frenleri - ucuz ve kaba, bilerek.
+ *
+ * Jeton taşıyıcı sır: curl ile istenen skor yazılabiliyor. Tam çözüm
+ * (tohumlu tekrar oynatma) sonraya; buradakiler yalnızca absürdü keser ve
+ * moderatöre işaret bırakır:
+ *   - makullük: satır başına en çok şu kadar puan (motorun teorik tavanının
+ *     üstü: Av/Kaçış/Üçlü bir turda şah 25 + zincir şah 10 + mat 5/20 +
+ *     tehdit + satır 1 + sıkışma 5 ≈ 64; günlükte bir kayma aralığında
+ *     birden çok yeme olabildiği için çok daha gevşek),
+ *   - sıklık: jeton başına dakikada en çok N koşu (bir koşu saniyeler sürer),
+ *   - panel işareti: puan/satır "şüpheli" eşiğini aşan ya da dakikalık
+ *     sınıra dayanan oyuncu ⚠ ile listelenir → tek tıkla Gizle.
+ * ------------------------------------------------------------------ */
+/** Satır başına kabul edilen en yüksek puan (üstü: koşu atılır) */
+export const PLAUSIBLE_PER_ROW: Record<Mode, number> = { classic: 80, kingRun: 80, trio: 100, daily: 1000 }
+/** Panel işareti için "olağan dışı" puan/satır eşiği (gerçek oyunda görülenin ~2 katı) */
+export const SUSPECT_PER_ROW: Record<Mode, number> = { classic: 8, kingRun: 8, trio: 12, daily: 60 }
+export const BURST_WINDOW_MS = 60_000
+/** Pencere içinde kabul edilen koşu sayısı; üstü düşer */
+export const BURST_MAX_RUNS = 8
+
+export function plausibleScoreMax(mode: Mode, distance: number): number {
+  return PLAUSIBLE_PER_ROW[mode] * (Math.max(0, distance) + 1)
+}
+
+/* ------------------------------------------------------------------ *
  * Günlük çarpan - günün mücadelesi puanı o günkü diğer koşuları büyütür
  *
  * çarpan = 1 + günlükPuan / DAILY_BONUS_DIV, ÜST SINIR YOK (kullanıcı kararı,
@@ -47,6 +73,28 @@ export const DAILY_BONUS_DIV = 1000
 export function dailyBonus(dailyScore: number | null | undefined): number {
   if (dailyScore == null || !(dailyScore > 0)) return 1
   return 1 + dailyScore / DAILY_BONUS_DIV
+}
+
+/**
+ * Jetonun gösterilebilir kısa hâli: `a1b2c3…9f` (6+2 = 32 bit). Eskiden 4+2
+ * (24 bit): ~1000 oyuncuda %3 çakışma, iki kişi aynı görünüyordu. Tek kaynak:
+ * sunucu `lb_player.short` buraya göre yazar/yeniler, istemci "ben" vurgusu
+ * ve künye için aynı fonksiyonu kullanır. Geçiş: eski 7 karakterli kısa
+ * hâller tabloda kalabilir; istemci `shortMatches` ile ikisini de tanır.
+ */
+export function shortOf(token: string): string {
+  const clean = token.replace(/-/g, '')
+  return `${clean.slice(0, 6)}…${clean.slice(-2)}`
+}
+
+/** Tablodaki kısa hâl (eski 4+2 ya da yeni 6+2) bu jetonun mu */
+export function shortMatches(short: string, token: string): boolean {
+  const clean = token.replace(/-/g, '')
+  const i = short.indexOf('…')
+  if (i < 0) return false
+  const head = short.slice(0, i)
+  const tail = short.slice(i + 1)
+  return head.length >= 4 && clean.startsWith(head) && clean.endsWith(tail)
 }
 
 /** Çarpan uygulanmış puan (aşağı yuvarlanır, skor tavanıyla kelepçeli) */
@@ -82,7 +130,7 @@ export interface SubmitBody {
 export interface WeeklyEntry {
   place: number
   name: string
-  /** Jetonun kısa hâli `a1b2…9f` - tam jeton hiçbir cevapta yok */
+  /** Jetonun kısa hâli `a1b2c3…9f` (eski satırlarda `a1b2…9f`) - tam jeton hiçbir cevapta yok */
   token: string
   score: number
   distance: number
@@ -259,6 +307,11 @@ export interface PlayerRow {
   firsts: number
   /** Kurtarma kodu oluşturmuş mu */
   recovery: boolean
+  /**
+   * Şüphe işareti (null = yok): `ratio` = en yüksek puan/satır'ın mod eşiğine
+   * oranı (≥1 şüpheli), `burst` = son pencerede dakikalık sınıra dayandı.
+   */
+  suspect: { ratio: number; burst: boolean } | null
 }
 
 export interface NamesResponse {

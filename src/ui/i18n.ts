@@ -114,6 +114,7 @@ const tr = {
   'home.hint.9': 'Günlük tahta herkese aynı tohumla kurulur, skor senin.',
   'home.hint.10': 'Yediğin taşa dönüşürsün: at yersen at, vezir yersen vezir.',
   'home.pulse': 'Bugün {n} kişi günlük mücadeleye katıldı',
+  'home.recoveryHint': 'Rozetlerin ve skorların bu cihazda. Kaybolmasın: rozetler penceresinin altından kurtarma kodu al →',
 
   /* --- ayarlar --- */
   'settings.title': 'AYARLAR',
@@ -616,6 +617,7 @@ const en: Partial7 = {
   'home.hint.9': "The daily board is built from the same seed for everyone, the score is yours.",
   'home.hint.10': 'You become what you capture: take a knight, be a knight.',
   'home.pulse': "{n} people joined today's challenge",
+  'home.recoveryHint': 'Your badges and scores live on this device. Don\'t lose them: grab a recovery code at the bottom of the badges window →',
 
   'settings.title': 'SETTINGS',
   'settings.pieceColor': 'PIECE COLOUR',
@@ -1107,6 +1109,7 @@ const de: Partial7 = {
   'home.hint.9': 'Das Tagesbrett entsteht für alle aus demselben Seed, die Punkte sind deine.',
   'home.hint.10': 'Du wirst, was du schlägst: Springer geschlagen, Springer geworden.',
   'home.pulse': 'Heute haben {n} Leute an der Tagesherausforderung teilgenommen',
+  'home.recoveryHint': 'Deine Abzeichen und Punkte hängen an diesem Gerät. Nicht verlieren: hol dir unten im Abzeichenfenster einen Wiederherstellungscode →',
 
   'settings.title': 'EINSTELLUNGEN',
   'settings.pieceColor': 'FIGURENFARBE',
@@ -1586,6 +1589,7 @@ const es: Partial7 = {
   'home.hint.9': 'El tablero diario se construye con la misma semilla para todos, la puntuación es tuya.',
   'home.hint.10': 'Te conviertes en lo que capturas: come un caballo, sé un caballo.',
   'home.pulse': 'Hoy {n} personas participaron en el reto del día',
+  'home.recoveryHint': 'Tus insignias y puntos viven en este dispositivo. Que no se pierdan: consigue un código de recuperación al final de la ventana de insignias →',
 
   'settings.title': 'AJUSTES',
   'settings.pieceColor': 'COLOR DE PIEZA',
@@ -2064,6 +2068,7 @@ const fr: Partial7 = {
   'home.hint.9': "L'échiquier du jour naît de la même graine pour tous, le score est à toi.",
   'home.hint.10': 'Tu deviens ce que tu captures : prends un cavalier, sois cavalier.',
   'home.pulse': "Aujourd'hui {n} personnes ont participé au défi du jour",
+  'home.recoveryHint': 'Tes badges et tes scores vivent sur cet appareil. Ne les perds pas : prends un code de récupération en bas de la fenêtre des badges →',
 
   'settings.title': 'RÉGLAGES',
   'settings.pieceColor': 'COULEUR DES PIÈCES',

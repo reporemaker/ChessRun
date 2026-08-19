@@ -10,7 +10,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "preview": "vite preview",
-    "test:e2e": "vitest run --config vitest.e2e.config.ts"
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "check": "npm run lint && npm test && npm run build && cd server && npx tsc --noEmit -p . && npm test && cd ../sub && npm run build",
+    "check:e2e": "vitest run --config vitest.e2e.config.ts"
   },
   "dependencies": {
     "react": "^19.2.8",
