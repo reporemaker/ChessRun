@@ -25,3 +25,10 @@
 # (19 Ağustos canlıda görüldü). Açık max-age=0 kenarda korunuyor (`/` gibi).
 /sw.js
   Cache-Control: no-cache, max-age=0, must-revalidate
+
+# Olmayan dosya SPA fallback ile HTML döner; bunlar gerçek dosya (tarayıcı /favicon.ico'yu
+# bağlantısız da ister; robots.txt tarayıcılar için). favicon.ico PNG baytlı - tarayıcılar kabul eder.
+/robots.txt
+  Cache-Control: public, max-age=3600
+/favicon.ico
+  Cache-Control: public, max-age=86400
