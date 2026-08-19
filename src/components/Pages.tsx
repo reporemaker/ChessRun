@@ -87,7 +87,7 @@ const ABOUT: Section[] = [
   { titleKey: 'about.tech.title', bodyKeys: ['about.tech.1', 'about.tech.2'] },
   // Künye: kim yaptı + iletişim. Adres i18n metnine {mail} ile giriyor,
   // böylece beş çeviri de tek kaynaktan (CONTACT_MAIL) besleniyor.
-  { titleKey: 'about.credit.title', bodyKeys: ['about.credit.1', 'about.credit.2'] },
+  { titleKey: 'about.credit.title', bodyKeys: ['about.credit.1', 'about.credit.2', 'about.credit.3'] },
 ]
 
 /**

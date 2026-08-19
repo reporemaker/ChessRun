@@ -958,6 +958,24 @@
   text-shadow: 0 0 18px rgba(255, 210, 63, 0.45);
 }
 
+/* Cardinal figürleri (ui/pieceArt.ts): gövde beyaz, günün kartında altın */
+.bi-g .piece-art {
+  display: grid;
+  place-items: center;
+  width: 78%;
+  height: 78%;
+}
+
+.bi-g .piece-art svg {
+  width: 100%;
+  height: 100%;
+}
+
+.bi-card.today .bi-g {
+  --pa1: #ffd23f;
+  --pa2: #e0a33a;
+}
+
 /* İkonlar SVG (ui/pieceIcons.tsx): fonttan bağımsız, her cihazda aynı oran */
 .bi-g svg {
   width: 64%;
