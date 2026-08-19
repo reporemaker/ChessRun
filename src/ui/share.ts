@@ -2,6 +2,7 @@ import type { GameMode, PieceType } from '../engine/types'
 import type { Lang, StringKey } from './i18n'
 import { localeOf } from './i18n'
 import { GLYPH } from './pieces'
+import { pieceArtImage } from './pieceArt'
 import { iconPath } from './pieceIconPaths'
 import type { Translate } from './text'
 
@@ -111,7 +112,16 @@ export function shareText(input: ShareInput, t: Translate): string {
 
 const CARD = 1080
 
-function drawIcon(ctx: CanvasRenderingContext2D, glyph: string, x: number, y: number, size: number): void {
+/** Figürlerin rasterlenmiş hâli (Chessnut, `pieceArtImage`); yoksa siluet */
+type PieceImages = ReadonlyMap<string, HTMLImageElement>
+
+function drawIcon(ctx: CanvasRenderingContext2D, glyph: string, x: number, y: number, size: number, art?: PieceImages): void {
+  const img = art?.get(glyph)
+  if (img) {
+    // Chessnut 800×800 kare; figür kutunun ortasında - olduğu gibi ölçekle
+    ctx.drawImage(img, x - size / 2, y - size / 2, size, size)
+    return
+  }
   const d = iconPath(glyph)
   ctx.save()
   ctx.translate(x - size / 2, y - size / 2)
@@ -127,8 +137,17 @@ function drawIcon(ctx: CanvasRenderingContext2D, glyph: string, x: number, y: nu
   ctx.restore()
 }
 
-/** Kartı çizer; canvas döner (test edilebilir, PNG'ye çevrilebilir) */
-export function drawShareCard(input: ShareInput, t: Translate): HTMLCanvasElement {
+/** Kartın figürleri: Kaçış'ta tek şah, diğerlerinde zincirin son 5'i */
+function cardGlyphs(input: ShareInput): string[] {
+  return input.mode === 'kingRun' ? ['♚'] : input.chain.slice(-5).map((type) => GLYPH[type])
+}
+
+/**
+ * Kartı çizer; canvas döner (test edilebilir, PNG'ye çevrilebilir).
+ * `art` verilirse figürler Chessnut (ana sayfayla aynı set), yoksa siluet -
+ * yükleme `shareCardFile`'da, çizim kendisi eşzamanlı kalıyor.
+ */
+export function drawShareCard(input: ShareInput, t: Translate, art?: PieceImages): HTMLCanvasElement {
   const cv = document.createElement('canvas')
   cv.width = CARD
   cv.height = CARD
@@ -166,15 +185,16 @@ export function drawShareCard(input: ShareInput, t: Translate): HTMLCanvasElemen
       : t(MODE_NAME_KEY[input.mode])
   ctx.fillText(sub.toUpperCase(), W / 2, 165)
 
-  // Zincir: figür ikonları ok ile; Kaçış'ta tek şah
+  // Zincir: figürler ok ile; Kaçış'ta tek şah. Chessnut figürü kutusunun
+  // ~%70'ini dolduruyor, siluetten biraz büyük çizilir ki aynı ağırlıkta görünsün
   ctx.fillStyle = '#f2f7ff'
-  const glyphs = input.mode === 'kingRun' ? ['♚'] : input.chain.slice(-5).map((type) => GLYPH[type])
-  const size = glyphs.length > 3 ? 120 : 150
-  const gap = size * 0.55
+  const glyphs = cardGlyphs(input)
+  const size = (glyphs.length > 3 ? 120 : 150) * (art ? 1.3 : 1)
+  const gap = size * (art ? 0.35 : 0.55)
   const total = glyphs.length * size + (glyphs.length - 1) * gap
   let x = W / 2 - total / 2 + size / 2
   glyphs.forEach((g, i) => {
-    drawIcon(ctx, g, x, 400, size)
+    drawIcon(ctx, g, x, 400, size, art)
     if (i < glyphs.length - 1) {
       ctx.fillStyle = '#93a3b8'
       ctx.font = `400 ${size * 0.5}px ${mono}`
@@ -221,9 +241,21 @@ export function drawShareCard(input: ShareInput, t: Translate): HTMLCanvasElemen
   return cv
 }
 
+/** Kartta gereken figürlerin görselleri; yüklenemeyen atlanır (siluete düşer) */
+async function loadCardArt(input: ShareInput): Promise<PieceImages> {
+  const art = new Map<string, HTMLImageElement>()
+  await Promise.all(
+    [...new Set(cardGlyphs(input))].map(async (glyph) => {
+      const img = await pieceArtImage(glyph)
+      if (img) art.set(glyph, img)
+    }),
+  )
+  return art
+}
+
 export async function shareCardFile(input: ShareInput, t: Translate): Promise<File | null> {
   try {
-    const cv = drawShareCard(input, t)
+    const cv = drawShareCard(input, t, await loadCardArt(input))
     const blob = await new Promise<Blob | null>((resolve) => cv.toBlob(resolve, 'image/png'))
     return blob ? new File([blob], 'chessrun.png', { type: 'image/png' }) : null
   } catch {

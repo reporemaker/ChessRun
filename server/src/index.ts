@@ -36,18 +36,11 @@ import {
  * Şema şeklini sızdırmamak ve istemciyi yeniden denemeye itmemek için.
  */
 
-export interface Env {
-  DB: D1Database
-  SALT: KVNamespace
-  /** Panelin alan adı; yönlendirme bununla ayrılıyor */
-  STATS_HOST?: string
-  /** Yerel geliştirmede Access doğrulaması atlanıyor */
-  SKIP_ACCESS?: string
-  ACCESS_TEAM?: string
-  ACCESS_AUD?: string
-  /** Günün Mücadelesi tohum sırrı (wrangler secret); yoksa deterministik yedek */
-  DAILY_SECRET?: string
-}
+// `Env` elle yazılmıyor: `wrangler types` üretiyor (worker-configuration.d.ts,
+// global). Bağlamalar ve [vars] wrangler.toml'dan, sırlar .dev.vars'tan:
+// SKIP_ACCESS (yalnızca yerel: Access doğrulaması atlanır), DAILY_SECRET
+// (Günün Mücadelesi tohum sırrı; üretimde wrangler secret, yoksa deterministik
+// yedek). Üretimde tanımsız olabilecekler kodda `?? ` / `!== '1'` ile okunuyor.
 
 const NO_CONTENT = { status: 204 } as const
 

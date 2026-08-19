@@ -14,6 +14,9 @@
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
-# Service worker her seferinde ağdan denetlensin
+# Service worker her seferinde ağdan denetlensin. Yalnızca `no-cache`
+# YETMEDİ: max-age yoksa Cloudflare zone varsayılanı (tarayıcı TTL 4 sa)
+# başlığı `max-age=14400` yapıyordu → SW güncellemesi 4 saate kadar gecikti
+# (19 Ağustos canlıda görüldü). Açık max-age=0 kenarda korunuyor (`/` gibi).
 /sw.js
-  Cache-Control: no-cache
+  Cache-Control: no-cache, max-age=0, must-revalidate

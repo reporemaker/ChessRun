@@ -1,0 +1,100 @@
+# ChessRun CI — üç derleme grafiği (oyun, server/, sub/) + uçtan uca.
+# Uzak depo açılınca kendiliğinden çalışır; yerelde aynı adımlar:
+#   npm ci && npm run lint && npm test && npm run build
+#   cd server && npm ci && npx tsc --noEmit -p . && npm test
+#   cd sub && npm ci && npm run build
+#   (e2e) cd server && wrangler d1 migrations apply chessrun --local && wrangler dev  →  npm run test:e2e
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  game:
+    name: Oyun (lint · test · build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  server:
+    name: Worker (tsc · test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+      # Env tipi elle yazılmıyor: wrangler.toml + .dev.vars'tan üretilip tsc ona
+      # karşı çalışıyor (depodaki worker-configuration.d.ts kozmetik olarak
+      # kayabilir; kodun gerçek konfigürasyona uyduğunu bu adım garanti eder).
+      - run: cp .dev.vars.example .dev.vars && npx wrangler types
+      - run: npx tsc --noEmit -p .
+      - run: npm test
+
+  panel:
+    name: Panel (tsc · build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sub
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: sub/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
+  e2e:
+    name: Uçtan uca (wrangler dev + sync.e2e)
+    runs-on: ubuntu-latest
+    needs: [game, server]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm ci
+        working-directory: server
+      # Yerel D1: boş şema, migration'lar; sır yok (DAILY_SECRET yoksa biber
+      # atlanır, Access /lb'de zaten yok) - e2e yalnızca /lb/* kullanıyor.
+      - run: cp .dev.vars.example .dev.vars && npx wrangler d1 migrations apply chessrun --local
+        working-directory: server
+      - name: wrangler dev (arka plan)
+        working-directory: server
+        run: |
+          nohup npx wrangler dev --port 8787 --local > wrangler.log 2>&1 &
+          # Herhangi bir HTTP cevabı yeter (/lb/awards jetonsuz 400 döner - -f kullanma)
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8787/lb/awards || true)
+            if [ "$code" != "000" ] && [ -n "$code" ]; then echo "hazır ($code)"; exit 0; fi
+            sleep 1
+          done
+          echo "wrangler dev ayağa kalkmadı"; cat wrangler.log; exit 1
+      - run: npm run test:e2e
+      - if: failure()
+        run: cat server/wrangler.log

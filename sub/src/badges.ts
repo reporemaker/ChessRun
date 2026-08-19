@@ -2,6 +2,10 @@
  * Rozet kimliği → glif + Türkçe ad, panel için. Oyundaki `src/ui/badges.ts`
  * motor tiplerine bağlı olduğu için buraya alınmıyor; bu tablo yalnızca
  * gösterim (bilinmeyen kimlik ham hâliyle çizilir).
+ *
+ * KARAR (19 Ağustos): panel tek dil - Türkçe, tek kişinin aracı; oyunun beş
+ * dilli i18n'i buraya girmiyor. Oyunda yeni rozet eklenince bu tabloya bir
+ * satır eklemek yeter (eksikse kimlik ham hâliyle görünür, kırılmaz).
  */
 export const BADGE_LABEL: Record<string, { glyph: string; name: string }> = {
   rook: { glyph: '♜', name: 'Kale' },

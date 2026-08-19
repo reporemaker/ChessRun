@@ -69,7 +69,8 @@ not_found_handling = "single-page-application"
 # Bu yollar HER ZAMAN önce Worker'a gelsin.
 run_worker_first = ["/s/*", "/lb/*", "/collect/*", "/api/*"]
 
+# Env tipi elle yazılmıyor: `npm run types` (wrangler types) →
+# worker-configuration.d.ts. toml/.dev.vars değişince yeniden üret.
 [vars]
-STATS_HOST = "1403.chessrun.app"
 ACCESS_TEAM = "round-bird-570f"
 ACCESS_AUD = "2709e20e855156d8d8ec62453763ee9346ade2377147123663a8e523e6fa0ade"

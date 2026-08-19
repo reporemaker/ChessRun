@@ -1,0 +1,6 @@
+# Yerel geliştirme değişkenleri → `.dev.vars` olarak kopyala (git dışı).
+# SKIP_ACCESS=1: /api/* için Access JWT doğrulaması atlanır (YALNIZCA yerel).
+# DAILY_SECRET: Günün Mücadelesi tohum sırrı + kurtarma kodu biberi; üretimde
+# `wrangler secret put DAILY_SECRET`. Yerelde herhangi bir dizgi.
+SKIP_ACCESS=1
+DAILY_SECRET=yerel-gelistirme-sirri

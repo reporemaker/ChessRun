@@ -300,6 +300,17 @@ async function resolvePlayer(
 }
 
 /**
+ * Koşunun oynandığı an (epoch ms): istemcinin `at`'i, ama sunucu saatini
+ * aşamaz (ileri tarihli koşu = şimdi) ve bozuksa şimdi. Günlük çarpan ve
+ * `lb_daily.ts` bunu kullanır - alım zamanını değil.
+ */
+export function playedAtOf(at: string, nowMs: number): number {
+  const parsed = Date.parse(at)
+  if (!Number.isFinite(parsed)) return nowMs
+  return Math.min(parsed, nowMs)
+}
+
+/**
  * Koşuyu yazar. Sıra: oyuncu satırı (ad kuralları `resolvePlayer`) → haftalık
  * en iyi (upsert, yalnızca daha iyiyse) → günlük nabız.
  */
@@ -312,14 +323,17 @@ export async function submitRun(db: D1Database, clean: CleanSubmit, nowMs: numbe
 
   /* Günlük çarpan: günün mücadelesi DEĞİLSE ve koşunun günü verildiyse, o
      gün için oyuncunun kaydedilmiş günlük puanına bak; yalnızca mücadeleden
-     SONRA gelen koşulara uygulanır (ts karşılaştırması sunucu saatiyle). */
+     SONRA OYNANAN koşulara uygulanır. Kıyas koşunun kendi zamanı (`at`,
+     istemciden; sunucu saatini aşamaz) - alım zamanı değil: çevrimdışı
+     kuyruktan geç gelen, mücadeleden önce oynanmış koşu bonus almasın. */
+  const playedAt = playedAtOf(clean.at, nowMs)
   let score = clean.score
   if (clean.mode !== 'daily' && clean.day) {
     const bonusRow = await db
       .prepare(`SELECT score, ts FROM lb_daily WHERE daily = ?1 AND token_hash = ?2`)
       .bind(clean.day, hash)
       .first<{ score: number | null; ts: number | null }>()
-    if (bonusRow?.score != null && bonusRow.ts != null && bonusRow.ts <= nowMs) {
+    if (bonusRow?.score != null && bonusRow.ts != null && bonusRow.ts <= playedAt) {
       score = applyDailyBonus(clean.score, bonusRow.score)
     }
   }
@@ -343,7 +357,8 @@ export async function submitRun(db: D1Database, clean: CleanSubmit, nowMs: numbe
     statements.push(
       db.prepare(`INSERT OR IGNORE INTO lb_daily (daily, token_hash) VALUES (?1, ?2)`).bind(clean.daily, hash),
     )
-    // Günün mücadelesi puanı güne yazılır (günde tek koşu; tekrar gelirse en iyisi kalır)
+    // Günün mücadelesi puanı güne yazılır (günde tek koşu; tekrar gelirse en
+    // iyisi kalır). `ts` = mücadelenin oynandığı an - çarpanın eşiği bu.
     if (clean.mode === 'daily') {
       statements.push(
         db
@@ -351,7 +366,7 @@ export async function submitRun(db: D1Database, clean: CleanSubmit, nowMs: numbe
             `UPDATE lb_daily SET score = MAX(COALESCE(score, 0), ?3), ts = COALESCE(ts, ?4)
              WHERE daily = ?1 AND token_hash = ?2`,
           )
-          .bind(clean.daily, hash, clean.score, nowMs),
+          .bind(clean.daily, hash, clean.score, playedAt),
       )
     }
   }

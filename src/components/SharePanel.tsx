@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   type ShareInput,
   type ShareOutcome,
@@ -9,6 +9,7 @@ import {
   shareRun,
   shareText,
 } from '../ui/share'
+import { preloadPieceArt } from '../ui/pieceArt'
 import { useT } from '../ui/text'
 
 /**
@@ -25,6 +26,9 @@ interface SharePanelProps {
 
 export function SharePanel({ input, className = '' }: SharePanelProps) {
   const t = useT()
+  // Kart figürleri (Chessnut) paylaşım tıklanmadan yüklensin - navigator.share
+  // kullanıcı etkileşimi penceresinde beklemesin
+  useEffect(() => preloadPieceArt(), [])
   const [outcome, setOutcome] = useState<ShareOutcome | 'png' | null>(null)
   const [open, setOpen] = useState(false)
   const system = canSystemShare()

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { hasBannedWord, normalizeName } from '../../shared/names'
-import { acceptedWeeks, cleanName, cleanSubmit, isoWeekUtc, previousWeek, shortOf, weekStartUtc } from './lb'
+import { acceptedWeeks, cleanName, cleanSubmit, isoWeekUtc, playedAtOf, previousWeek, shortOf, weekStartUtc } from './lb'
 
 // 2026-08-18 Salı 02:00 UTC → ISO hafta 34
 const NOW = Date.UTC(2026, 7, 18, 2, 0, 0)
@@ -227,5 +227,17 @@ describe('paylaşım sayfası (/s/)', () => {
     const en = buildSharePage(new URL('https://chessrun.app/s/?g=zzz&l=xx&p=5'))
     expect(en.title).toBe('ChessRun · Hunt')
     expect(en.target).toBe('https://chessrun.app/?g=classic')
+  })
+})
+
+describe('playedAtOf - günlük çarpanın zaman eşiği', () => {
+  const now = Date.parse('2026-08-19T12:00:00Z')
+  it('koşunun kendi zamanı: geç gelen (kuyruk) koşu oynandığı ana göre değerlendirilir', () => {
+    expect(playedAtOf('2026-08-19T08:00:00Z', now)).toBe(Date.parse('2026-08-19T08:00:00Z'))
+  })
+  it('ileri tarihli koşu sunucu saatine kırpılır; bozuk tarih = şimdi', () => {
+    expect(playedAtOf('2026-08-20T00:00:00Z', now)).toBe(now)
+    expect(playedAtOf('saçma', now)).toBe(now)
+    expect(playedAtOf('', now)).toBe(now)
   })
 })
