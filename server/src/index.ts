@@ -281,10 +281,14 @@ export default {
           if (request.method !== 'GET') return new Response('method', { status: 405 })
           return await profileGet(env.DB, request.headers.get('x-chessrun-token'))
         }
-        if (request.method !== 'GET') return new Response('method', { status: 405 })
         // Açık sağlık ucu (Access yok): dış izleyici (UptimeRobot vb.) buraya
         // vurur. Gece toplaması 2 günden eskiyse 503 → alarm. Veri sızdırmaz.
-        if (path === '/lb/health') return await publicHealth(env, now)
+        // HEAD de kabul: UptimeRobot varsayılanı HEAD; 405 "down" sayılıyordu.
+        if (path === '/lb/health' && (request.method === 'GET' || request.method === 'HEAD')) {
+          const res = await publicHealth(env, now)
+          return request.method === 'HEAD' ? new Response(null, { status: res.status, headers: res.headers }) : res
+        }
+        if (request.method !== 'GET') return new Response('method', { status: 405 })
         if (path === '/lb/daily') return await daily(env.DB, url, request.headers.get('x-chessrun-token'), env.DAILY_SECRET, now)
         if (path === '/lb/weekly') return await weekly(env.DB, url, request.headers.get('x-chessrun-token'), now)
         if (path === '/lb/pulse') return await pulse(env.DB, url, now)
