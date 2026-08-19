@@ -2491,6 +2491,35 @@ button.pop-chip {
   border-bottom-color: var(--arc-gold);
 }
 
+/* Hakkında › lisans metni (Apache 2.0) - açılır, kaydırılır */
+.page-license {
+  margin-top: 6px;
+}
+
+.page-license-btn {
+  padding: 0;
+  background: none;
+  border-top: 0;
+  border-left: 0;
+  border-right: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+
+.page-license-text {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  max-height: 260px;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  font: 9.5px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0;
+  white-space: pre-wrap;
+  color: var(--arc-dim);
+}
+
 /* ---------------------------------------------------------------- *
  * Nasıl oynanır - kılavuz: bölüm numarası, ders sahnesi, puan tablosu
  * ---------------------------------------------------------------- */

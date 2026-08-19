@@ -4,6 +4,7 @@ import type { DemoId } from '../ui/demos'
 import { MODES } from '../ui/modes'
 import { GLYPH } from '../ui/pieces'
 import { LessonStage } from './LessonStage'
+import { LicenseText } from './LicenseText'
 import {
   CHECK_SCORE,
   KING_BONUS_LIVES,
@@ -140,6 +141,11 @@ export function Page({ page, onClose }: PageProps) {
                     <a className="page-mail" href={`mailto:${CONTACT_MAIL}`}>
                       {CONTACT_MAIL}
                     </a>
+                  </li>
+                ) : key === 'about.credit.3' ? (
+                  <li key={key}>
+                    {t(key)}
+                    <LicenseText />
                   </li>
                 ) : (
                   <li key={key}>{t(key)}</li>
