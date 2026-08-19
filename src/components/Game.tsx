@@ -33,13 +33,15 @@ import {
   currentStreak,
   dailyScoreOf,
   dayKey,
-  rankOf,
+  isoWeekKey,
   readRuns,
   readStanding,
   recordRun,
-  topRuns,
+  runsOfMode,
+  runsOfWeek,
 } from '../ui/scores'
 import { applyDailyBonus, dailyBonus } from '@shared/leaderboard'
+import { weekTotal } from '../ui/ranking'
 import { useRanking } from '../ui/useRanking'
 import { setCols, setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
 import type { ShareInput } from '../ui/share'
@@ -115,9 +117,9 @@ interface RunResult {
   isWeekBest: boolean
   allTime: number
   weekBest: number
-  /** Arcade tablosu ve sıra - Şah Kaçışı kapanışında gösteriliyor */
-  table: RunRecord[]
-  rank: number
+  /** Kapanış lig özeti: bu hafta bu modda birikmiş toplam (bu koşu dahil) ve koşu sayısı - yerel defterden */
+  weekTotal: number
+  weekRuns: number
   /** Bu koşuda kazanılan rozet kademeleri - kapanış özeti */
   badges: BadgeAward[]
 }
@@ -149,8 +151,15 @@ export function Game({
   // Sağ sütun: koridor seçimi onay bekliyor (pencereyle aynı akış)
   const [pendingCols, setPendingCols] = useState<number | null>(null)
   const [identity, setIdentity] = useState(() => getIdentity())
-  // Sıralama özeti - koşu bitince (result değişince) tazeleniyor
-  const { view: ranking, status: rankStatus } = useRanking(config.mode, result)
+  // Sıralama özeti - koşu bitince (result değişince) tazeleniyor; sunucu bu
+  // koşuyu işlesin diye 2 sn sonra bir kez daha (kapanıştaki sıra taze olsun)
+  const [rankTick, setRankTick] = useState(0)
+  useEffect(() => {
+    if (!result) return
+    const timer = setTimeout(() => setRankTick((n) => n + 1), 2000)
+    return () => clearTimeout(timer)
+  }, [result])
+  const { view: ranking, status: rankStatus } = useRanking(config.mode, `${result?.run.at ?? ''}-${rankTick}`)
 
   /* Reklam yalnızca gerçek bir slot tanımlıysa çiziliyor - tanımsızken
      yer tutucu kutu göstermiyoruz. */
@@ -375,8 +384,8 @@ export function Game({
       isWeekBest: !isBest && run.score > 0 && run.score > (before.thisWeek?.score ?? 0),
       allTime: after.allTime?.score ?? run.score,
       weekBest: after.thisWeek?.score ?? run.score,
-      table: topRuns(runs, state.mode),
-      rank: rankOf(runs, run),
+      weekTotal: weekTotal(runsOfWeek(runsOfMode(runs, state.mode), isoWeekKey(new Date()))),
+      weekRuns: runsOfWeek(runsOfMode(runs, state.mode), isoWeekKey(new Date())).length,
       badges: awards.current,
     })
 
@@ -684,13 +693,19 @@ export function Game({
 
         {arcadeOutro && (
           <ArcadeOutro
-            run={result?.run ?? null}
             score={applyDailyBonus(game.score, dailyToday.current)}
             bonus={bonus > 1 ? bonus : undefined}
             distance={game.distance}
             mated={game.events.some((event) => event.kind === 'checkmated')}
-            table={result?.table ?? []}
-            rank={result?.rank ?? null}
+            weekly={{
+              earned: result?.run.score ?? applyDailyBonus(game.score, dailyToday.current),
+              // Yerel toplam bu koşuyu kesin içerir; sunucu daha büyük biliyorsa (başka cihaz) o
+              total: Math.max(result?.weekTotal ?? 0, rankStatus === 'live' ? ranking.score : 0),
+              runs: result?.weekRuns ?? 0,
+              rank: rankStatus === 'live' ? ranking.rank : null,
+              players: rankStatus === 'live' ? ranking.players : null,
+              live: rankStatus === 'live',
+            }}
             isRecord={result?.isBest ?? false}
             isWeekRecord={result?.isWeekBest ?? false}
             chain={game.mode === 'classic' ? game.chain : undefined}

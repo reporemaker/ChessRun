@@ -5,7 +5,6 @@ import type { PieceType } from '../engine/types'
 import { type BadgeAward, badgeOf } from '../ui/badges'
 import { GLYPH } from '../ui/pieces'
 import { BadgeGlyph } from './BadgeGlyph'
-import type { RunRecord } from '../ui/scores'
 import type { ShareInput } from '../ui/share'
 import { SharePanel } from './SharePanel'
 
@@ -31,15 +30,29 @@ const TITLE_MS = 1500
 /** Puanın sayaç sayaç tırmanması - arcade sayacı gibi kesikli */
 const COUNT_STEPS = 26
 
+/**
+ * Kapanıştaki lig özeti (19 Ağustos kararı): başka oyuncu listelenmez;
+ * bu koşunun puanı, bu haftaki birikmiş toplam ve sıra. `rank` sunucudan
+ * (yoksa null → «—»); `total` yerel defterden (bu koşu dahil, sunucu
+ * gecikse de doğru), sunucu daha büyük biliyorsa o.
+ */
+export interface WeeklySummary {
+  earned: number
+  total: number
+  runs: number
+  rank: number | null
+  players: number | null
+  /** Sunucu görünümü mü (sıra gerçek) - değilse sıra için bekleniyor/yok notu */
+  live: boolean
+}
+
 interface ArcadeOutroProps {
-  run: RunRecord | null
   score: number
   /** Günlük çarpan uygulandıysa (>1): kapanışta gösterilir */
   bonus?: number
   distance: number
   mated: boolean
-  table: RunRecord[]
-  rank: number | null
+  weekly: WeeklySummary
   isRecord: boolean
   /** Haftalık rekor - tüm zamanlar rekoru değilse gösteriliyor */
   isWeekRecord?: boolean
@@ -55,13 +68,11 @@ interface ArcadeOutroProps {
 }
 
 export function ArcadeOutro({
-  run,
   score,
   bonus,
   distance,
   mated,
-  table,
-  rank,
+  weekly,
   isRecord,
   isWeekRecord,
   chain,
@@ -158,28 +169,30 @@ export function ArcadeOutro({
 
       {phase === 'table' && (
         <div className="outro-table">
+          {/* Lig özeti: listesiz - bu koşu · haftalık toplam · sıran */}
           <div className="outro-table-head">
-            <span>{t('outro.best')}</span>
-            {rank != null && <span className="outro-rank">{t('outro.rank', { n: rank })}</span>}
+            <span>{t('outro.league')}</span>
+            <span className="outro-rank">{name}</span>
           </div>
-
-          <ol className="score-rows">
-            {table.map((entry, index) => {
-              const isCurrent = run != null && entry.at === run.at
-              return (
-                <li
-                  key={entry.at}
-                  className={isCurrent ? 'current' : ''}
-                  style={{ animationDelay: `${index * 70}ms` }}
-                >
-                  <span className="rank">{index + 1}</span>
-                  <span className="who">{name}</span>
-                  <span className="pts">{entry.score}</span>
-                  <span className="rows">{t('outro.rows', { n: entry.distance })}</span>
-                </li>
-              )
-            })}
-          </ol>
+          <div className="outro-week" role="group" aria-label={t('outro.league')}>
+            <div className="ow-cell" style={{ animationDelay: '0ms' }}>
+              <span className="ow-v">+{weekly.earned}</span>
+              <span className="ow-l">{t('outro.earned')}</span>
+            </div>
+            <div className="ow-cell" style={{ animationDelay: '90ms' }}>
+              <span className="ow-v">{weekly.total}</span>
+              <span className="ow-l">{t('outro.weekTotal')}</span>
+            </div>
+            <div className="ow-cell" style={{ animationDelay: '180ms' }}>
+              <span className="ow-v">{weekly.rank != null ? `#${weekly.rank}` : '—'}</span>
+              <span className="ow-l">{t('outro.weekRank')}</span>
+            </div>
+          </div>
+          <p className="outro-week-note">
+            {t('outro.weekNote', { n: weekly.runs })}
+            {weekly.live && weekly.players != null ? ` · ${t('outro.players', { n: weekly.players })}` : ''}
+            {!weekly.live ? ` · ${t('outro.rankPending')}` : ''}
+          </p>
 
           <div className="outro-actions">
             {!daily && (

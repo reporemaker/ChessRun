@@ -275,6 +275,51 @@
   color: var(--accent);
 }
 
+/* Kapanış lig özeti: üç hücre - bu koşu · haftalık toplam · sıran (liste yok) */
+.outro-week {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.ow-cell {
+  display: grid;
+  gap: 4px;
+  padding: 10px 8px;
+  border-radius: 7px;
+  background: var(--accent-soft);
+  text-align: center;
+  animation: row-drop 260ms steps(3, end) both;
+}
+
+.ow-v {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.ow-cell:nth-child(2) .ow-v {
+  color: var(--accent);
+}
+
+.ow-l {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+}
+
+.outro-week-note {
+  margin: -6px 0 0;
+  font-size: 10.5px;
+  letter-spacing: 0.03em;
+  line-height: 1.45;
+  text-align: center;
+  color: var(--text-dim);
+}
+
 .score-rows {
   margin: 0;
   padding: 0;
