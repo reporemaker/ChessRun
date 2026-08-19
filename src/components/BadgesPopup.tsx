@@ -10,10 +10,13 @@ import {
   readSelectedBadge,
   selectBadge,
 } from '../ui/badges'
+import { getIdentity } from '../ui/identity'
 import { readLifetime } from '../ui/lifetime'
 import { leaderboardEnabled } from '../ui/leaderboard'
+import { syncEnabled } from '../ui/sync'
 import { useT } from '../ui/text'
 import { BadgeGlyph } from './BadgeGlyph'
+import { Recovery } from './Recovery'
 
 interface Props {
   onClose: () => void
@@ -42,6 +45,10 @@ const SECTIONS: Array<{ id: BadgeSection; key: 'badges.pieces' | 'badges.skill' 
  * Değerler `chessrun:lifetime`'dan (kümülatif toplamlar ve tek-koşu en
  * iyiler); oyun sürerken pencere açılırsa mevcut koşunun sayaçları henüz
  * eklenmemiştir - koşu bitince eklenir, bilinçli sadeleştirme.
+ *
+ * En altta KURTARMA KODU (`Recovery`): rozetlerin/adın/skorların bu cihaza
+ * bağlı olduğu ve kodla nasıl geri geleceği burada anlatılıyor - ayarlar
+ * penceresinden buraya taşındı. Sunucu yoksa bölüm çizilmez.
  */
 export function BadgesPopup({ onClose, onSelect }: Props) {
   const t = useT()
@@ -150,6 +157,13 @@ export function BadgesPopup({ onClose, onSelect }: Props) {
               </section>
             )
           })}
+
+          {syncEnabled && (
+            <section className="bdg-sec bdg-rec">
+              <h3 className="bdg-h">{t('recovery.title')}</h3>
+              <Recovery identity={getIdentity()} />
+            </section>
+          )}
         </div>
       </div>
     </div>

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { COL_CHOICES } from '../engine/config'
-import { FeedbackLinks } from './FeedbackLinks'
+import { FeedbackLink } from './FeedbackLinks'
 import { getIdentity, shortToken } from '../ui/identity'
 import { LANGS, hasFullProse } from '../ui/i18n'
+import { platformOf, promptInstall, useInstallState } from '../ui/install'
 import { GLYPH } from '../ui/pieces'
 import { useRanking } from '../ui/useRanking'
 import { setCols, setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
@@ -10,7 +11,6 @@ import { useT } from '../ui/text'
 import { APP_VERSION } from '../ui/version'
 import { BadgeChip } from './BadgeChip'
 import { NameChip } from './NameChip'
-import { Persistence } from './Persistence'
 
 /**
  * Oyun sürerken pencere açıldıysa App bunu geçiriyor: koridor değişimi
@@ -68,6 +68,9 @@ export function Settings({
   const { view: ranking, status: rankStatus } = useRanking(undefined, rankVersion)
 
   const [identity, setIdentity] = useState(() => getIdentity())
+  // Ana ekrana ekle: Chromium'da istem, diğerlerinde düğmeye basınca ipucu
+  const install = useInstallState()
+  const [installTip, setInstallTip] = useState(false)
   // Sıfırlama / kurtarma sonrası ad değişmiş olabilir - fiş sürümüyle yeniden oku
   useEffect(() => {
     setIdentity(getIdentity())
@@ -283,16 +286,15 @@ export function Settings({
             {rankStatus === 'offline' && <span className="pend">{t('rank.offline')}</span>}
           </div>
 
-          {/* H · kalıcılık - kurtarma kodu + ana ekrana ekle (Faz 10) */}
-          <div className="pop-dv">{t('settings.persist')}</div>
-          <Persistence identity={identity} />
-
           {/* ayraç */}
           <div className="pop-dv">{t('settings.info')}</div>
 
           {/* F · üstte tek sıra Nasıl oynanır (birincil), altında yan yana
-              Hakkında · Öneri (mailto - form değil, bkz. ui/feedback.ts).
-              Adres Hakkında sayfasında yazılı. */}
+              Hakkında · Öneri (mailto - form değil, bkz. ui/feedback.ts) ·
+              Yükle / Ana ekrana ekle (uygulama olarak açıksa yok). Altında,
+              istenirse, elle ekleme ipucu. Kurtarma kodu rozetler
+              penceresinde. Adres Hakkında sayfasında yazılı; webmail yedeği
+              (metni kopyala) yalnızca oyun sağ sütununda. */}
           <div className="pop-links main">
             <button type="button" onClick={() => onOpenPage('help')}>
               {t('settings.howTo')}
@@ -302,8 +304,34 @@ export function Settings({
             <button type="button" onClick={() => onOpenPage('about')}>
               {t('settings.about')}
             </button>
-            <FeedbackLinks lang={settings.lang} />
+            <FeedbackLink lang={settings.lang} />
+            {install === 'prompt' && (
+              <button type="button" onClick={() => void promptInstall()}>
+                {t('install.button')}
+              </button>
+            )}
+            {install === 'hint' && (
+              <button
+                type="button"
+                className={installTip ? 'on' : ''}
+                aria-expanded={installTip}
+                onClick={() => setInstallTip((v) => !v)}
+              >
+                {t('install.title')}
+              </button>
+            )}
           </div>
+          {install === 'hint' && installTip && (
+            <p className="pop-codename pop-tip">
+              {t(
+                platformOf() === 'ios'
+                  ? 'install.hint.ios'
+                  : platformOf() === 'android'
+                    ? 'install.hint.android'
+                    : 'install.hint.desktop',
+              )}
+            </p>
+          )}
         </div>
       </div>
     </div>

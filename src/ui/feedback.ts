@@ -5,7 +5,7 @@ import { readRuns } from './scores'
 import { APP_VERSION, CONTACT_MAIL } from './version'
 
 /**
- * Öneri / hata bildirimi - `mailto:` bağlantısı (bkz. mail.html taslağı).
+ * Öneri gönder - `mailto:` bağlantısı.
  *
  * Form yok, sunucu yok: form demek Worker'a uç + e-posta sağlayıcısı + spam
  * koruması + beş dilde durum mesajları demekti; bir öneri düğmesi için
@@ -15,15 +15,13 @@ import { APP_VERSION, CONTACT_MAIL } from './version'
  * Mail oyuncunun SEÇTİĞİ arayüz dilinde: selam + tek köşeli parantezli yer
  * tutucu (oyuncu siler, yazar) + imza; çizginin altında silinebilir otomatik
  * bilgi bloğu (sürüm · dil · cihaz · tarayıcı/OS · ekran · ana ekrandan mı ·
- * açık oyun · son koşu). Kişisel veri yok. İki tür: öneri / hata (konu ve
- * yer tutucu farklı). Emoji ve uzun tire yok.
+ * açık oyun · son koşu). Kişisel veri yok. Tek tür: öneri - hata da aynı
+ * adrese gider, ayrı bir "hata bildir" maili yok. Emoji ve uzun tire yok.
  *
  * Bilinen zayıflık: masaüstünde webmail kullananlarda mailto hiçbir şey
  * açmayabilir; bu yüzden `feedbackText` panoya kopyalanabilir yedek üretir
  * ve adres metin olarak da görünür.
  */
-export type FeedbackKind = 'idea' | 'bug'
-
 function uaShort(): string {
   const ua = typeof navigator === 'undefined' ? '' : navigator.userAgent
   const os = /iPhone|iPad/.test(ua)
@@ -79,10 +77,10 @@ export interface FeedbackMail {
   href: string
 }
 
-export function feedbackMail(lang: Lang, kind: FeedbackKind = 'idea', mode?: GameMode): FeedbackMail {
+export function feedbackMail(lang: Lang, mode?: GameMode): FeedbackMail {
   const t = (key: Parameters<typeof translate>[1], vars?: Record<string, string | number>) => translate(lang, key, vars)
   const modeName = mode ? t(`mode.${mode}.name`) : null
-  const subject = `${kind === 'bug' ? t('feedback.subject.bug') : t('feedback.subject.idea')}${modeName ? ` · ${modeName}` : ''}`
+  const subject = `${t('feedback.subject.idea')}${modeName ? ` · ${modeName}` : ''}`
 
   const screen =
     typeof window === 'undefined' ? '' : ` · ${t('feedback.screen')} ${window.innerWidth}×${window.innerHeight}`
@@ -98,7 +96,7 @@ export function feedbackMail(lang: Lang, kind: FeedbackKind = 'idea', mode?: Gam
   const body = [
     t('feedback.hi'),
     '',
-    kind === 'bug' ? t('feedback.ph.bug') : t('feedback.ph.idea'),
+    t('feedback.ph.idea'),
     '',
     t('feedback.bye'),
     '',
@@ -117,13 +115,13 @@ export function feedbackMail(lang: Lang, kind: FeedbackKind = 'idea', mode?: Gam
   }
 }
 
-/** Geriye dönük: mevcut çağrılar (Settings/Game/DailyGame) - öneri türü */
-export function feedbackHref(lang: Lang, mode?: GameMode, kind: FeedbackKind = 'idea'): string {
-  return feedbackMail(lang, kind, mode).href
+/** Settings/Game/DailyGame çağrıları: yalnızca href */
+export function feedbackHref(lang: Lang, mode?: GameMode): string {
+  return feedbackMail(lang, mode).href
 }
 
 /** Webmail yedeği: adres + konu + gövde, panoya kopyalanacak metin */
-export function feedbackText(lang: Lang, kind: FeedbackKind = 'idea', mode?: GameMode): string {
-  const mail = feedbackMail(lang, kind, mode)
+export function feedbackText(lang: Lang, mode?: GameMode): string {
+  const mail = feedbackMail(lang, mode)
   return `${CONTACT_MAIL}\n${mail.subject}\n\n${mail.body}`
 }

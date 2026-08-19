@@ -1,28 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { Identity } from '../ui/identity'
-import { canPromptInstall, isStandalone, onInstallChange, platformOf, promptInstall } from '../ui/install'
 import { readRuns } from '../ui/scores'
-import { type RestoreResult, createRecoveryCode, readRecoveryCode, restoreFromCode, syncEnabled } from '../ui/sync'
+import { type RestoreResult, createRecoveryCode, readRecoveryCode, restoreFromCode } from '../ui/sync'
 import { useT } from '../ui/text'
 
-/**
- * Ayarlar → KALICILIK: kurtarma kodu (oluştur / göster / kopyala / geri yükle)
- * ve "ana ekrana ekle" ipucu. Sunucu tanımsızsa kod bölümü hiç çizilmez -
- * kod sunucusuz anlamsız; ana ekran ipucu her zaman.
- */
 interface Props {
   identity: Identity
-}
-
-export function Persistence({ identity }: Props) {
-  const t = useT()
-  return (
-    <>
-      {syncEnabled && <Recovery identity={identity} />}
-      <Install />
-      {!syncEnabled && !isStandalone() && <span className="pop-codename">{t('settings.serverPending')}</span>}
-    </>
-  )
 }
 
 /** Kod maskesi: XXXX-XXXX-XXXX → ••••-••••-XXXX (son blok kalır - hangi kod olduğu belli olsun) */
@@ -30,7 +13,13 @@ function mask(code: string): string {
   return code.replace(/[A-Z0-9](?=.*-)/g, '•')
 }
 
-function Recovery({ identity }: Props) {
+/**
+ * Kurtarma kodu: oluştur / göster / kopyala / yenile + koddan geri yükle.
+ * Rozetler penceresinin en altında; başlığı oradaki bölüm başlığı taşır,
+ * burada yalnızca açıklama + kod + form var. Sunucu tanımsızsa çağıran hiç
+ * çizmez (`syncEnabled`) - kod sunucusuz anlamsız.
+ */
+export function Recovery({ identity }: Props) {
   const t = useT()
   const [code, setCode] = useState<string | null>(() => readRecoveryCode())
   const [shown, setShown] = useState(false)
@@ -85,7 +74,6 @@ function Recovery({ identity }: Props) {
 
   return (
     <div className="pop-field pop-rec">
-      <span className="pop-lbl">{t('recovery.title')}</span>
       <p className="pop-codename">{t('recovery.hint')}</p>
 
       {code ? (
@@ -175,36 +163,6 @@ function Recovery({ identity }: Props) {
               {t('recovery.confirm.ok')}
             </button>
           </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function Install() {
-  const t = useT()
-  const [, bump] = useState(0)
-  useEffect(() => onInstallChange(() => bump((v) => v + 1)), [])
-
-  if (isStandalone()) {
-    return (
-      <div className="pop-field">
-        <span className="pop-lbl">{t('install.title')}</span>
-        <p className="pop-codename">✓ {t('install.installed')}</p>
-      </div>
-    )
-  }
-  const platform = platformOf()
-  const hintKey = platform === 'ios' ? 'install.hint.ios' : platform === 'android' ? 'install.hint.android' : 'install.hint.desktop'
-  return (
-    <div className="pop-field">
-      <span className="pop-lbl">{t('install.title')}</span>
-      <p className="pop-codename">{t(hintKey)}</p>
-      {canPromptInstall() && (
-        <div className="pop-links main">
-          <button type="button" onClick={() => void promptInstall()}>
-            {t('install.button')}
-          </button>
         </div>
       )}
     </div>

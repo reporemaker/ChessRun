@@ -1,3 +1,5 @@
+import { useSyncExternalStore } from 'react'
+
 /**
  * "Ana ekrana ekle" - platform ipucu ve (Chromium'da) yükleme istemi.
  *
@@ -5,6 +7,10 @@
  * yakalanmazsa kaybolur. Bu yüzden dinleyici modül yüklenir yüklenmez
  * kuruluyor - Ayarlar penceresi çok sonra açılsa da düğme çalışır.
  * iOS/Safari'de böyle bir olay yok: orada yalnızca metin ipucu.
+ *
+ * Ayarlar penceresinde tek düğme (`useInstallState`): istem hazırsa YÜKLE →
+ * tarayıcı kutusu; değilse ANA EKRANA EKLE → düğmenin altında platform
+ * ipucu açılır; uygulama olarak açıksa düğme yok.
  */
 
 interface BeforeInstallPromptEvent extends Event {
@@ -71,4 +77,17 @@ export async function promptInstall(): Promise<boolean> {
 export function onInstallChange(fn: () => void): () => void {
   listeners.add(fn)
   return () => listeners.delete(fn)
+}
+
+export type InstallState = 'installed' | 'prompt' | 'hint'
+
+/**
+ * Düğmenin durumu; `beforeinstallprompt` gelince / kullanılınca yeniden
+ * çizilir. `installed` = uygulama olarak açık, `prompt` = Chromium istemi
+ * hazır, `hint` = yalnızca elle ekleme ipucu gösterilebilir.
+ */
+export function useInstallState(): InstallState {
+  const ready = useSyncExternalStore(onInstallChange, canPromptInstall, () => false)
+  if (isStandalone()) return 'installed'
+  return ready ? 'prompt' : 'hint'
 }

@@ -1504,6 +1504,17 @@
   border-color: rgba(255, 255, 255, 0.3);
 }
 
+/* Ana ekrana ekle - ipucu açıkken düğme altın, ipucu altta tek paragraf */
+.pop-links button.on {
+  border-color: rgba(255, 210, 63, 0.6);
+  color: var(--arc-gold);
+}
+
+.pop-tip {
+  margin: 4px 0 0;
+  line-height: 1.5;
+}
+
 /* G · künye - rozetler */
 .pop-chips {
   display: flex;
