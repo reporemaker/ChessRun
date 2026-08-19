@@ -33,6 +33,7 @@ import { FeedbackLinks } from './FeedbackLinks'
 import { type Translate, useT } from '../ui/text'
 import { type SoundName, playSound, unlockSound } from '../ui/sound'
 import { APP_VERSION } from '../ui/version'
+import { type DailyResume, clearResume, saveResume } from '../ui/resume'
 import { DailyOutro } from './DailyOutro'
 import { ExitButton } from './ExitButton'
 import { BadgeChip } from './BadgeChip'
@@ -62,6 +63,8 @@ interface DailyGameProps {
   onOpenRanking: () => void
   onOpenBadges: () => void
   badgeVersion: number
+  /** Devam fişi: hak zaten yanmış, koşu kaldığı yerden (hazır/geri sayım atlanır) */
+  resume?: DailyResume
   ref?: Ref<GameHandle>
 }
 
@@ -127,6 +130,7 @@ export function DailyGame({
   onOpenRanking,
   onOpenBadges,
   badgeVersion,
+  resume,
   ref,
 }: DailyGameProps) {
   const seed = config.seed ?? 0
@@ -134,11 +138,12 @@ export function DailyGame({
   const t = useT()
   const settings = useSettings()
 
-  const [game, setGame] = useState<DailyState>(() => createDaily({ seed }))
+  const [game, setGame] = useState<DailyState>(() => resume?.game ?? createDaily({ seed }))
   const [runId, setRunId] = useState(0)
   /* Açılış: önce "Hazır mısın?" penceresi (kurallar), sonra 3-2-1 geri sayım,
-     sonra tahta akmaya başlar. Tahta arkada duruyor (kaymıyor, hamle yok). */
-  const [phase, setPhase] = useState<'ready' | 'countdown' | 'playing'>('ready')
+     sonra tahta akmaya başlar. Tahta arkada duruyor (kaymıyor, hamle yok).
+     Devam fişiyle gelindiyse hak zaten yanmış: doğrudan oyun. */
+  const [phase, setPhase] = useState<'ready' | 'countdown' | 'playing'>(resume ? 'playing' : 'ready')
   const [count, setCount] = useState(3)
   const countTimer = useRef<number | null>(null)
   // "Hazırım": hak burada yanar (sunucu start). Sunucu yoksa yerel; ulaşılamıyorsa
@@ -238,10 +243,22 @@ export function DailyGame({
   latest.current = game
   const slideRef = useRef<HTMLDivElement | null>(null)
   const progress = useRef(0)
-  const rps = useRef(1000 / DAILY_START_MS)
+  // Devam: hız anlık hedefinden başlar (yumuşatma kısa), süre kaldığı yerden
+  const rps = useRef(resume ? 1000 / dailyIntervalMs(resume.game.captures) : 1000 / DAILY_START_MS)
   const lastTs = useRef<number | null>(null)
   const finished = useRef(false)
-  const runStart = useRef(performance.now())
+  const runStart = useRef(performance.now() - (resume?.elapsedMs ?? 0))
+
+  /* Devam fişi: her commit'te (satır kayması dahil) yaz; bitince / çıkınca sil.
+     Günlük, hak yandıktan sonra yenilemede kaybolmasın - kilit zaten sunucuda. */
+  useEffect(() => {
+    if (phase !== 'playing' || game.status !== 'playing' || finished.current) return
+    if (game.distance === 0 && game.score === 0) return
+    saveResume({
+      config,
+      data: { kind: 'daily', game, elapsedMs: performance.now() - runStart.current, day },
+    })
+  }, [game, phase, config, day])
 
 
   const moves = useMemo(() => (phase === 'playing' ? dailyMoves(game) : []), [game, phase])
@@ -313,6 +330,7 @@ export function DailyGame({
   }
 
   async function record(state: DailyState, endReason: 'fellOff' | 'lifeLost' | 'abandoned'): Promise<RunRecord> {
+    clearResume()
     const run = await recordRun({
       mode: 'daily',
       score: state.score,

@@ -14,6 +14,8 @@ import { getSettings, useSettings } from './ui/settings'
 import { DAILY_REPLAY_ALLOWED, dailyPlayed } from './ui/dailyLock'
 import { fetchDaily, leaderboardEnabled } from './ui/leaderboard'
 import { type PlayMode, type Route, parseRoute, pathOf, routeOfMode } from './ui/route'
+import { type ResumeTicket, clearResume, readResume, resumeMatches } from './ui/resume'
+import { ResumePrompt } from './components/ResumePrompt'
 import { unlockSound } from './ui/sound'
 import { trackSessionEnd, trackVisit } from './ui/stats'
 import { dailySeed, dayKey } from './ui/scores'
@@ -27,6 +29,11 @@ function devConfig(mode: string, seedParam: string | null): GameConfig {
   return mode === 'daily'
     ? { mode: 'daily', playerColor: 'w', cols: 8, seed, daily: day }
     : { mode: mode as GameConfig['mode'], playerColor: 'w', cols: 8 }
+}
+
+/** Game/DailyGame'in `key`'i: değişince bileşen baştan kurulur (yeni koşu) */
+function runKeyOf(config: GameConfig): string {
+  return `${config.mode}-${config.cols}-${config.seed ?? 'free'}-${config.daily ?? ''}`
 }
 
 /** /play/<mod> adresinden konfig: ayarlardaki koridor (Üçlü için en az kendi genişliği) */
@@ -61,13 +68,30 @@ export default function App() {
      günün mücadelesi (kilit/tohum sunucudan - aşağıdaki effect), / ana sayfa.
      Geliştirmede ?dev=game kısayolu öncelikli (ekran görüntüsü için). */
   const [route] = useState<Route>(initialRoute)
+  /* Devam fişi (ui/resume): ana sayfada ya da fişin oyununun adresinde
+     «devam et / vazgeç» sorulur; karar verilene dek oyun kurulmaz (yeni koşu
+     fişi ezerdi). Başka bir oyunun adresinde fiş sessizce atılır. */
+  const [offer, setOffer] = useState<ResumeTicket | null>(() => {
+    if (import.meta.env.DEV && window.location.search.includes('dev=')) return null
+    const ticket = readResume()
+    if (!ticket) return null
+    const r = route
+    if (r.kind === 'home') return ticket
+    if (r.kind === 'play' && resumeMatches(ticket, r.mode)) return ticket
+    if (r.kind === 'daily' && resumeMatches(ticket, 'daily', dayKey())) return ticket
+    clearResume()
+    return null
+  })
+  // Tüketilen fiş: yalnızca aynı runKey'li ilk kuruluma verilir (koridor
+  // değişimi / çıkış-giriş yeni runKey = yeni koşu, fiş uygulanmaz)
+  const [resume, setResume] = useState<{ key: string; data: ResumeTicket['data'] } | null>(null)
   const [config, setConfig] = useState<GameConfig | null>(() =>
     import.meta.env.DEV && window.location.search.includes('dev=game')
       ? devConfig(
           new URLSearchParams(window.location.search).get('mode') ?? 'classic',
           new URLSearchParams(window.location.search).get('seed'),
         )
-      : route.kind === 'play'
+      : route.kind === 'play' && !offer
         ? playConfig(route.mode)
         : null,
   )
@@ -117,8 +141,26 @@ export default function App() {
 
   function enterGame(next: GameConfig) {
     unlockSound()
+    setResume(null)
     setConfig(next)
     syncPath(next, 'push')
+  }
+
+  /** Fişten devam: oyun aynı konfigle, `resume` verisiyle kurulur */
+  function resumeFromTicket(ticket: ResumeTicket) {
+    setOffer(null)
+    unlockSound()
+    setResume({ key: runKeyOf(ticket.config), data: ticket.data })
+    setConfig(ticket.config)
+    syncPath(ticket.config, route.kind === 'home' ? 'push' : 'replace')
+  }
+
+  /** Vazgeç: fiş silinir; adres bir oyunsa o oyun sıfırdan, değilse ana sayfa */
+  function skipTicket() {
+    setOffer(null)
+    clearResume()
+    if (route.kind === 'play') setConfig(playConfig(route.mode))
+    else if (route.kind === 'daily') launchDailyFromRoute()
   }
 
   /**
@@ -161,7 +203,7 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (route.kind === 'daily' && !config) launchDailyFromRoute()
+    if (route.kind === 'daily' && !config && !offer) launchDailyFromRoute()
     // Yalnızca açılışta: rota ilk değerinden sonra değişmiyor
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -263,9 +305,8 @@ export default function App() {
     })()
   }
 
-  const runKey = config
-    ? `${config.mode}-${config.cols}-${config.seed ?? 'free'}-${config.daily ?? ''}`
-    : ''
+  const runKey = config ? runKeyOf(config) : ''
+  const resumeData = resume && resume.key === runKey ? resume.data : null
 
   return (
     <>
@@ -274,6 +315,7 @@ export default function App() {
           key={runKey}
           ref={gameRef}
           config={config}
+          resume={resumeData?.kind === 'daily' ? resumeData : undefined}
           onExit={exitGame}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPage={setPage}
@@ -286,6 +328,7 @@ export default function App() {
           key={runKey}
           ref={gameRef}
           config={config}
+          resume={resumeData?.kind === 'game' ? resumeData : undefined}
           onExit={exitGame}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPage={setPage}
@@ -348,6 +391,8 @@ export default function App() {
       )}
 
       {page && <Page page={page} onClose={() => setPage(null)} />}
+
+      {offer && <ResumePrompt ticket={offer} onResume={() => resumeFromTicket(offer)} onSkip={skipTicket} />}
     </>
   )
 }

@@ -14,10 +14,15 @@ export interface Rng {
   (): number
   /** Tohum; tohumsuz (sistem) üreteçte null */
   readonly seed: number | null
+  /**
+   * Üretecin anlık iç durumu (32 bit) - koşuyu kaldığı yerden sürdürmek için
+   * (`createRng(seed, state)` ile aynı akış devam eder). Sistem üretecinde null.
+   */
+  readonly state: number | null
 }
 
-export function createRng(seed: number): Rng {
-  let state = seed >>> 0
+export function createRng(seed: number, at?: number): Rng {
+  let state = (at ?? seed) >>> 0
 
   const next = (): number => {
     state = (state + 0x6d2b79f5) >>> 0
@@ -26,11 +31,12 @@ export function createRng(seed: number): Rng {
     return ((t ^ (t >>> 14)) >>> 0) / 4_294_967_296
   }
 
-  return Object.assign(next, { seed: seed >>> 0 })
+  Object.defineProperty(next, 'state', { get: () => state, enumerable: true })
+  return Object.assign(next, { seed: seed >>> 0 }) as Rng
 }
 
 /** Tohumsuz oyunlar için sistem üreteci */
-export const systemRng: Rng = Object.assign(() => Math.random(), { seed: null })
+export const systemRng: Rng = Object.assign(() => Math.random(), { seed: null, state: null })
 
 /** Metinden 32 bitlik tohum (FNV-1a) - "2026-08-16" gibi anahtarlar için */
 export function hashSeed(text: string): number {

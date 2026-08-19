@@ -58,6 +58,7 @@ import {
   storeSpeed,
   wait,
 } from '../ui/timing'
+import { type GameResume, clearResume, reviveGame, saveResume, serializeGame } from '../ui/resume'
 import { ArcadeOutro } from './ArcadeOutro'
 import { ExitButton } from './ExitButton'
 import { BadgeChip } from './BadgeChip'
@@ -96,6 +97,8 @@ interface GameProps {
   badgeVersion: number
   /** Sağ sütundaki koridor seçimi onaylanınca: App koşuyu kapatıp yeni genişlikte kurar */
   onRestartWithCols: (cols: number) => void
+  /** Devam fişi (yenileme / sekme ölümü sonrası): koşu kaldığı yerden sürer */
+  resume?: GameResume
   ref?: Ref<GameHandle>
 }
 
@@ -130,9 +133,10 @@ export function Game({
   onOpenBadges,
   badgeVersion,
   onRestartWithCols,
+  resume,
   ref,
 }: GameProps) {
-  const [game, setGame] = useState<GameState>(() => createGame(config))
+  const [game, setGame] = useState<GameState>(() => (resume ? reviveGame(resume.game) : createGame(config)))
   const [phase, setPhase] = useState<Phase>('input')
   const [ghostRow, setGhostRow] = useState<Row | null>(null)
   const [flash, setFlash] = useState<Flash | null>(null)
@@ -181,20 +185,20 @@ export function Game({
      Motora saat konmuyor: tohum + hamle dizisi bayt bayt aynı tahtayı
      üretmeli, günlük meydan okuma ve ileride sunucu doğrulaması buna
      dayanıyor. */
-  const runStart = useRef(performance.now())
+  const runStart = useRef(performance.now() - (resume?.elapsedMs ?? 0))
   /* Günlük çarpan: koşu BAŞINDA sabitlenir (bugün günün mücadelesi
      oynandıysa onun puanı → 1 + puan/1000, üst sınır yok). Yalnızca mücadeleden
      sonraki koşular alır - koşu başlarken kayıt varsa zaten sonrasındayız.
      Sunucu aynı çarpanı kendi kaydından uygular; buradaki gösterim ve
      yerel defter içindir. Günlük modun kendisi çarpan almaz. */
-  const runDay = useRef(dayKey())
-  const dailyToday = useRef<number | null>(dailyScoreOf(readRuns(), runDay.current))
+  const runDay = useRef(resume?.runDay ?? dayKey())
+  const dailyToday = useRef<number | null>(resume ? resume.dailyToday : dailyScoreOf(readRuns(), runDay.current))
   const bonus = dailyBonus(dailyToday.current)
-  const tally = useRef(emptyTally())
+  const tally = useRef(resume?.tally ?? emptyTally())
   // tallyEvents hamleden ÖNCEKİ taş tipini istiyor. commit'in kapanışındaki
   // `game` bir tur zincirinde bayatlıyor (runTurn arada render olmadan
   // commit'i birkaç kez çağırıyor), bu yüzden tipi commit'in kendisi taşıyor.
-  const prevType = useRef<PieceType>(game.playerType)
+  const prevType = useRef<PieceType>(resume?.prevType ?? game.playerType)
   // Motor gameover'ı bir kez yayıyor (cloneState events'i sıfırlıyor) ama o
   // garanti üç dosya ötede yaşıyor - tek satırlık sigorta.
   const finished = useRef(false)
@@ -217,6 +221,26 @@ export function Game({
     const timer = setTimeout(() => setTip(null), TIP_MS)
     return () => clearTimeout(timer)
   }, [tip])
+
+  /* Devam fişi: tur zinciri durulunca (phase=input) ve kaybedilecek bir şey
+     varken yaz; bitince / çıkınca silinir (finishRun, abandon). Yenileme,
+     sekme ölümü, PWA'nın öldürülmesi → açılışta «devam et» (bkz. ui/resume). */
+  useEffect(() => {
+    if (phase !== 'input' || game.status !== 'playing' || finished.current) return
+    if (game.distance === 0 && game.score === 0) return
+    saveResume({
+      config,
+      data: {
+        kind: 'game',
+        game: serializeGame(game),
+        elapsedMs: performance.now() - runStart.current,
+        runDay: runDay.current,
+        dailyToday: dailyToday.current,
+        tally: tally.current,
+        prevType: prevType.current,
+      },
+    })
+  }, [game, phase, config])
 
   /** Bir ipucunu yalnızca ilk kez gösterir */
   function offerTip(id: TipId) {
@@ -286,6 +310,7 @@ export function Game({
    * ikisinin de kaydı ve sayacı aynı olmalı, yalnızca bitiş sebebi farklı.
    */
   async function recordAndReport(state: GameState, endReason: EndReason): Promise<RunRecord> {
+    clearResume()
     const durationMs = performance.now() - runStart.current
     const counts = tally.current
     const cols = colsOf(state.board)
