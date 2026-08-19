@@ -14,6 +14,8 @@ interface Props {
   mode?: GameMode
   /** Yalnızca DEV: sunucu gelmeden gerçek görünüm için örnek tablo */
   demo?: boolean
+  /** Değişince liste yeniden çekilir (ad/rozet sunucuya işlendi) */
+  refresh?: unknown
 }
 
 /**
@@ -28,13 +30,14 @@ interface Props {
  * sıra ve oyuncu sayısı bilinmiyor). Rozet glifi için ad yanında yer var -
  * rozet sistemi gelince dolacak.
  */
-export function RankingPopup({ onClose, mode: initialMode, demo = false }: Props) {
+export function RankingPopup({ onClose, mode: initialMode, demo = false, refresh }: Props) {
   const t = useT()
   const { lang } = useSettings()
   const closeRef = useRef<HTMLButtonElement>(null)
   const [mode, setMode] = useState<GameMode>(initialMode ?? 'classic')
 
-  const live = useRanking(mode)
+  // `refresh`: ad/rozet sunucuya işlenince (PROFILE_EVENT) liste yeniden çekilir
+  const live = useRanking(mode, refresh)
   const view: RankingView = useMemo(() => (demo ? demoRanking(mode) : live.view), [demo, mode, live.view])
   const status = live.status
 

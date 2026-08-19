@@ -53,6 +53,8 @@ const TIMEOUT_MS = 8000
 const PROFILE_TARGET_BYTES = 40_000
 /** Yerel ilerleme silinince arayüz tazelensin diye (App dinliyor) */
 export const RESET_EVENT = 'chessrun:reset'
+/** Ad/rozet/profil sunucuya işlendi - sıralama görünümleri yeniden çeksin */
+export const PROFILE_EVENT = 'chessrun:profile'
 
 /* ------------------------------------------------------------------ *
  * Kurtarma kodu
@@ -242,6 +244,7 @@ export function pushProfile(withData = true): Promise<ProfileResponse | null> {
       })
       if (!response.ok) return null
       const data = (await response.json()) as ProfileResponse
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event(PROFILE_EVENT))
       if (applyReset(data)) {
         // Sıfırlama şimdi öğrenildi: yerel silindi, damga alındı - boş
         // profili hemen yaz ki sunucudaki kilit açılsın ve durum netleşsin

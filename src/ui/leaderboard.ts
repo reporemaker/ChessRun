@@ -158,6 +158,9 @@ export async function fetchWeekly(mode: GameMode, week: string): Promise<WeeklyR
     const params = new URLSearchParams({ mode, week })
     const response = await fetch(`${ENDPOINT}/weekly?${params}`, {
       headers: { 'x-chessrun-token': getIdentity().token },
+      // Tarayıcı önbelleğini atla: koşu/ad/rozet değişince liste hemen taze
+      // gelsin (sunucu tarafında kısa izole önbelleği zaten var)
+      cache: 'no-cache',
     })
     if (!response.ok) return null
     return (await response.json()) as WeeklyResponse

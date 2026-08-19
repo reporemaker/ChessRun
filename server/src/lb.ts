@@ -399,11 +399,11 @@ export const RANK_SQL = `
  */
 /**
  * Tablonun herkese ortak kısmı (liste + oyuncu sayısı + geçen hafta) izole
- * içi 20 sn önbellekte: her açılış D1'e 3 sorgu + N satır okutmasın (D1 Free
+ * içi 10 sn önbellekte: her açılış D1'e 3 sorgu + N satır okutmasın (D1 Free
  * günde 5M satır okuma; kişisel `me` her istekte ayrıca hesaplanır).
  */
 const boardCache = new Map<string, { at: number; body: WeeklyResponse }>()
-const BOARD_TTL_MS = 20_000
+const BOARD_TTL_MS = 10_000
 
 async function boardOf(db: D1Database, week: string, mode: Mode, nowMs: number): Promise<WeeklyResponse> {
   const key = `${week}|${mode}`

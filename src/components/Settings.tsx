@@ -34,6 +34,8 @@ interface SettingsProps {
   onOpenBadges: () => void
   /** Seçili rozet değişince artar - fiş yeniden okusun */
   badgeVersion: number
+  /** Ad/rozet sunucuya işlenince artar - sıralama özeti yeniden çeksin */
+  rankVersion?: number
   game?: LiveGame
 }
 
@@ -55,6 +57,7 @@ export function Settings({
   onOpenRanking,
   onOpenBadges,
   badgeVersion,
+  rankVersion,
   game,
 }: SettingsProps) {
   const settings = useSettings()
@@ -62,7 +65,7 @@ export function Settings({
   const closeRef = useRef<HTMLButtonElement>(null)
 
   // Sıralama özeti - bu haftanın ligi, sunucu görünümü gelince yerini alıyor
-  const { view: ranking, status: rankStatus } = useRanking()
+  const { view: ranking, status: rankStatus } = useRanking(undefined, rankVersion)
 
   const [identity, setIdentity] = useState(() => getIdentity())
   // Sıfırlama / kurtarma sonrası ad değişmiş olabilir - fiş sürümüyle yeniden oku

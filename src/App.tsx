@@ -9,7 +9,7 @@ import { BadgesPopup } from './components/BadgesPopup'
 import { Settings } from './components/Settings'
 import { claimLeague } from './ui/badges'
 import { fetchAwards, flushSubmitQueue } from './ui/leaderboard'
-import { RESET_EVENT, pullProfile, pushProfile } from './ui/sync'
+import { PROFILE_EVENT, RESET_EVENT, pullProfile, pushProfile } from './ui/sync'
 import { useSettings } from './ui/settings'
 import { unlockSound } from './ui/sound'
 import { trackSessionEnd, trackVisit } from './ui/stats'
@@ -79,6 +79,8 @@ export default function App() {
   )
   // Seçili rozet değişince fişler yeniden okusun
   const [badgeVersion, setBadgeVersion] = useState(0)
+  // Ad/rozet sunucuya işlenince sıralama görünümleri yeniden çeksin
+  const [rankVersion, setRankVersion] = useState(0)
 
   // Ekran okuyucular ve tarayıcı tireleme kuralları için
   useEffect(() => {
@@ -105,8 +107,13 @@ export default function App() {
     })
     // Moderatör sıfırlaması bir gönderim cevabıyla da gelebilir - fişler tazelensin
     const onReset = () => setBadgeVersion((v) => v + 1)
+    const onProfile = () => setRankVersion((v) => v + 1)
     window.addEventListener(RESET_EVENT, onReset)
-    return () => window.removeEventListener(RESET_EVENT, onReset)
+    window.addEventListener(PROFILE_EVENT, onProfile)
+    return () => {
+      window.removeEventListener(RESET_EVENT, onReset)
+      window.removeEventListener(PROFILE_EVENT, onProfile)
+    }
   }, [])
 
   useEffect(() => {
@@ -184,6 +191,7 @@ export default function App() {
       {settingsOpen && (
         <Settings
           onClose={() => setSettingsOpen(false)}
+          rankVersion={rankVersion}
           onExitGame={
             config
               ? () => {
@@ -227,6 +235,7 @@ export default function App() {
           // Günlük ligi sunucuda henüz yok: pencere haftanın ligini açar
           mode={config?.mode === 'daily' ? undefined : config?.mode}
           demo={demoRank}
+          refresh={rankVersion}
           onClose={() => setRankOpen(false)}
         />
       )}
