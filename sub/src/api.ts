@@ -28,7 +28,8 @@ export class ApiError extends Error {
 async function get<T>(path: string, params: Record<string, string | number | undefined>): Promise<T> {
   const query = new URLSearchParams()
   for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== '') query.set(k, String(v))
-  const res = await fetch(`/api/${path}?${query}`, { headers: { accept: 'application/json' } })
+  // no-store: panel her zaman canlı okur; tarayıcı/ara önbellek karışmasın
+  const res = await fetch(`/api/${path}?${query}`, { headers: { accept: 'application/json' }, cache: 'no-store' })
   if (!res.ok) {
     // 403 → Access oturumu düşmüş; 5xx → Worker; ikisi de kullanıcıya söylenir
     throw new ApiError(res.status, res.status === 403 ? 'Oturum yok - Access girişi gerekiyor' : `Sunucu ${res.status}`)

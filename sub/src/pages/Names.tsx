@@ -157,7 +157,7 @@ export function Names() {
                   </td>
                   <td className="mono" title={row.recovery ? 'Kurtarma kodu var' : 'Kurtarma kodu yok'}>
                     {row.short}
-                    {row.recovery && <span className="muted"> ⚿</span>}
+                    {row.recovery && <span className="pill tiny" title="Kurtarma kodu oluşturmuş"> kod</span>}
                   </td>
                   <td className="muted" title={row.badge ?? ''}>{badgeText(row.badge, row.badgeTier)}</td>
                   <td className="num mono">{row.runs}</td>
@@ -217,7 +217,7 @@ export function Names() {
           <dd>Süreye göre otomatik silme YOK - "10 gün oynamadı" ile "verisi silindi, dönmeyecek" ayırt edilemez, dönen oyuncu kaldığı yerden devam eder. Filtre 1 yıldır koşusuz ve hiç birinciliksiz oyuncuları listeler; silme elle. Şişkinlik takvim verisinde çözülür: günlük nabız 35 gün, haftalık satırlar ~8 hafta (ilk üçler önce arşive).</dd>
           <dt>Reddedilen ad</dt>
           <dd>Oyuncu "Oyuncu a1b2…9f" görünüyorsa istemcinin yolladığı ad sunucu filtresine takılmıştır (yasaklı kök, rezerve ad, <code>#</code>, ya da moderatörün reddettiği ad). En son reddedilen ham ad adın yanında «…» içinde. Oyuncu tarafı da ayarlarda "sunucu bu adı kabul etmedi" görür.</dd>
-          <dt>⚿</dt>
+          <dt>kod</dt>
           <dd>Oyuncu kurtarma kodu oluşturmuş: tarayıcı verisi silinse de kodla aynı kimliğe döner. Panel kodu göremez (sunucuda yalnızca kör blob).</dd>
           <dt>Kısıtlar</dt>
           <dd>Ad değişikliği günde 3 · 24 karakter · <code>#</code> ve görünmez karakterler atılır · ChessRun / SmartKraft rezerve · yasaklı kökler istemcide ve sunucuda.</dd>

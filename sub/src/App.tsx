@@ -1,6 +1,7 @@
 import type { Period } from '@shared/events'
 import { rangeOf } from '@shared/period'
 import { useEffect, useState } from 'react'
+import { bumpRefresh, lastRefreshAt, startAutoRefresh, useRefreshTick } from './refresh'
 import { api } from './api'
 import { PERIOD_LABEL, fmtRange } from './format'
 import { type Route, isFuture, parseHash, shift, toHash, todayUtc } from './period'
@@ -41,6 +42,9 @@ export default function App() {
   }
 
   const health = useQuery('health', () => api.health())
+  useEffect(() => startAutoRefresh(), [])
+  useRefreshTick() // "güncellendi" saati yeniden çizilsin
+  const clock = new Date(lastRefreshAt()).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
   const stale =
     health.data?.lastRollupDay != null && shift('day', health.data.lastRollupDay, 1) < todayUtc()
 
@@ -63,6 +67,9 @@ export default function App() {
           <span className="muted">
             {health.error ? 'Worker yok' : stale ? 'Toplama gecikti' : health.data ? 'Canlı' : '…'}
           </span>
+          <button className="refresh" onClick={bumpRefresh} title="Bütün sayfayı yeniden çek (30 sn'de bir kendiliğinden yenilenir)">
+            ↻ <span className="muted">{clock}</span>
+          </button>
         </div>
       </header>
 

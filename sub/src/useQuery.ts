@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ApiError } from './api'
+import { useRefreshTick } from './refresh'
 
 /**
  * Küçük veri kancası - kütüphane yok.
@@ -7,7 +8,8 @@ import { ApiError } from './api'
  * Üç durum: yükleniyor / hata / veri. Eski veri yeni istek gelene kadar
  * ekranda kalıyor (dönem değişince sayfa boşalıp titremiyor). Yarış
  * durumu `alive` bayrağıyla kesiliyor: geç gelen eski cevap yenisini
- * ezmiyor.
+ * ezmiyor. Genel tazeleme sayacı (refresh.ts) artınca aynı anahtarla
+ * yeniden çekiliyor - eldeki veri ekranda kalır.
  */
 export interface Query<T> {
   data: T | null
@@ -17,6 +19,7 @@ export interface Query<T> {
 
 export function useQuery<T>(key: string, fetcher: () => Promise<T>): Query<T> {
   const [state, setState] = useState<Query<T>>({ data: null, error: null, loading: true })
+  const tick = useRefreshTick()
 
   useEffect(() => {
     let alive = true
@@ -36,7 +39,7 @@ export function useQuery<T>(key: string, fetcher: () => Promise<T>): Query<T> {
     }
     // key, isteği tanımlayan her şeyi taşıyor; fetcher kapanışı ona bağlı
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key])
+  }, [key, tick])
 
   return state
 }

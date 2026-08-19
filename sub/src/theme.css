@@ -173,3 +173,6 @@ button.primary { padding: 6px 14px; border-radius: 8px; font-size: 13px; font-we
 .badge-tag.tier-gold { color: var(--amber); }
 .controls .muted { align-self: center; font-size: 12px; }
 .names-table .acts-sep { display: inline-block; width: 1px; height: 14px; margin: 0 4px 0 8px; background: var(--border); vertical-align: middle; }
+.health .refresh { margin-left: 10px; padding: 3px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-2); color: var(--text); font: inherit; font-size: 12px; cursor: pointer; }
+.health .refresh:hover { border-color: var(--text-dim); }
+.pill.tiny { font-size: 9px; padding: 0 6px; margin-left: 4px; vertical-align: middle; }
