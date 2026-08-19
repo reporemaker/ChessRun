@@ -21,11 +21,12 @@ import { useQuery } from '../useQuery'
  * değişir.
  */
 
-type Filter = PlayerStatus | 'orphan' | 'suspect' | ''
+type Filter = PlayerStatus | 'orphan' | 'suspect' | 'visitor' | ''
 const STATUS_LABEL: Record<PlayerStatus, string> = { ok: 'açık', shadow: 'gizli', banned: 'yasaklı' }
 const FILTERS: Array<{ id: Filter; label: string; title?: string }> = [
   { id: '', label: 'Hepsi' },
   { id: 'ok', label: 'Açık' },
+  { id: 'visitor', label: 'Hiç oynamadı', title: 'Siteye girdi, kimliği kaydedildi (açılış selamı) ama henüz koşusu yok' },
   { id: 'shadow', label: 'Gizli' },
   { id: 'banned', label: 'Yasaklı' },
   { id: 'orphan', label: 'Öksüz', title: '1 yıldır koşu yok ve hiç birincilik yok - elle silinecek adaylar' },
@@ -87,9 +88,11 @@ export function Names() {
       <section className="card names">
         <header className="card-head">
           <h3>
-            Oyuncu adları{' '}
-            <span className="muted">
-              {list.data ? `- ${list.data.total} oyuncu${list.data.total > (rows?.length ?? 0) ? `, ilk ${rows?.length}` : ''}` : ''}
+            Adlar{' '}
+            <span className="muted" title="Kimlik = siteye girip açılış selamı veren her cihaz (koşu beklemez) · oynadı = en az bir koşusu olan">
+              {list.data
+                ? `- ${list.data.identities} kimlik · ${list.data.playersWithRuns} oynadı${status || debounced ? ` · filtrede ${list.data.total}` : ''}${list.data.total > (rows?.length ?? 0) ? `, ilk ${rows?.length}` : ''}`
+                : ''}
             </span>
           </h3>
           <div className="names-tools">
@@ -116,7 +119,7 @@ export function Names() {
           <div className="chart-empty">{list.error}</div>
         ) : rows && rows.length === 0 ? (
           <div className="chart-empty">
-            {status === 'orphan' ? 'Öksüz aday yok (1 yıldır koşusuz ve birinciliksiz oyuncu)' : status === 'suspect' ? 'Şüpheli oyuncu yok - puan/satır eşiğin altında, dakikalık sınıra dayanan yok' : debounced || status ? 'Eşleşen oyuncu yok' : 'Henüz oyuncu yok - ilk koşu gelince burada görünür'}
+            {status === 'visitor' ? 'Hepsi oynamış - koşusuz kimlik yok' : status === 'orphan' ? 'Öksüz aday yok (1 yıldır koşusuz ve birinciliksiz oyuncu)' : status === 'suspect' ? 'Şüpheli oyuncu yok - puan/satır eşiğin altında, dakikalık sınıra dayanan yok' : debounced || status ? 'Eşleşen oyuncu yok' : 'Henüz kimlik yok - siteye ilk giren açılış selamıyla burada görünür'}
           </div>
         ) : (
           <table className="names-table">
@@ -215,6 +218,8 @@ export function Names() {
         <dl>
           <dt>Sıfırla</dt>
           <dd>Ad "Oyuncu a1b2…9f" olur; eski ad kayda geçer ve oyuncu aynı adı yollamaya devam etse de kabul edilmez. Yeni bir ad seçerse geçer.</dd>
+          <dt>Kimlik / Hiç oynamadı</dt>
+          <dd>Siteye giren her cihaz açılışta sunucuya bir kez «merhaba» der (günde bir): adı ve rozetiyle 0 koşulu satır açılır. Başlıktaki «N kimlik» = kaç farklı cihaz/kişi girdi; «oynadı» = en az bir koşu. 90 gün koşusuz, profilsiz, kodsuz kimlikler gece silinir.</dd>
           <dt>⚠ Şüpheli</dt>
           <dd>Sunucu iki ucuz frenle işaretler: haftalık satırlarından birinde puan/satır mod eşiğinin üstünde (Av/Kaçış 8, Üçlü 12, Günlük 60 - gerçek oyunda görülenin ~2 katı) ya da son dakikada 8+ koşu (sınır aşımı zaten düşürülür). Motorun veremeyeceği puan (satır başına 80/100/1000 üstü) hiç yazılmaz. Kesin kanıt değil, bakılacak aday.</dd>
           <dt>Gizle</dt>

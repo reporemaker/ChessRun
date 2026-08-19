@@ -1,7 +1,7 @@
 import { dayKeyUtc, type Device } from '../../shared/events'
 import { PROFILE_MAX_BYTES } from '../../shared/leaderboard'
 import { verifyAccess } from './access'
-import { awards, bannedWords, cleanSubmit, daily, dailyStart, profileGet, profilePut, pruneLeague, pulse, recoveryFetch, recoveryPut, submitRun, weekly } from './lb'
+import { awards, bannedWords, cleanSubmit, daily, dailyStart, hello, profileGet, profilePut, pruneLeague, pulse, recoveryFetch, recoveryPut, submitRun, weekly } from './lb'
 import { sharePageResponse } from './share'
 import { actOnName, getWords, league, listNames, setWords } from './moderation'
 import { breakdown, breakdowns, pruneRaw, rollupDay, rollupMissing, series, summary } from './api'
@@ -292,6 +292,10 @@ export default {
           return await dailyStart(env.DB, await readBody(request), env.DAILY_SECRET, now)
         }
         // Kalıcılık: kurtarma kodu (kör blob) ve profil - bkz. shared/leaderboard
+        if (path === '/lb/hello') {
+          if (request.method !== 'POST') return noContent()
+          return await hello(env.DB, await readBody(request, 4096), now, await bannedWords(env.DB, now))
+        }
         if (path === '/lb/recovery') {
           if (request.method !== 'POST') return noContent()
           return await recoveryPut(env.DB, await readBody(request, 4096), now, env.DAILY_SECRET)

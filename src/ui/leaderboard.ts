@@ -1,4 +1,4 @@
-import type { AwardsResponse, PulseResponse, SubmitBody, WeeklyResponse,
+import type { AwardsResponse, HelloBody, PulseResponse, SubmitBody, WeeklyResponse,
   DailyResponse,
   DailyStartBody,
 } from '@shared/leaderboard'
@@ -72,6 +72,42 @@ function enqueue(run: RunRecord): void {
 }
 
 let flushing = false
+
+const HELLO_KEY = 'chessrun:hello'
+
+/**
+ * Açılış selamı: kimlik sunucuya koşu beklemeden tanıtılır (POST /lb/hello →
+ * lb_player satırı 0 koşuyla). Panelde «kaç farklı kişi girdi» Adlar'dan
+ * okunur. Günde bir kez (localStorage tarihi); ad/rozet zaten koşuyla ve
+ * profil ucuyla güncellenir. Sessiz: hata olursa ertesi açılışta tekrar.
+ */
+export function sayHello(): void {
+  if (!ENDPOINT) return
+  const today = new Date().toISOString().slice(0, 10)
+  try {
+    if (localStorage.getItem(HELLO_KEY) === today) return
+  } catch {
+    // yoksay
+  }
+  const identity = getIdentity()
+  const body: HelloBody = { token: identity.token, name: identity.name, ...selectedBadge() }
+  void fetch(`${ENDPOINT}/hello`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+    keepalive: true,
+    signal: AbortSignal.timeout(8000),
+  })
+    .then((res) => {
+      if (!res.ok) return
+      try {
+        localStorage.setItem(HELLO_KEY, today)
+      } catch {
+        // yoksay
+      }
+    })
+    .catch(() => undefined)
+}
 
 /** Kuyruktakileri sırayla yeniden dener; ilk başarısızlıkta durur (ağ yok) */
 export async function flushSubmitQueue(): Promise<void> {

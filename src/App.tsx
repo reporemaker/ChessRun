@@ -8,7 +8,7 @@ import { RankingPopup } from './components/RankingPopup'
 import { BadgesPopup } from './components/BadgesPopup'
 import { Settings } from './components/Settings'
 import { claimLeague } from './ui/badges'
-import { fetchAwards, flushSubmitQueue } from './ui/leaderboard'
+import { fetchAwards, flushSubmitQueue, sayHello } from './ui/leaderboard'
 import { PROFILE_EVENT, RESET_EVENT, pullProfile, pushProfile } from './ui/sync'
 import { getSettings, useSettings } from './ui/settings'
 import { DAILY_REPLAY_ALLOWED, dailyPlayed } from './ui/dailyLock'
@@ -261,6 +261,8 @@ export default function App() {
      varsa depoya işlenir ve fişler yeniden okur. Haftada bir değişen veri -
      açılışta bir kez yeter. */
   useEffect(() => {
+    // Açılış selamı: kimlik sunucuya (panel «kaç kişi girdi» için) - günde bir
+    sayHello()
     // Ağ yüzünden gönderilememiş koşular (özellikle günlük) açılışta tekrar denenir
     void flushSubmitQueue()
     void fetchAwards().then((firsts) => {

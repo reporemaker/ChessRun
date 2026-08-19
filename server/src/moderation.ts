@@ -111,6 +111,9 @@ export async function listNames(db: D1Database, url: URL, nowMs: number): Promis
   if (status === 'shadow' || status === 'banned' || status === 'ok') {
     binds.push(status)
     where.push(`p.status = ?${binds.length}`)
+  } else if (status === 'visitor') {
+    // Siteye girmiş (selam vermiş) ama hiç koşusu olmayan kimlikler
+    where.push(`p.runs = 0`)
   } else if (status === 'suspect') {
     // Şüpheli: puan/satır eşiğin üstünde ya da dakikalık sınıra dayanmış
     binds.push(BURST_MAX_RUNS)
@@ -123,13 +126,17 @@ export async function listNames(db: D1Database, url: URL, nowMs: number): Promis
   }
   const clause = where.length ? `WHERE ${where.join(' AND ')}` : ''
 
-  const [rows, count] = await db.batch([
+  const [rows, count, all] = await db.batch([
     db.prepare(`SELECT ${COLS} FROM lb_player p ${clause} ORDER BY p.last_seen DESC LIMIT ${limit}`).bind(...binds),
     db.prepare(`SELECT COUNT(*) AS n FROM lb_player p ${clause}`).bind(...binds),
+    db.prepare(`SELECT COUNT(*) AS n, SUM(CASE WHEN runs > 0 THEN 1 ELSE 0 END) AS played FROM lb_player`),
   ])
+  const totals = all.results[0] as { n: number; played: number | null } | undefined
   const body: NamesResponse = {
     rows: (rows.results as DbPlayer[]).map(toRow),
     total: (count.results[0] as { n: number } | undefined)?.n ?? 0,
+    identities: totals?.n ?? 0,
+    playersWithRuns: totals?.played ?? 0,
   }
   return Response.json(body)
 }

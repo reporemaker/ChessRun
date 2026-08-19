@@ -324,7 +324,24 @@ export interface PlayerRow {
 
 export interface NamesResponse {
   rows: PlayerRow[]
+  /** Filtreye uyan satır sayısı */
   total: number
+  /** Bütün kayıtlı kimlikler (siteye girip «merhaba» demiş herkes) ve koşusu olanlar */
+  identities: number
+  playersWithRuns: number
+}
+
+/**
+ * POST /lb/hello - açılış selamı: siteye giren her cihaz kimliğini bir kez
+ * tanıtır (ad + rozet); sunucu `lb_player` satırını 0 koşuyla açar. Böylece
+ * panel «kaç farklı kişi girdi» sorusuna Adlar listesinden cevap verir.
+ * Koşu beklemez. 204 her durumda. Var olan oyuncuda yalnızca last_seen/ad.
+ */
+export interface HelloBody {
+  token: string
+  name: string
+  badge?: string
+  badgeTier?: BadgeTier
 }
 
 /**

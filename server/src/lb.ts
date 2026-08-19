@@ -12,6 +12,7 @@ import {
   shortOf,
   type AwardsResponse,
   type BadgeTier,
+  type HelloBody,
   type ProfileData,
   type ProfilePutBody,
   type ProfileResponse,
@@ -765,6 +766,30 @@ export async function profileGet(db: D1Database, token: string | null): Promise<
  * sunucunun kabul ettiği ad - istemci "adın kabul edilmedi" diyebilsin.
  * Yasaklı oyuncuya da normal cevap: fark ettirmemek kuralı.
  */
+/**
+ * Açılış selamı (bkz. shared HelloBody): kimliği 0 koşuyla kaydeder. Yasaklıysa
+ * ya da bozuksa sessiz 204. Kötüye kullanım: satır küçük, IP başına hız sınırı
+ * var, 90 gün koşusuz+profilsiz kimlikler gece silinir (pruneLeague).
+ */
+export async function hello(db: D1Database, raw: unknown, nowMs: number, extraBanned: readonly string[]): Promise<Response> {
+  const body = (raw && typeof raw === 'object' ? raw : {}) as Partial<HelloBody>
+  const token = str(body.token, 64)
+  if (!TOKEN_RE.test(token)) return new Response(null, { status: 204 })
+  const hash = await hashToken(token)
+  const short = shortOf(token)
+  const badge = str(body.badge, 24)
+  const badgeTier = str(body.badgeTier, 8) as BadgeTier
+  const wish: PlayerWish = {
+    name: cleanName(body.name, extraBanned),
+    rawName: str(body.name, 40),
+    badge: BADGE_RE.test(badge) ? badge : null,
+    badgeTier: BADGE_TIERS.includes(badgeTier) ? badgeTier : null,
+  }
+  const player = await resolvePlayer(db, hash, short, wish, nowMs, false)
+  if (player.statement) await player.statement.run()
+  return new Response(null, { status: 204 })
+}
+
 export async function profilePut(db: D1Database, raw: unknown, nowMs: number, extraBanned: readonly string[]): Promise<Response> {
   const body = (raw && typeof raw === 'object' ? raw : {}) as Partial<ProfilePutBody>
   const token = str(body.token, 64)
@@ -881,6 +906,15 @@ export async function pruneLeague(db: D1Database, nowMs: number): Promise<{ week
     db.prepare(`DELETE FROM lb_daily WHERE daily < ?1`).bind(dayCutoff),
     // Tekrar koruması anahtarları: 35 gün yeter (kuyruk o kadar eski koşu taşımaz)
     db.prepare(`DELETE FROM lb_run_seen WHERE ts < ?1`).bind(nowMs - 35 * 86_400_000),
+    // Selamla açılmış ama hiç oynamamış, profili/kurtarma kodu olmayan kimlikler: 90 gün sonra gider
+    db
+      .prepare(
+        `DELETE FROM lb_player WHERE runs = 0 AND last_seen < ?1 AND status = 'ok'
+           AND NOT EXISTS (SELECT 1 FROM lb_profile f WHERE f.token_hash = lb_player.token_hash)
+           AND NOT EXISTS (SELECT 1 FROM lb_recovery r WHERE r.token_hash = lb_player.token_hash)
+           AND NOT EXISTS (SELECT 1 FROM lb_weekly w WHERE w.token_hash = lb_player.token_hash)`,
+      )
+      .bind(nowMs - 90 * 86_400_000),
   ])
   return { weeks: w.meta.changes ?? 0, days: d.meta.changes ?? 0 }
 }
