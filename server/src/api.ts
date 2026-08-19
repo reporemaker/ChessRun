@@ -1,5 +1,6 @@
 import {
   type BreakdownResponse,
+  type BreakdownsResponse,
   type Dimension,
   type Metric,
   type SeriesResponse,
@@ -9,11 +10,12 @@ import {
   isMetric,
   isPeriod,
 } from '../../shared/events'
-import { addDays, bucketOf, daysBetween, previousOf, rangeOf, type Range } from './period'
+import { addDays, bucketOf, comparisonOf, daysBetween, rangeOf, type Range } from './period'
 import {
   type DailyTotals,
   type DimRow,
   type RunRow,
+  type SessionRow,
   type VisitRow,
   computeDims,
   computeTotals,
@@ -47,6 +49,10 @@ const EMPTY_TOTALS = (day: string): DailyTotals => ({
   dur_p50_ms: null,
   dur_p90_ms: null,
   score_sum: 0,
+  sess_dur_sum_ms: 0,
+  sess_dur_count: 0,
+  sess_dur_p50_ms: null,
+  dist_sum: 0,
 })
 
 /** Bugünün ham satırlarından anlık toplam - henüz cron çalışmadı */
@@ -55,7 +61,7 @@ async function liveTotals(db: DB, day: string): Promise<{ totals: DailyTotals; d
     await db
       .prepare(
         `SELECT session_id, country, ui_lang, nav_lang, accept_lang, browser, os, device,
-                viewport, referrer, standalone FROM visit WHERE day = ?1`,
+                viewport, referrer, standalone, app_version FROM visit WHERE day = ?1`,
       )
       .bind(day)
       .all<VisitRow>()
@@ -63,15 +69,16 @@ async function liveTotals(db: DB, day: string): Promise<{ totals: DailyTotals; d
   const runs = (
     await db
       .prepare(
-        `SELECT session_id, mode, daily, score, duration_ms, end_reason, country, ui_lang, device
+        `SELECT session_id, mode, daily, score, distance, duration_ms, end_reason, country, ui_lang,
+                device, app_version
            FROM run_event WHERE day = ?1`,
       )
       .bind(day)
       .all<RunRow>()
   ).results
   const sessions = (
-    await db.prepare(`SELECT session_id FROM session_event WHERE day = ?1`).bind(day).all<{ session_id: string }>()
-  ).results.map((r) => r.session_id)
+    await db.prepare(`SELECT session_id, duration_ms FROM session_event WHERE day = ?1`).bind(day).all<SessionRow>()
+  ).results
   return { totals: computeTotals(day, visits, runs, sessions), dims: computeDims(day, visits, runs) }
 }
 
@@ -99,7 +106,9 @@ export async function summary(db: DB, url: URL, now = Date.now()): Promise<Summa
 
   const today = dayKeyUtc(now)
   const range = rangeOf(period, at)
-  const prev = previousOf(period, range)
+  // Sürmekte olan dönemde önceki dönemin yalnızca aynı uzunluktaki başı
+  // (bkz. shared/period comparisonOf) - hafta ortasında her delta ▼ olmasın
+  const { prev, partial, comparedDays } = comparisonOf(period, range, today)
   const [cur, before] = await Promise.all([totalsFor(db, range, today), totalsFor(db, prev, today)])
 
   return {
@@ -108,6 +117,8 @@ export async function summary(db: DB, url: URL, now = Date.now()): Promise<Summa
     to: range.to,
     ...foldTotals(cur),
     previous: foldTotals(before),
+    partial,
+    comparedDays,
   }
 }
 
@@ -131,66 +142,106 @@ export async function series(db: DB, url: URL, now = Date.now()): Promise<Series
   return { metric, period, points: [...buckets].map(([bucket, value]) => ({ bucket, value })) }
 }
 
+/**
+ * Kırılım(lar). Tek boyut `breakdown`, birden çok boyut `breakdowns`
+ * (`dims=a,b,c`): geçmiş günler `daily_dim`den tek sorguyla, bugün ham
+ * satırlardan TEK taramayla - istatistik sayfası eskiden 12 kartı için
+ * bugünün ham tablosunu 12 kez tarıyordu.
+ *
+ * `rest`: sınırın dışında kalanların toplamı; panel bunu "Diğer (n değer)"
+ * satırı olarak basar ki yüzdeler 100'e tamamlansın.
+ */
 export async function breakdown(
   db: DB,
   url: URL,
   now = Date.now(),
 ): Promise<BreakdownResponse | Response> {
   const dim = url.searchParams.get('dim') ?? 'country'
+  if (!isDimension(dim)) return bad('dim')
+  const many = await breakdowns(db, withDims(url, dim), now)
+  return many instanceof Response ? many : (many[dim] as BreakdownResponse)
+}
+
+function withDims(url: URL, dim: string): URL {
+  const u = new URL(url.toString())
+  u.searchParams.set('dims', dim)
+  return u
+}
+
+export async function breakdowns(
+  db: DB,
+  url: URL,
+  now = Date.now(),
+): Promise<BreakdownsResponse | Response> {
+  const dims = (url.searchParams.get('dims') ?? '').split(',').filter(Boolean)
   const period = url.searchParams.get('period') ?? 'month'
   const at = url.searchParams.get('at') ?? dayKeyUtc(now)
   const limit = Math.min(50, Math.max(1, Number(url.searchParams.get('limit') ?? '20') || 20))
-  if (!isDimension(dim)) return bad('dim')
+  if (dims.length === 0 || dims.length > 20 || !dims.every(isDimension)) return bad('dims')
   if (!isPeriod(period)) return bad('period')
   if (!DAY_RE.test(at)) return bad('at')
 
   const today = dayKeyUtc(now)
   const range = rangeOf(period, at)
+  const wanted = new Set<string>(dims)
 
+  const placeholders = dims.map((_, i) => `?${i + 3}`).join(',')
   const stored = (
     await db
       .prepare(
-        `SELECT value, SUM(visitors) AS visitors, SUM(runs) AS runs
-           FROM daily_dim WHERE dim = ?1 AND day >= ?2 AND day <= ?3
-          GROUP BY value`,
+        `SELECT dim, value, SUM(visitors) AS visitors, SUM(runs) AS runs
+           FROM daily_dim WHERE day >= ?1 AND day <= ?2 AND dim IN (${placeholders})
+          GROUP BY dim, value`,
       )
-      .bind(dim, range.from, range.to)
-      .all<{ value: string; visitors: number; runs: number }>()
+      .bind(range.from, range.to, ...dims)
+      .all<{ dim: string; value: string; visitors: number; runs: number }>()
   ).results
 
-  const acc = new Map(stored.map((r) => [r.value, { visitors: r.visitors, runs: r.runs }]))
+  const acc = new Map<string, Map<string, { visitors: number; runs: number }>>()
+  const add = (dim: string, value: string, visitors: number, runs: number) => {
+    let table = acc.get(dim)
+    if (!table) {
+      table = new Map()
+      acc.set(dim, table)
+    }
+    const cur = table.get(value) ?? { visitors: 0, runs: 0 }
+    cur.visitors += visitors
+    cur.runs += runs
+    table.set(value, cur)
+  }
+  for (const r of stored) add(r.dim, r.value, r.visitors, r.runs)
 
   if (today >= range.from && today <= range.to) {
-    const rolled = await db
-      .prepare(`SELECT 1 FROM daily_totals WHERE day = ?1`)
-      .bind(today)
-      .first()
+    const rolled = await db.prepare(`SELECT 1 FROM daily_totals WHERE day = ?1`).bind(today).first()
     if (!rolled) {
       for (const row of (await liveTotals(db, today)).dims) {
-        if (row.dim !== dim) continue
-        const cur = acc.get(row.value) ?? { visitors: 0, runs: 0 }
-        cur.visitors += row.visitors
-        cur.runs += row.runs
-        acc.set(row.value, cur)
+        if (wanted.has(row.dim)) add(row.dim, row.value, row.visitors, row.runs)
       }
     }
   }
 
-  // Ziyaret boyutu mu koşu boyutu mu - payı ona göre hesapla
-  const runDim = dim === 'mode' || dim === 'end_reason'
-  const rows = [...acc]
-    .map(([value, v]) => ({ value, visitors: v.visitors, runs: v.runs }))
-    .sort((a, b) => (runDim ? b.runs - a.runs : b.visitors - a.visitors))
-  const total = rows.reduce((s, r) => s + (runDim ? r.runs : r.visitors), 0)
-
-  return {
-    dim: dim as Dimension,
-    total,
-    rows: rows.slice(0, limit).map((r) => ({
-      ...r,
-      share: total ? (runDim ? r.runs : r.visitors) / total : 0,
-    })),
+  const out: BreakdownsResponse = {}
+  for (const dim of dims as Dimension[]) {
+    // Ziyaret boyutu mu koşu boyutu mu - payı ona göre hesapla
+    const runDim = dim === 'mode' || dim === 'end_reason' || dim === 'daily_end'
+    const rows = [...(acc.get(dim) ?? new Map<string, { visitors: number; runs: number }>())]
+      .map(([value, v]) => ({ value, visitors: v.visitors, runs: v.runs }))
+      .sort((a, b) => (runDim ? b.runs - a.runs : b.visitors - a.visitors))
+    const total = rows.reduce((s, r) => s + (runDim ? r.runs : r.visitors), 0)
+    const shown = rows.slice(0, limit)
+    const hidden = rows.slice(limit)
+    const restV = hidden.reduce((s, r) => s + r.visitors, 0)
+    const restR = hidden.reduce((s, r) => s + r.runs, 0)
+    out[dim] = {
+      dim,
+      total,
+      rows: shown.map((r) => ({ ...r, share: total ? (runDim ? r.runs : r.visitors) / total : 0 })),
+      rest: hidden.length
+        ? { values: hidden.length, visitors: restV, runs: restR, share: total ? (runDim ? restR : restV) / total : 0 }
+        : null,
+    }
   }
+  return out
 }
 
 function bad(param: string): Response {
@@ -236,8 +287,9 @@ export async function rollupDay(db: DB, day: string): Promise<void> {
       .prepare(
         `INSERT OR REPLACE INTO daily_totals
            (day, visitors, sessions, players, runs, runs_classic, runs_kingrun, runs_trio,
-            runs_daily, dur_sum_ms, dur_count, dur_p50_ms, dur_p90_ms, score_sum, updated_at)
-         VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15)`,
+            runs_daily, dur_sum_ms, dur_count, dur_p50_ms, dur_p90_ms, score_sum, updated_at,
+            sess_dur_sum_ms, sess_dur_count, sess_dur_p50_ms, dist_sum)
+         VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19)`,
       )
       .bind(
         totals.day,
@@ -255,6 +307,10 @@ export async function rollupDay(db: DB, day: string): Promise<void> {
         totals.dur_p90_ms,
         totals.score_sum,
         now,
+        totals.sess_dur_sum_ms,
+        totals.sess_dur_count,
+        totals.sess_dur_p50_ms,
+        totals.dist_sum,
       ),
     db.prepare(`DELETE FROM daily_dim WHERE day = ?1`).bind(day),
     ...dims.map((r) =>

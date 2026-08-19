@@ -18,16 +18,18 @@ interface Props {
   primary?: boolean
   /** Yönü olmayan metrik (süre): artış iyi ya da kötü değil, renk verilmez */
   neutral?: boolean
+  /** Deltanın neye göre olduğu ("önceki haftanın ilk 3 gününe göre") */
+  compare?: string
 }
 
-export function Kpi({ label, value, now, before, hint, primary, neutral }: Props) {
+export function Kpi({ label, value, now, before, hint, primary, neutral, compare = 'önceki döneme göre' }: Props) {
   const delta = now !== undefined && before !== undefined ? fmtDelta(now, before) : null
   return (
     <div className={`kpi${primary ? ' primary' : ''}`} title={hint}>
       <div className="kpi-label">{label}</div>
       <div className="kpi-value">{value}</div>
       {delta && (
-        <div className={`kpi-delta ${neutral ? 'flat' : delta.dir}`} aria-label={`önceki döneme göre ${delta.text}`}>
+        <div className={`kpi-delta ${neutral ? 'flat' : delta.dir}`} title={compare} aria-label={`${compare} ${delta.text}`}>
           <span aria-hidden="true">{delta.dir === 'up' ? '▲' : delta.dir === 'down' ? '▼' : '■'}</span> {delta.text}
         </div>
       )}

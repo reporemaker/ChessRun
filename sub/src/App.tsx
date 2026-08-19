@@ -112,14 +112,19 @@ export default function App() {
       </main>
 
       <footer className="foot-bar muted">
-        Ham veri 35 gün, günlük toplamlar kalıcı · IP ve cihaz jetonu hiç saklanmaz · bir SmartKraft projesi
+        Günler UTC · ham veri 35 gün, günlük toplamlar kalıcı · IP ve cihaz jetonu hiç saklanmaz · bir SmartKraft projesi
       </footer>
     </div>
   )
 }
 
-/** Aralık sunucuyla aynı saf fonksiyondan (shared/period) - ekstra istek yok */
+/** Aralık sunucuyla aynı saf fonksiyondan (shared/period) - ekstra istek yok. Günler UTC. */
 function RangeLabel({ period, at }: { period: Period; at: string }) {
   const r = rangeOf(period, at)
-  return <>{fmtRange(r.from, r.to)}</>
+  return (
+    <>
+      {fmtRange(r.from, r.to)}
+      <small title="Bütün günler UTC gece yarısında başlar (TR için +3 saat)">UTC</small>
+    </>
+  )
 }

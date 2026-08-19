@@ -160,6 +160,8 @@ export function buildRunPayload(facts: RunFacts, env: ClientEnv): RunPayload {
     bestStreak: facts.bestStreak,
     stuckUsed: facts.stuckUsed,
     mated: facts.mated,
+    // Ziyaretteki bot süzgeci koşuda da çalışsın (telefon UA + dokunmatik yok)
+    touch: env.touch,
   }
 }
 
@@ -241,6 +243,7 @@ export function trackSessionEnd(): void {
     appVersion: APP_VERSION,
     durationMs: Math.max(0, Date.now() - start),
     runs: sessionRuns(),
+    touch: (navigator.maxTouchPoints ?? 0) > 0,
   }
 
   try {

@@ -1,5 +1,6 @@
 import type {
   BreakdownResponse,
+  BreakdownsResponse,
   Dimension,
   HealthResponse,
   Metric,
@@ -56,6 +57,9 @@ export const api = {
     get<SeriesResponse>('series', { metric, period, at }),
   breakdown: (dim: Dimension, period: Period, at: string, limit = 12) =>
     get<BreakdownResponse>('breakdown', { dim, period, at, limit }),
+  /** Birden çok kırılım tek istekte - bugünün ham satırları sunucuda bir kez taranır */
+  breakdowns: (dims: Dimension[], period: Period, at: string, limit = 12) =>
+    get<BreakdownsResponse>('breakdowns', { dims: dims.join(','), period, at, limit }),
   /* --- Adlar (Faz 9 moderasyon) --- */
   names: (q: string, status: PlayerStatus | 'orphan' | '' = '', limit = 60) =>
     get<NamesResponse>('names', { q, status, limit }),

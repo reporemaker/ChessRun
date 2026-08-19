@@ -68,6 +68,8 @@ export const DIM_LABEL: Record<Dimension, string> = {
   mode: 'Oyun',
   end_reason: 'Bitiş sebebi',
   standalone: 'Açılış',
+  daily_end: 'Günlük mücadele - bitiş',
+  app_version: 'Sürüm',
 }
 
 /** Kırılım değerlerinin okunur hâli - bilinmeyen değer olduğu gibi geçer */

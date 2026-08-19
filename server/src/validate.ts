@@ -138,6 +138,8 @@ export interface CleanRun {
   bestStreak: number
   stuckUsed: number
   mated: boolean
+  /** Eski istemci göndermez → undefined; bot süzgeci o zaman bu koşulu atlar */
+  touch?: boolean
 }
 
 export function cleanRun(raw: unknown): CleanRun | null {
@@ -163,6 +165,7 @@ export function cleanRun(raw: unknown): CleanRun | null {
     bestStreak: clampInt(body.bestStreak, 0, 999),
     stuckUsed: clampInt(body.stuckUsed, 0, 999),
     mated: bool(body.mated),
+    touch: typeof body.touch === 'boolean' ? body.touch : undefined,
   }
 }
 
@@ -171,6 +174,7 @@ export interface CleanSession {
   appVersion: string
   durationMs: number
   runs: number
+  touch?: boolean
 }
 
 export function cleanSession(raw: unknown): CleanSession | null {
@@ -185,6 +189,7 @@ export function cleanSession(raw: unknown): CleanSession | null {
     // Oturum bir gün sürebilir; koşudan farklı bir tavan
     durationMs: clampInt(body.durationMs, 0, 24 * 60 * 60 * 1000),
     runs: clampInt(body.runs, 0, 10_000),
+    touch: typeof body.touch === 'boolean' ? body.touch : undefined,
   }
 }
 

@@ -68,6 +68,24 @@ export function previousOf(period: Period, range: Range): Range {
   }
 }
 
+/**
+ * Delta için kıyas aralığı. Dönem sürüyorsa (bugün içinde, son gün değil)
+ * önceki dönemin yalnızca aynı uzunluktaki başı: bugün dahil geçen gün
+ * sayısı kadar. Yoksa çarşamba günü "bu hafta" 3 gün, "geçen hafta" 7 gün
+ * olur ve her delta ▼ görünür. Bitmiş dönemde tam önceki dönem.
+ */
+export function comparisonOf(
+  period: Period,
+  range: Range,
+  today: string,
+): { prev: Range; partial: boolean; comparedDays: number } {
+  const partial = today >= range.from && today < range.to
+  const comparedDays = daysBetween({ from: range.from, to: partial ? today : range.to }).length
+  const full = previousOf(period, range)
+  const prev = partial ? { from: full.from, to: addDays(full.from, comparedDays - 1) } : full
+  return { prev, partial, comparedDays }
+}
+
 /** Seri grafiği için kova anahtarı: gün → gün, hafta/ay → gün, yıl → ay */
 export function bucketOf(period: Period, day: string): string {
   return period === 'year' ? day.slice(0, 7) : day

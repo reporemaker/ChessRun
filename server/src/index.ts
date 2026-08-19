@@ -4,7 +4,7 @@ import { verifyAccess } from './access'
 import { awards, bannedWords, cleanSubmit, daily, dailyStart, profileGet, profilePut, pruneLeague, pulse, recoveryFetch, recoveryPut, submitRun, weekly } from './lb'
 import { sharePageResponse } from './share'
 import { actOnName, getWords, league, listNames, setWords } from './moderation'
-import { breakdown, pruneRaw, rollupDay, rollupMissing, series, summary } from './api'
+import { breakdown, breakdowns, pruneRaw, rollupDay, rollupMissing, series, summary } from './api'
 import { addDays } from './period'
 import { currentSalt, hashVisitor, saltKey } from './salt'
 import {
@@ -158,7 +158,8 @@ async function collectRun(request: Request, env: Env): Promise<Response> {
   const body = await readBody(request)
   const clean = cleanRun(body)
   const facts = factsOf(request)
-  if (!clean || isBot(facts.ua) || looksAutomated(facts)) return noContent()
+  // Ziyaretle aynı süzgeç: telefon UA + dokunmatik yok = otomasyon
+  if (!clean || isBot(facts.ua) || looksAutomated({ ...facts, touch: clean.touch })) return noContent()
 
   const now = Date.now()
   await env.DB.prepare(
@@ -198,7 +199,7 @@ async function collectSession(request: Request, env: Env): Promise<Response> {
   const body = await readBody(request)
   const clean = cleanSession(body)
   const facts = factsOf(request)
-  if (!clean || isBot(facts.ua) || looksAutomated(facts)) return noContent()
+  if (!clean || isBot(facts.ua) || looksAutomated({ ...facts, touch: clean.touch })) return noContent()
 
   const now = Date.now()
   // Aynı oturum için son beacon kazanıyor: sekme birkaç kez gizlenip
@@ -344,6 +345,7 @@ export default {
       if (path === '/api/summary') return json(await summary(env.DB, url))
       if (path === '/api/series') return json(await series(env.DB, url))
       if (path === '/api/breakdown') return json(await breakdown(env.DB, url))
+      if (path === '/api/breakdowns') return json(await breakdowns(env.DB, url))
       return new Response('not found', { status: 404 })
     }
 

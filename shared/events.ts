@@ -61,6 +61,12 @@ export const DIMENSIONS = [
   'mode',
   'end_reason',
   'standalone',
+  // Yalnızca günlük mücadele koşularının bitiş sebebi: "başlayan → bitiren"
+  // hunisi. Başlayan = bitişini bildiren her koşu (yarıda bırakılan dahil);
+  // bitiren = yarıda bırakılmayan.
+  'daily_end',
+  // Hangi sürüm canlıda - ziyaret ve koşu tarafında ayrı sayılır
+  'app_version',
 ] as const
 export type Dimension = (typeof DIMENSIONS)[number]
 
@@ -119,11 +125,18 @@ export interface RunPayload extends BasePayload {
   bestStreak: number
   stuckUsed: number
   mated: boolean
+  /**
+   * Dokunmatik var mı - ziyaretle aynı bot süzgeci koşuda da çalışsın
+   * (telefon UA + dokunmatik yok = otomasyon). Eski istemciler
+   * göndermiyor; yoksa süzgeç bu koşulu atlar.
+   */
+  touch?: boolean
 }
 
 export interface SessionPayload extends BasePayload {
   durationMs: number
   runs: number
+  touch?: boolean
 }
 
 /* ------------------------------------------------------------------ *
@@ -141,14 +154,28 @@ export interface SummaryTotals {
   avgDurationMs: number
   /** Yalnızca tek günlük dönemde gerçek medyan; çok günlü aralıkta null */
   medianDurationMs: number | null
+  /** Koşu süresi p90 - yine yalnızca tek gün */
+  p90DurationMs: number | null
+  /** Oturum süresi (session_event): ortalama her dönemde, medyan tek günde */
+  avgSessionMs: number
+  medianSessionMs: number | null
+  /** Koşu başına ortalama skor ve mesafe (satır) */
+  avgScore: number
+  avgDistance: number
 }
 
 export interface SummaryResponse extends SummaryTotals {
   period: Period
   from: string
   to: string
-  /** Önceki eşdeğer dönem - her KPI'nın deltası bedavaya geliyor */
+  /**
+   * Önceki eşdeğer dönem - her KPI'nın deltası bedavaya geliyor.
+   * Dönem henüz bitmediyse (`partial`) önceki dönemin yalnızca ilk
+   * `comparedDays` günüyle kıyaslanır; yoksa hafta ortasında her delta ▼.
+   */
   previous: SummaryTotals
+  partial: boolean
+  comparedDays: number
 }
 
 export interface SeriesPoint {
@@ -174,7 +201,12 @@ export interface BreakdownResponse {
   dim: Dimension
   total: number
   rows: BreakdownRow[]
+  /** Sınırın dışında kalan değerlerin toplamı - yüzdeler 100'e tamamlansın */
+  rest: { values: number; visitors: number; runs: number; share: number } | null
 }
+
+/** Tek istekte birden çok kırılım - bugünün ham satırları bir kez taranır */
+export type BreakdownsResponse = Partial<Record<Dimension, BreakdownResponse>>
 
 export interface HealthResponse {
   ok: boolean
