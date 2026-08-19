@@ -3,7 +3,7 @@ import type { GameMode } from '../engine/types'
 import { type BadgeId, badgeOf, isBadgeId, readBadges, readSelectedBadge } from './badges'
 import { getIdentity } from './identity'
 import { fetchWeekly, leaderboardEnabled } from './leaderboard'
-import { type RunRecord, bestOf, isoWeekKey, readRuns, runsOfMode, runsOfWeek } from './scores'
+import { type RunRecord, isoWeekKey, readRuns, runsOfMode, runsOfWeek } from './scores'
 
 /**
  * Sıralamanın tek okuma noktası.
@@ -17,8 +17,11 @@ import { type RunRecord, bestOf, isoWeekKey, readRuns, runsOfMode, runsOfWeek } 
 export interface RankRow {
   place: number
   name: string
+  /** Haftalık TOPLAM puan (sunucu) ya da tek koşunun puanı (yerel liste) */
   score: number
   distance: number
+  /** Sunucu satırında: bu haftaki koşu sayısı; yerel listede (satır = koşu) yok */
+  runs?: number
   /** Bu satır oyuncunun kendisi mi - listede altın gösteriliyor */
   me: boolean
   /** ISO zaman damgası, React anahtarı olarak da kullanılıyor */
@@ -40,7 +43,7 @@ function selectedBadgeGlyph(): { id: BadgeId; tier: 'black' | 'bronze' | 'silver
 export interface RankingView {
   /** Sunucu yoksa null: gerçek bir sıra bilinmiyor */
   rank: number | null
-  /** Kendi en iyi skorun - sunucu olmadan da bilinen tek gerçek sayı */
+  /** Bu haftaki TOPLAM puanın (sunucudan; yoksa yerel defterden toplanır) */
   score: number
   /** Sunucu yoksa null */
   players: number | null
@@ -61,12 +64,19 @@ const LIST_LIMIT = 12
  * sonra donar, ilk aylarda skor yapan üstte kalır, yeni oyuncu hiç
  * göremez. Haftalık her Pazartesi herkese aynı şansı veriyor. Kişisel "en
  * iyin" oyun ekranında zaten var - ligin işi değil.
+ *
+ * Lig puanı = o hafta o modda BİRİKTİRİLEN toplam (her koşu eklenir; 19
+ * Ağustos kararı - "kim en çok oynadı, en çok puan topladı"). En iyi tek
+ * koşu değil. Sunucu yokken toplam yerel defterden.
  */
+export function weekTotal(runs: RunRecord[]): number {
+  return runs.reduce((sum, run) => sum + run.score, 0)
+}
+
 export function readRanking(mode?: GameMode, now: Date = new Date()): RankingView {
   const stored = readRuns()
   const all = mode ? runsOfMode(stored, mode) : stored
   const runs = runsOfWeek(all, isoWeekKey(now))
-  const best = bestOf(runs)
   const identity = getIdentity()
 
   // Seçili rozet adın önünde - sunucu görünümünde diğer oyuncularınki de var
@@ -93,7 +103,7 @@ export function readRanking(mode?: GameMode, now: Date = new Date()): RankingVie
 
   return {
     rank: null,
-    score: best?.score ?? 0,
+    score: weekTotal(runs),
     players: null,
     pending: true,
     rows,
@@ -102,13 +112,18 @@ export function readRanking(mode?: GameMode, now: Date = new Date()): RankingVie
 
 /**
  * Mod verilmeden sorulduğunda (ayarlar, ana sayfa) hangi ligin sırası?
- * Bu hafta en iyi koşunun modu - oyuncunun bu hafta "yarıştığı" lig.
+ * Bu hafta en çok puan biriktirilen mod - oyuncunun bu hafta "yarıştığı" lig.
  * Hiç koşu yoksa Av.
  */
 export function weekMode(now: Date = new Date()): GameMode {
   // Günlük mücadele haftalık lig değil - bu haftanın ligi üç serbest moddan biri
-  const best = bestOf(runsOfWeek(readRuns(), isoWeekKey(now)).filter((run) => run.mode !== 'daily'))
-  return best?.mode ?? 'classic'
+  const runs = runsOfWeek(readRuns(), isoWeekKey(now)).filter((run) => run.mode !== 'daily')
+  const totals = new Map<GameMode, number>()
+  for (const run of runs) totals.set(run.mode, (totals.get(run.mode) ?? 0) + run.score)
+  let pick: GameMode = 'classic'
+  let top = -1
+  for (const [m, total] of totals) if (total > top) { top = total; pick = m }
+  return pick
 }
 
 /* ------------------------------------------------------------------ *
@@ -121,6 +136,7 @@ function entryToRow(entry: WeeklyEntry, me: boolean): RankRow {
     name: entry.name,
     score: entry.score,
     distance: entry.distance,
+    runs: entry.runs,
     me,
     at: `${entry.token}-${entry.place}`,
     badge: entry.badge && isBadgeId(entry.badge) ? entry.badge : undefined,
@@ -148,8 +164,8 @@ export async function fetchRanking(mode: GameMode, now: Date = new Date()): Prom
 
   return {
     rank: data.me?.place ?? null,
-    // Sunucu bu hafta için bir skor biliyorsa o; bilmiyorsa (henüz
-    // gönderilmedi / ağ yoktu) yerel en iyi - sıfır göstermek yalan olur.
+    // Sunucu bu hafta için toplam biliyorsa o; bilmiyorsa (henüz
+    // gönderilmedi / ağ yoktu) yerel toplam - sıfır göstermek yalan olur.
     score: data.me?.score ?? local.score,
     players: data.players,
     pending: false,

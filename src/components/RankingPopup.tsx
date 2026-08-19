@@ -130,9 +130,10 @@ export function RankingPopup({ onClose, mode: initialMode, demo = false, refresh
                   <b>{row.name}</b>
                   {row.me && <em>{t('settings.you')}</em>}
                 </span>
+                {/* Sunucu satırı: kaç koşu biriktirdi; yerel liste (satır = koşu): satır sayısı */}
                 <span className="rank-dist">
-                  {row.distance}
-                  <small>{t('rank.rows')}</small>
+                  {row.runs != null ? row.runs : row.distance}
+                  <small>{row.runs != null ? t('rank.runs') : t('rank.rows')}</small>
                 </span>
                 <span className="rank-score">{row.score.toLocaleString(lang)}</span>
               </li>
@@ -194,7 +195,9 @@ export function RankingPopup({ onClose, mode: initialMode, demo = false, refresh
               <span className="rank-note">{t('rank.offline')}</span>
             ) : status === 'loading' ? (
               <span className="rank-note">{t('rank.loading')}</span>
-            ) : null}
+            ) : (
+              <span className="rank-note">{t('rank.total')}</span>
+            )}
           </div>
         </div>
       </div>

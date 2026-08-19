@@ -64,8 +64,10 @@ export function League({ week, onWeek }: Props) {
                     <th className="num">#</th>
                     <th>Ad</th>
                     <th>Jeton</th>
-                    <th className="num">Puan</th>
-                    <th className="num">Mesafe</th>
+                    <th className="num" title="Haftalık TOPLAM puan (her koşu eklenir)">Puan</th>
+                    <th className="num" title="Bu haftaki koşu sayısı">Koşu</th>
+                    <th className="num" title="En iyi tek koşu">En iyi</th>
+                    <th className="num" title="Toplam satır">Mesafe</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -82,6 +84,8 @@ export function League({ week, onWeek }: Props) {
                       </td>
                       <td className="mono muted">{e.token}</td>
                       <td className="num mono">{e.score.toLocaleString('tr-TR')}</td>
+                      <td className="num mono muted">{e.runs}</td>
+                      <td className="num mono muted">{e.best.toLocaleString('tr-TR')}</td>
                       <td className="num mono muted">{e.distance.toLocaleString('tr-TR')}</td>
                     </tr>
                   ))}
@@ -96,7 +100,7 @@ export function League({ week, onWeek }: Props) {
         <h2>Nasıl çalışıyor</h2>
         <dl>
           <dt>Tablo</dt>
-          <dd>Oyundaki sıralama penceresiyle aynı sorgu: hafta × mod, oyuncu başına en iyi koşu, ilk 12. Gizli ve yasaklı oyuncular yok.</dd>
+          <dd>Oyundaki sıralama penceresiyle aynı sorgu: hafta × mod, oyuncu başına o haftaki TOPLAM puan (her koşu eklenir; Koşu = sayısı, En iyi = tek koşu), ilk 12. Gizli ve yasaklı oyuncular yok.</dd>
           <dt>Hafta</dt>
           <dd>ISO hafta, UTC. Pazartesi 00:00'da yeni tablo. Bitmiş haftaların ilk üçü <code>lb_award</code>'a yazılır (her gece cron); haftalık satırlar ~8 hafta sonra silinir, günlük nabız 35 gün.</dd>
           <dt>Birincilik</dt>

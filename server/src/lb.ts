@@ -339,12 +339,24 @@ export function playedAtOf(at: string, nowMs: number): number {
 }
 
 /**
- * Koşuyu yazar. Sıra: oyuncu satırı (ad kuralları `resolvePlayer`) → haftalık
- * en iyi (upsert, yalnızca daha iyiyse) → günlük nabız.
+ * Koşuyu yazar. Sıra: tekrar koruması (`lb_run_seen`) → oyuncu satırı (ad
+ * kuralları `resolvePlayer`) → haftalık TOPLAM (her koşu eklenir; runs/best
+ * de tutulur) → günlük nabız.
+ *
+ * Haftalık lig = o hafta biriktirilen toplam puan (19 Ağustos kararı): "kim
+ * en çok oynadı, en çok puan topladı". En iyi tek koşu değil.
  */
 export async function submitRun(db: D1Database, clean: CleanSubmit, nowMs: number): Promise<void> {
   const hash = await hashToken(clean.token)
   const short = shortOf(clean.token)
+
+  // Aynı koşu ikinci kez gelirse (kuyruk yeniden denemesi) toplamı şişirmesin:
+  // (jeton, koşu zamanı) anahtarı bir kez girer; girmediyse bu bir tekrar.
+  const seen = await db
+    .prepare(`INSERT OR IGNORE INTO lb_run_seen (token_hash, at, ts) VALUES (?1, ?2, ?3)`)
+    .bind(hash, clean.at, nowMs)
+    .run()
+  if ((seen.meta?.changes ?? 1) === 0) return
 
   const player = await resolvePlayer(db, hash, short, clean, nowMs, true)
   if (player.banned || !player.statement) return
@@ -371,12 +383,14 @@ export async function submitRun(db: D1Database, clean: CleanSubmit, nowMs: numbe
   statements.push(
     db
       .prepare(
-        `INSERT INTO lb_weekly (week, mode, token_hash, score, distance, at, ts)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+        `INSERT INTO lb_weekly (week, mode, token_hash, score, distance, at, ts, runs, best)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 1, ?4)
          ON CONFLICT(week, mode, token_hash) DO UPDATE SET
-           score = excluded.score, distance = excluded.distance, at = excluded.at, ts = excluded.ts
-         WHERE excluded.score > lb_weekly.score
-            OR (excluded.score = lb_weekly.score AND excluded.distance > lb_weekly.distance)`,
+           score = lb_weekly.score + excluded.score,
+           distance = lb_weekly.distance + excluded.distance,
+           runs = lb_weekly.runs + 1,
+           best = MAX(lb_weekly.best, excluded.score),
+           at = excluded.at, ts = excluded.ts`,
       )
       .bind(clean.week, clean.mode, hash, score, clean.distance, clean.at, nowMs),
   )
@@ -410,6 +424,8 @@ export interface WeeklyRow {
   short: string
   score: number
   distance: number
+  runs: number
+  best: number
   badge: string | null
   badge_tier: string | null
   token_hash: string
@@ -422,13 +438,15 @@ export function toEntry(row: WeeklyRow, place: number): WeeklyEntry {
     token: row.short,
     score: row.score,
     distance: row.distance,
+    runs: row.runs,
+    best: row.best,
     badge: row.badge ?? undefined,
     badgeTier: (row.badge_tier as BadgeTier | null) ?? undefined,
   }
 }
 
 export const RANK_SQL = `
-  SELECT w.token_hash, w.score, w.distance, p.name, p.short, p.badge, p.badge_tier
+  SELECT w.token_hash, w.score, w.distance, w.runs, w.best, p.name, p.short, p.badge, p.badge_tier
   FROM lb_weekly w JOIN lb_player p ON p.token_hash = w.token_hash
   WHERE w.week = ?1 AND w.mode = ?2 AND p.status = 'ok'
   ORDER BY w.score DESC, w.distance DESC, w.ts ASC
@@ -486,11 +504,11 @@ export async function weekly(db: D1Database, url: URL, token: string | null, now
     const hash = await hashToken(token)
     const mine = await db
       .prepare(
-        `SELECT w.score, w.distance, w.ts, p.status FROM lb_weekly w JOIN lb_player p ON p.token_hash = w.token_hash
+        `SELECT w.score, w.distance, w.runs, w.best, w.ts, p.status FROM lb_weekly w JOIN lb_player p ON p.token_hash = w.token_hash
          WHERE w.week = ?1 AND w.mode = ?2 AND w.token_hash = ?3`,
       )
       .bind(week, mode, hash)
-      .first<{ score: number; distance: number; ts: number; status: string }>()
+      .first<{ score: number; distance: number; runs: number; best: number; ts: number; status: string }>()
     if (mine && mine.status !== 'banned') {
       const ahead = await db
         .prepare(
@@ -501,7 +519,7 @@ export async function weekly(db: D1Database, url: URL, token: string | null, now
         )
         .bind(week, mode, mine.score, mine.distance, hash, mine.ts)
         .first<{ n: number }>()
-      body.me = { place: (ahead?.n ?? 0) + 1, score: mine.score, distance: mine.distance }
+      body.me = { place: (ahead?.n ?? 0) + 1, score: mine.score, distance: mine.distance, runs: mine.runs, best: mine.best }
     }
   }
 
@@ -861,6 +879,8 @@ export async function pruneLeague(db: D1Database, nowMs: number): Promise<{ week
   const [w, d] = await db.batch([
     db.prepare(`DELETE FROM lb_weekly WHERE week < ?1`).bind(weekCutoff),
     db.prepare(`DELETE FROM lb_daily WHERE daily < ?1`).bind(dayCutoff),
+    // Tekrar koruması anahtarları: 35 gün yeter (kuyruk o kadar eski koşu taşımaz)
+    db.prepare(`DELETE FROM lb_run_seen WHERE ts < ?1`).bind(nowMs - 35 * 86_400_000),
   ])
   return { weeks: w.meta.changes ?? 0, days: d.meta.changes ?? 0 }
 }

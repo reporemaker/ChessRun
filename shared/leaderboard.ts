@@ -127,6 +127,12 @@ export interface SubmitBody {
   badgeTier?: BadgeTier
 }
 
+/**
+ * Haftalık lig satırı. `score` = o hafta o modda BİRİKTİRİLEN toplam puan
+ * (her koşu eklenir; günlük çarpan uygulanmış), `distance` = toplam satır,
+ * `runs` = koşu sayısı, `best` = en iyi tek koşu (bilgi). Sıra: toplam puan,
+ * eşitlikte toplam satır, sonra erken gelen.
+ */
 export interface WeeklyEntry {
   place: number
   name: string
@@ -134,6 +140,8 @@ export interface WeeklyEntry {
   token: string
   score: number
   distance: number
+  runs: number
+  best: number
   badge?: string
   badgeTier?: BadgeTier
 }
@@ -145,7 +153,7 @@ export interface WeeklyResponse {
   /** Bu hafta bu modda en az bir koşu yollayan oyuncu sayısı */
   players: number
   /** Başlıkta jeton geldiyse ve tabloda varsa: kendi sıran (listede olmasan da) */
-  me?: { place: number; score: number; distance: number }
+  me?: { place: number; score: number; distance: number; runs: number; best: number }
   /** Geçen haftanın ilk üçü - Pazartesi kazananlar iz bırakmadan silinmesin */
   lastWeek?: { week: string; entries: WeeklyEntry[] }
 }
