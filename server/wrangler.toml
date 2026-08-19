@@ -28,6 +28,10 @@ id = "f69b4bdcf4f14393a33b2f429ea5f73e"
 crons = ["5 0 * * *"]
 
 # --- Rotalar -----------------------------------------------------------
+# REZERVE (oyun, Pages'te): /play/* ve /daily oyunun kendi adresleri
+# (src/ui/route.ts) - Pages 404.html olmadığı için bunlara index.html verir.
+# Buraya ASLA /play/* ya da /daily rotası ekleme; yeni Worker rotası için
+# yeni bir önek seç ve route.ts'teki listeyi güncelle.
 # Toplama APEX'te, yani oyunla aynı origin. Bu tesadüf değil: sendBeacon
 # preflight yapamaz, çapraz origin'de oturum olayları iOS'ta sessizce
 # kaybolur. Panel ayrı alan adında çünkü Access politikaları alan adı

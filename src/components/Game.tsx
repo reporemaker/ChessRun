@@ -59,6 +59,7 @@ import {
   wait,
 } from '../ui/timing'
 import { ArcadeOutro } from './ArcadeOutro'
+import { ExitButton } from './ExitButton'
 import { BadgeChip } from './BadgeChip'
 import { NameChip } from './NameChip'
 import { Board } from './Board'
@@ -522,6 +523,8 @@ export function Game({
   }
 
   const canAct = phase === 'input' && game.status === 'playing'
+  // Kaybedilecek bir şey var mı: çıkışta onay ve deftere `abandoned` kaydı buna bakar
+  const runLive = game.status === 'playing' && (game.distance > 0 || game.score > 0)
   const over = game.status === 'gameover'
   // Arcade kapanış üç modda da: tahta kırmızı alarmla söner, sonra tablo açılır
   const arcadeOutro = over
@@ -588,9 +591,9 @@ export function Game({
     <div className="gv">
       {/* ---- masaüstü üst çubuk ---- */}
       <div className="gv-bar">
-        <button type="button" className="gv-back" onClick={onExit}>
+        <ExitButton className="gv-back" active={runLive} onExit={onExit}>
           ← {t('game.menu')}
-        </button>
+        </ExitButton>
         <span>
           <span className="gv-glyph">{game.mode === 'kingRun' ? '♚' : game.mode === 'trio' ? '♛' : '♞'}</span>{' '}
           <span className="gv-mode">{t(`mode.${game.mode}.name`)}</span>
@@ -601,8 +604,11 @@ export function Game({
         <span>{t('home.rank')} -</span>
       </div>
 
-      {/* ---- mobil üst köşeler ---- */}
+      {/* ---- mobil üst köşeler: «←» çıkış (koşu sürüyorsa onaylı) · skor · en iyi ---- */}
       <div className="gv-cnr">
+        <ExitButton className="gv-exit" active={runLive} onExit={onExit} ariaLabel={t('game.menu')}>
+          ←
+        </ExitButton>
         <span className="gv-cell">
           <span className="gv-lb">{t('hud.score')}{bonus > 1 ? ` · ×${bonus.toFixed(2)}` : ''}</span>
           <span className="gv-n xl">{game.score}</span>

@@ -34,6 +34,7 @@ import { type Translate, useT } from '../ui/text'
 import { type SoundName, playSound, unlockSound } from '../ui/sound'
 import { APP_VERSION } from '../ui/version'
 import { DailyOutro } from './DailyOutro'
+import { ExitButton } from './ExitButton'
 import { BadgeChip } from './BadgeChip'
 import { DailyBoard, STRIKE_DELAY_MS, STRIKE_MOVE_MS } from './DailyBoard'
 import { NameChip } from './NameChip'
@@ -484,12 +485,15 @@ export function DailyGame({
     </span>
   )
 
+  // Hak yandı ve oynanıyor: çıkışta onay + deftere `abandoned` (puan kalır)
+  const runLive = phase === 'playing' && game.status === 'playing' && (game.distance > 0 || game.score > 0)
+
   return (
     <div className="gv daily-gv">
       <div className="gv-bar">
-        <button type="button" className="gv-back" onClick={onExit}>
+        <ExitButton className="gv-back" active={runLive} onExit={onExit}>
           ← {t('game.menu')}
-        </button>
+        </ExitButton>
         <span>
           <span className="gv-glyph">⚡</span> <span className="gv-mode">{t('mode.daily.name')}</span>
         </span>
@@ -501,6 +505,9 @@ export function DailyGame({
       </div>
 
       <div className="gv-cnr">
+        <ExitButton className="gv-exit" active={runLive} onExit={onExit} ariaLabel={t('game.menu')}>
+          ←
+        </ExitButton>
         <span className="gv-cell">
           <span className="gv-lb">{t('hud.score')}</span>
           <span className="gv-n xl">{game.score}</span>

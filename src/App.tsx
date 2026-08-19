@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { minColsOf } from './engine/config'
+import { DEFAULT_COLS, minColsOf } from './engine/config'
 import { Game, type GameConfig, type GameHandle } from './components/Game'
 import { DailyGame } from './components/DailyGame'
 import { Home, type HomeFocus } from './components/Home'
@@ -10,7 +10,10 @@ import { Settings } from './components/Settings'
 import { claimLeague } from './ui/badges'
 import { fetchAwards, flushSubmitQueue } from './ui/leaderboard'
 import { PROFILE_EVENT, RESET_EVENT, pullProfile, pushProfile } from './ui/sync'
-import { useSettings } from './ui/settings'
+import { getSettings, useSettings } from './ui/settings'
+import { DAILY_REPLAY_ALLOWED, dailyPlayed } from './ui/dailyLock'
+import { fetchDaily, leaderboardEnabled } from './ui/leaderboard'
+import { type PlayMode, type Route, parseRoute, pathOf, routeOfMode } from './ui/route'
 import { unlockSound } from './ui/sound'
 import { trackSessionEnd, trackVisit } from './ui/stats'
 import { dailySeed, dayKey } from './ui/scores'
@@ -26,6 +29,26 @@ function devConfig(mode: string, seedParam: string | null): GameConfig {
     : { mode: mode as GameConfig['mode'], playerColor: 'w', cols: 8 }
 }
 
+/** /play/<mod> adresinden konfig: ayarlardaki koridor (Üçlü için en az kendi genişliği) */
+function playConfig(mode: PlayMode): GameConfig {
+  return { mode, playerColor: 'w', cols: Math.max(getSettings().cols, minColsOf(mode)) }
+}
+
+/**
+ * Açılış rotası: adres bilinmiyorsa ana sayfa ve adres düzeltilir. Paylaşım
+ * `?g=` sorgusu korunur (aşağıdaki odak mantığı okuyacak).
+ */
+function initialRoute(): Route {
+  const route = parseRoute(window.location.pathname)
+  if (route) return route
+  try {
+    window.history.replaceState(null, '', `/${window.location.search}`)
+  } catch {
+    // yoksay
+  }
+  return { kind: 'home' }
+}
+
 /**
  * Menü, oyun ve iki katman: ayarlar penceresi ile bilgi sayfaları.
  *
@@ -34,16 +57,23 @@ function devConfig(mode: string, seedParam: string | null): GameConfig {
  * kalmış tur zincirleri kendiliğinden iptal oluyor.
  */
 export default function App() {
-  // Geliştirmede ?dev=game ile doğrudan oyuna girilebiliyor - ekran
-  // görüntüsüyle doğrulama için. Üretim derlemesinde tamamen kapalı.
+  /* Adres → ekran (bkz. ui/route.ts): /play/<mod> doğrudan o oyun, /daily
+     günün mücadelesi (kilit/tohum sunucudan - aşağıdaki effect), / ana sayfa.
+     Geliştirmede ?dev=game kısayolu öncelikli (ekran görüntüsü için). */
+  const [route] = useState<Route>(initialRoute)
   const [config, setConfig] = useState<GameConfig | null>(() =>
     import.meta.env.DEV && window.location.search.includes('dev=game')
       ? devConfig(
           new URLSearchParams(window.location.search).get('mode') ?? 'classic',
           new URLSearchParams(window.location.search).get('seed'),
         )
-      : null,
+      : route.kind === 'play'
+        ? playConfig(route.mode)
+        : null,
   )
+  // popstate dinleyicisi bir kez kuruluyor; güncel konfigi ref'ten okur
+  const configRef = useRef(config)
+  configRef.current = config
   // ?dev=settings - ayarlar penceresini açık başlat (yalnızca DEV)
   const [settingsOpen, setSettingsOpen] = useState(
     () => import.meta.env.DEV && window.location.search.includes('dev=settings'),
@@ -57,7 +87,7 @@ export default function App() {
   const { lang } = useSettings()
   /* Paylaşım bağlantısı: ?g=classic|kingRun|trio|daily(&d=gün) → ana sayfada o
      kart vurgulanır. Adres çubuğu temizlenir ki yenilemede tekrar vurgulamasın. */
-  const [focus] = useState<HomeFocus | null>(() => {
+  const [focus, setFocus] = useState<HomeFocus | null>(() => {
     const params = new URLSearchParams(window.location.search)
     const g = params.get('g')
     if (!g || !['classic', 'kingRun', 'trio', 'daily'].includes(g)) return null
@@ -70,6 +100,93 @@ export default function App() {
     return { mode: g as HomeFocus['mode'], day: d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : undefined }
   })
   const gameRef = useRef<GameHandle>(null)
+
+  /* --- gezinme: adres ↔ ekran ------------------------------------------ */
+
+  /** Adres çubuğunu ekrana eşitle; oyuna girerken geçmişe yeni kayıt, çıkarken yerine yaz */
+  function syncPath(next: GameConfig | null, how: 'push' | 'replace') {
+    const path = pathOf(routeOfMode(next?.mode ?? null))
+    if (window.location.pathname === path) return
+    try {
+      if (how === 'push') window.history.pushState(null, '', path)
+      else window.history.replaceState(null, '', path)
+    } catch {
+      // yoksay (dosya:// vb.)
+    }
+  }
+
+  function enterGame(next: GameConfig) {
+    unlockSound()
+    setConfig(next)
+    syncPath(next, 'push')
+  }
+
+  /**
+   * Oyundan çıkış - tek yol: «← Menü», mobil «←», ayarlar «Menüye dön»,
+   * outro, tarayıcı geri tuşu. Süren koşu deftere `abandoned` yazılır
+   * (puan kalır; bitmiş/boş koşuda `abandon` zaten hiçbir şey yapmaz),
+   * sonra ana sayfa. Adres yerine yazılır ki «geri» oyuna değil, oyundan
+   * önceki sayfaya gitsin.
+   */
+  function exitGame() {
+    void (async () => {
+      await gameRef.current?.abandon()
+      setSettingsOpen(false)
+      setConfig(null)
+      syncPath(null, 'replace')
+    })()
+  }
+
+  /**
+   * /daily adresi: kart akışının aynısı, sunucu yetkili. Oynandıysa ya da
+   * sunucuya ulaşılamadıysa ana sayfa (günlük kartı vurgulu; kart kendi
+   * durumunu - sonuç/uyarı - gösterir) ve adres `/`'a düzeltilir.
+   */
+  function launchDailyFromRoute() {
+    const day = dayKey()
+    const fallback = () => {
+      setFocus({ mode: 'daily' })
+      setConfig(null)
+      syncPath(null, 'replace')
+    }
+    if (!leaderboardEnabled) {
+      if (dailyPlayed(day) && !DAILY_REPLAY_ALLOWED) return fallback()
+      setConfig({ mode: 'daily', playerColor: 'w', cols: DEFAULT_COLS, seed: dailySeed(day), daily: day })
+      return
+    }
+    void fetchDaily(day).then((info) => {
+      if (!info || (info.played && !DAILY_REPLAY_ALLOWED)) return fallback()
+      setConfig({ mode: 'daily', playerColor: 'w', cols: DEFAULT_COLS, seed: info.seed, daily: day })
+    })
+  }
+
+  useEffect(() => {
+    if (route.kind === 'daily' && !config) launchDailyFromRoute()
+    // Yalnızca açılışta: rota ilk değerinden sonra değişmiyor
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  /* Tarayıcı geri/ileri: adres neyse o ekran. Geri = oyundan çık (onay
+     sormadan - kullanıcı zaten «geri» dedi); ileri/geri ile bir oyun adresine
+     gelmek o oyunu (yeni koşu) açar - adres = sayfa. */
+  useEffect(() => {
+    const onPop = () => {
+      const next = parseRoute(window.location.pathname) ?? { kind: 'home' as const }
+      const current = configRef.current
+      if (next.kind === 'home') {
+        if (current) exitGame()
+        return
+      }
+      void (async () => {
+        await gameRef.current?.abandon()
+        if (next.kind === 'play') setConfig(playConfig(next.mode))
+        else launchDailyFromRoute()
+      })()
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   // Sıralama kendi penceresi. ?dev=rank örnek veriyle açıyor (yalnızca DEV).
   const demoRank = import.meta.env.DEV && window.location.search.includes('dev=rank')
   const [rankOpen, setRankOpen] = useState<boolean>(demoRank)
@@ -157,7 +274,7 @@ export default function App() {
           key={runKey}
           ref={gameRef}
           config={config}
-          onExit={() => setConfig(null)}
+          onExit={exitGame}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPage={setPage}
           onOpenRanking={() => setRankOpen(true)}
@@ -169,7 +286,7 @@ export default function App() {
           key={runKey}
           ref={gameRef}
           config={config}
-          onExit={() => setConfig(null)}
+          onExit={exitGame}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPage={setPage}
           onOpenRanking={() => setRankOpen(true)}
@@ -179,10 +296,7 @@ export default function App() {
         />
       ) : (
         <Home
-          onStart={(next) => {
-            unlockSound()
-            setConfig(next)
-          }}
+          onStart={enterGame}
           onOpenSettings={() => setSettingsOpen(true)}
           focus={focus}
         />
@@ -192,14 +306,7 @@ export default function App() {
         <Settings
           onClose={() => setSettingsOpen(false)}
           rankVersion={rankVersion}
-          onExitGame={
-            config
-              ? () => {
-                  setSettingsOpen(false)
-                  setConfig(null)
-                }
-              : undefined
-          }
+          onExitGame={config ? exitGame : undefined}
           onOpenPage={(next) => {
             setSettingsOpen(false)
             setPage(next)

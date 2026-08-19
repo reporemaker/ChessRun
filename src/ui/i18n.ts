@@ -369,6 +369,10 @@ const tr = {
 
   /* --- oyun ekranı --- */
   'game.menu': 'Menü',
+  'game.leave.title': 'KOŞU YARIM KALACAK',
+  'game.leave.body': 'Çıkarsan bu koşu burada biter; şimdiye kadarki puan deftere yazılır.',
+  'game.leave.stay': 'KAL',
+  'game.leave.go': 'ÇIK',
   'game.daily': 'günlük',
   'game.share': 'Sonucu paylaş',
   'game.shareCopied': 'Panoya kopyalandı ✓',
@@ -858,6 +862,10 @@ const en: Partial7 = {
   'about.version': 'VERSION',
 
   'game.menu': 'Menu',
+  'game.leave.title': 'RUN WILL END',
+  'game.leave.body': 'Leaving ends this run here; the score so far is kept in your log.',
+  'game.leave.stay': 'STAY',
+  'game.leave.go': 'LEAVE',
   'game.daily': 'daily',
   'game.share': 'Share result',
   'game.shareCopied': 'Copied to clipboard ✓',
@@ -1339,6 +1347,10 @@ const de: Partial7 = {
   'about.tech.2':
     'Der Tages-Seed leitet sich aus dem Datum ab, und aller Zufall kommt aus einem gesetzten Generator: Derselbe Seed baut auf jedem Gerät dasselbe Brett.',
   'game.menu': 'Menü',
+  'game.leave.title': 'LAUF WIRD BEENDET',
+  'game.leave.body': 'Beim Verlassen endet dieser Lauf hier; die bisherigen Punkte bleiben im Logbuch.',
+  'game.leave.stay': 'BLEIBEN',
+  'game.leave.go': 'VERLASSEN',
   'game.daily': 'täglich',
   'game.share': 'Ergebnis teilen',
   'game.shareCopied': 'In die Zwischenablage kopiert ✓',
@@ -1810,6 +1822,10 @@ const es: Partial7 = {
   'about.tech.2':
     'La semilla diaria se deriva de la fecha y todo el azar sale de un generador con semilla: la misma semilla construye el mismo tablero en cualquier dispositivo.',
   'game.menu': 'Menú',
+  'game.leave.title': 'LA CARRERA TERMINARÁ',
+  'game.leave.body': 'Si sales, esta carrera termina aquí; los puntos hasta ahora quedan en tu registro.',
+  'game.leave.stay': 'QUEDARME',
+  'game.leave.go': 'SALIR',
   'game.daily': 'diaria',
   'game.share': 'Compartir resultado',
   'game.shareCopied': 'Copiado al portapapeles ✓',
@@ -2281,6 +2297,10 @@ const fr: Partial7 = {
   'about.tech.2':
     'La graine du jour vient de la date et tout le hasard sort d\'un générateur ensemencé : la même graine construit le même échiquier sur tous les appareils.',
   'game.menu': 'Menu',
+  'game.leave.title': "LA COURSE VA S'ARRÊTER",
+  'game.leave.body': "Si tu quittes, cette course s'arrête ici ; les points acquis restent dans ton carnet.",
+  'game.leave.stay': 'RESTER',
+  'game.leave.go': 'QUITTER',
   'game.daily': 'du jour',
   'game.share': 'Partager le résultat',
   'game.shareCopied': 'Copié dans le presse-papiers ✓',

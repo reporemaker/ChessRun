@@ -3320,6 +3320,33 @@ button.pop-chip {
   color: #dbe4f0;
 }
 
+/* Mobil sol üst «←»: köşe hücresinin önünde, başparmak boyu hedef */
+.gv-exit {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  margin: -8px 0 0 -8px;
+  border: 0;
+  background: none;
+  color: var(--arc-dim);
+  font: inherit;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.gv-exit:active {
+  color: var(--arc-text);
+}
+
+/* Çıkış onayı: pop-warn kutusu ekran ortasında tek başına */
+.gv-leave {
+  width: 100%;
+  max-width: 352px;
+  margin: 0;
+  padding: 14px 16px;
+  background: var(--arc-ink);
+}
+
 .gv-sp {
   flex: 1;
 }

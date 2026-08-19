@@ -1,4 +1,9 @@
-# Cloudflare Pages başlıkları (oyun, chessrun.app). Oyun tamamen aynı
+# Cloudflare Pages başlıkları (oyun, chessrun.app).
+#
+# YOLLAR: oyun adresleri /play/classic|kingRun|trio ve /daily (src/ui/route.ts)
+# Pages'in SPA fallback'ine dayanır: 404.html YOK, bilinmeyen yol index.html.
+# public/'e 404.html KOYMA. Worker rotaları apex'te /collect /s /lb - oyun
+# bu öneklerin altında adres kullanmaz. Oyun tamamen aynı
 # origin'den besleniyor: harici betik/stil/yazı tipi yok, API'ler /collect ve
 # /lb apex'te. Bu yüzden CSP sıkı tutulabiliyor. 'unsafe-inline' yalnızca
 # stil için: React satır içi stil atıyor.
