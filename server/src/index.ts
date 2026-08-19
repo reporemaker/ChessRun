@@ -48,6 +48,23 @@ function noContent(): Response {
   return new Response(null, NO_CONTENT)
 }
 
+/**
+ * IP başına hız sınırı (Workers Rate Limiting bağlaması). Bağlama yoksa
+ * (eski yerel ortam) ya da hata verirse izin ver - sınır bir sigorta,
+ * oyunu durduracak bir şey değil.
+ */
+async function allowed(limiter: RateLimit | undefined, request: Request): Promise<boolean> {
+  if (!limiter) return true
+  const ip = request.headers.get('cf-connecting-ip') ?? 'unknown'
+  try {
+    const { success } = await limiter.limit({ key: ip })
+    return success
+  } catch (err) {
+    console.error(JSON.stringify({ msg: 'ratelimit failed', err: String(err) }))
+    return true
+  }
+}
+
 /** Gövde ayrıştırmadan ÖNCE boyut kapısı - en ucuz koruma */
 async function readBody(request: Request, max = MAX_BODY_BYTES): Promise<unknown> {
   // Content-Length yoksa (chunked) okumadan reddet: aksi hâlde sınır ancak
@@ -230,6 +247,8 @@ export default {
 
     if (path.startsWith('/collect/')) {
       if (request.method !== 'POST') return noContent()
+      // Hız sınırı: IP başına; aşımda sessiz 204 (istatistik kaybı kabul)
+      if (!(await allowed(env.COLLECT_LIMIT, request))) return noContent()
       try {
         if (path === '/collect/visit') return await collectVisit(request, env, url.hostname)
         if (path === '/collect/run') return await collectRun(request, env)
@@ -254,6 +273,13 @@ export default {
       // Sıralama apex'te ve herkese açık - Access'in arkasına GİRMEMELİ.
       // Yazma ucu istatistikle aynı kuralı taşıyor: her durumda 204.
       const now = Date.now()
+      // Hız sınırı: IP başına (bkz. wrangler.toml). Okumada 429 (istemci
+      // yerel görünüme düşer), yazmada 204 (kuyruğa alınır, sonra gelir).
+      if (!(await allowed(env.LB_LIMIT, request))) {
+        return request.method === 'GET' || request.method === 'HEAD'
+          ? new Response('rate limited', { status: 429, headers: { 'retry-after': '10', 'cache-control': 'no-store' } })
+          : noContent()
+      }
       try {
         if (path === '/lb/runs') {
           if (request.method !== 'POST') return noContent()
