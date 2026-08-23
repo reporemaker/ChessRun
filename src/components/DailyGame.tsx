@@ -15,10 +15,11 @@ import {
   dailyMoves,
   dailyStriker,
 } from '../engine/daily'
+import { tuningActive } from '../engine/tuning'
 import type { PieceType, Pos } from '../engine/types'
 import { getIdentity, shortToken } from '../ui/identity'
 import { DAILY_REPLAY_ALLOWED, markDailyPlayed } from '../ui/dailyLock'
-import { leaderboardEnabled, startDaily } from '../ui/leaderboard'
+import { RANKS_EVENT, leaderboardEnabled, startDaily } from '../ui/leaderboard'
 import { GLYPH, PIECE_NAME_KEY } from '../ui/pieces'
 import { type RunRecord, currentStreak, readRuns, readStanding, recordRun } from '../ui/scores'
 import { lifetimeStreak, recordLifetime } from '../ui/lifetime'
@@ -29,7 +30,7 @@ import { setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
 import { LANGS } from '../ui/i18n'
 import type { ShareInput } from '../ui/share'
 import { dailyBonus } from '@shared/leaderboard'
-import { FeedbackLinks } from './FeedbackLinks'
+import { FeedbackLink } from './FeedbackLinks'
 import { type Translate, useT } from '../ui/text'
 import { type SoundName, playSound, unlockSound } from '../ui/sound'
 import { APP_VERSION } from '../ui/version'
@@ -59,7 +60,7 @@ interface DailyGameProps {
   config: GameConfig
   onExit: () => void
   onOpenSettings: () => void
-  onOpenPage: (page: 'help' | 'about') => void
+  onOpenPage: (page: 'help') => void
   onOpenRanking: () => void
   onOpenBadges: () => void
   badgeVersion: number
@@ -237,7 +238,14 @@ export function DailyGame({
     morphQueue.current.push(...items)
     if (morphTimer.current == null) playNextMorph()
   }
-  const { view: ranking, status: rankStatus } = useRanking('daily', result)
+  // Koşu sunucuya İŞLENDİ (RANKS_EVENT): kart, sunucunun onayladığı toplamla tazelensin
+  const [rankTick, setRankTick] = useState(0)
+  useEffect(() => {
+    const onRanks = () => setRankTick((n) => n + 1)
+    window.addEventListener(RANKS_EVENT, onRanks)
+    return () => window.removeEventListener(RANKS_EVENT, onRanks)
+  }, [])
+  const { view: ranking, status: rankStatus } = useRanking('daily', `${result ? 1 : 0}-${rankTick}`)
 
   const latest = useRef(game)
   latest.current = game
@@ -381,7 +389,8 @@ export function DailyGame({
     setHiScore(after.allTime?.score ?? run.score)
     setResult({
       run,
-      isBest: run.score > 0 && run.score > (before.allTime?.score ?? 0),
+      // Test kipinde kolay eğri gerçek rekoru "kırmış" görünmesin
+      isBest: !tuningActive() && run.score > 0 && run.score > (before.allTime?.score ?? 0),
       best: before.allTime?.score ?? 0,
       elapsedMs,
     })
@@ -768,10 +777,12 @@ export function DailyGame({
           </button>
         </div>
         <div className="gv-btns">
-          <button type="button" onClick={() => onOpenPage('about')}>
+          {/* Hakkında: pencere değil /about statik sayfası; koşu devam
+              fişiyle (ui/resume) geri çağrılır */}
+          <button type="button" onClick={() => window.location.assign('/about')}>
             {t('settings.about')}
           </button>
-          <FeedbackLinks lang={settings.lang} mode="daily" />
+          <FeedbackLink lang={settings.lang} mode="daily" />
         </div>
       </aside>
     </div>

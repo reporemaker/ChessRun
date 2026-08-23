@@ -4300,31 +4300,3 @@ button.gv-chip {
   50% { box-shadow: 0 0 0 4px rgba(255, 210, 63, 0.7), 0 0 28px rgba(255, 210, 63, 0.35); }
 }
 
-/* Öneri gönder altı: Hata bildir · metni kopyala (küçük, aynı satır) */
-.fb-more {
-  grid-column: 1 / -1;
-  display: block;
-  text-align: center;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: none;
-  color: var(--text-dim);
-}
-
-.fb-more a,
-.fb-more button {
-  font: inherit;
-  letter-spacing: inherit;
-  color: inherit;
-  background: none;
-  border: 0;
-  padding: 0;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  cursor: pointer;
-}
-
-.fb-more a:hover,
-.fb-more button:hover {
-  color: var(--text);
-}

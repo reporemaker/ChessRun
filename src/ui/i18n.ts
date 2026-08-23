@@ -214,8 +214,6 @@ const tr = {
   'feedback.game': 'Oyun',
   'feedback.last': 'Son koşu',
   'feedback.reply': 'Cevap bu adrese gelir.',
-  'feedback.copy': 'Metni kopyala',
-  'feedback.copied': 'Adres, konu ve gövde panoya kopyalandı',
   'settings.langPartial':
     'Uzun metinler ve oyun içi yazılar bu dilde henüz yok, İngilizce gösterilir.',
 
@@ -255,6 +253,8 @@ const tr = {
     'Şah turda bir kare gider, tahta bir satır kayar: hayatta kalmak için her tur yukarı basmalısın.',
   'help.kingRun.4':
     'Tehdit altındayken kaçacak güvenli kare kalmazsa mat olursun ve koşu biter. Tehdit yokken güvenli kare kalmazsa bu sıkışmadır: bir hak yanar, tahta yenilenir.',
+  'help.kingRun.5':
+    'Vezir yersen tahta o tur kaymaz: alt satır silinmez, tırmandığın satır gerçekten kazanılır. Korunmasız vezire uzanmak riskine değer.',
   'help.trio.1': 'Vezir, kale ve fil senin. Her tur bunlardan yalnızca birini oynarsın.',
   'help.trio.2':
     'Tahta yine her hamlede kayar; oynamadığın iki taş bir satır aşağı düşer. Üçünü birden ayakta tutmak asıl mesele.',
@@ -338,39 +338,6 @@ const tr = {
   'score.noteKingRun': "Kaçış'ta şah puanı yok, sen şahsın, mesafe ve yeme sayılır.",
 
   /* --- sayfa: hakkında --- */
-  'about.title': 'HAKKINDA',
-  'about.what.title': 'BU NE',
-  'about.what.1':
-    'ChessRun sonsuz koşu ile satrancı birleştiriyor: tahta her hamlede kayıyor, gerçek satranç hamleleriyle hayatta kalmaya çalışıyorsun.',
-  'about.what.2':
-    'Üç mod aynı motoru paylaşıyor. Motor React bilmiyor, oyunun tüm kuralları saf fonksiyonlarda yaşıyor ve testlerle korunuyor.',
-  'about.scores.title': 'SKORLAR VE GİZLİLİK',
-  'about.scores.1':
-    'Hesap yok, e-posta yok, parola yok. Tarayıcın ilk açılışta kendine bir cihaz jetonu üretiyor; skorların bu jetonla imzalanıyor.',
-  'about.scores.2':
-    'Skorların ve rozetlerin bu cihazda, tarayıcının yerel deposunda duruyor. Haftalık sıralamaya giden koşular sunucuya da yazılıyor: skor, mod, ad, seçili rozet ve cihaz jetonunun özeti (SHA-256) — jetonun kendisi hiç saklanmıyor. Sıralama haftalık; eski haftalardan yalnızca ilk üç kalıyor.',
-  'about.scores.3':
-    'Rozetlerin, ömür boyu sayaçların ve son koşuların bir kopyası da aynı jeton özetiyle sunucuda tutuluyor ki cihaz değiştirince ya da tarayıcı verin silinince geri gelebilsin. Ayarlardan bir kurtarma kodu oluşturursan cihaz jetonun şifrelenmiş olarak sunucuya yazılır; sunucu kodu bilmediği için şifreyi açamaz — kodu bilen kimliğini alır, bir yere yaz.',
-  'about.privacy.title': 'NELERİ SAYIYORUZ',
-  'about.privacy.1':
-    'Oyunu geliştirmek için anonim kullanım istatistiği tutuyoruz: hangi mod ne kadar oynanıyor, koşular ne kadar sürüyor, nasıl bitiyor, hangi ülkeden ve hangi dilde oynanıyor.',
-  'about.privacy.2':
-    'Çerez yok, hesap yok, cihaz jetonu bu istatistiğe hiç gönderilmiyor. Ziyaretçi sayımı IP adresinin günlük değişen bir tuzla hash\'lenmesiyle yapılıyor; IP\'nin kendisi hiçbir yere yazılmıyor ve tuz iki günde silindiği için dünkü sayımlar geriye döndürülemiyor.',
-  'about.privacy.3':
-    'Bilerek toplamadıklarımız: şehir, ekran çözünürlüğü, ham tarayıcı kimliği, ziyaret ettiğin başka siteler. Ham kayıtlar 35 gün sonra siliniyor; geriye yalnızca günlük toplamlar kalıyor. Tarayıcın "izleme" (Do Not Track) diyorsa hiçbir şey gönderilmiyor.',
-  'about.tech.title': 'TEKNİK',
-  'about.tech.1':
-    'Ses dosyası yok: bütün efektler WebAudio osilatörüyle anlık üretiliyor. Görsel de aynı dili konuşuyor - 8-bit, sert zarflar, kare dalga.',
-  'about.tech.2':
-    'Günlük tohum tarihten üretiliyor, rastgelelik tohumlanmış bir üreteçten geliyor: aynı tohum her cihazda aynı tahtayı kuruyor.',
-  'about.credit.title': 'KİM YAPTI',
-  'about.credit.1': 'ChessRun bir SmartKraft projesi.',
-  'about.credit.2': 'Soru, hata, öneri: {mail}',
-  'about.credit.3': 'Ana sayfa figürleri: «Chessnut» seti, Alexis Luengas - Apache 2.0.',
-  'about.license.show': 'Lisans metnini göster (Apache 2.0)',
-  'about.license.hide': 'Lisans metnini gizle',
-  'about.device': 'CİHAZ',
-  'about.version': 'SÜRÜM',
 
   /* --- oyun ekranı --- */
   'game.menu': 'Menü',
@@ -413,6 +380,7 @@ const tr = {
 
   'flash.kingBonus': 'ŞAH ALINDI! +{points} puan, +{lives} can',
   'flash.capture': '{piece} +{points}',
+  'flash.queenFreeze': 'Tahta bu tur kaymıyor!',
   'flash.transform': '→ {piece} oldun',
   'flash.check': 'ŞAH! +{points}',
   'flash.checkStreak': 'ŞAH ×{streak} +{points}',
@@ -724,8 +692,6 @@ const en: Partial7 = {
   'feedback.game': 'Game',
   'feedback.last': 'Last run',
   'feedback.reply': 'Replies go to this address.',
-  'feedback.copy': 'Copy text',
-  'feedback.copied': 'Address, subject and body copied',
   'settings.langPartial':
     'Long-form pages and in-game text are not translated yet - showing English.',
 
@@ -763,6 +729,8 @@ const en: Partial7 = {
     'The king moves one square per turn and the board scrolls one row: to survive you have to climb every single turn.',
   'help.kingRun.4':
     "In check with no safe square left you are mated and the run ends. Not in check but no safe square: that's a stuck - one right burns, the board reshuffles.",
+  'help.kingRun.5':
+    'Take a queen and the board does not scroll that turn: the bottom row is not erased, the row you climbed is truly won. Reaching for an undefended queen is worth the risk.',
   'help.trio.1': 'Queen, rook and bishop are yours. Each turn you move exactly one of them.',
   'help.trio.2':
     'The board still scrolls on every move, so the two pieces you did not move fall one row. Keeping all three alive is the real problem.',
@@ -845,39 +813,6 @@ const en: Partial7 = {
   'score.trioMate': 'Trio: mate',
   'score.noteKingRun': 'No check points in Escape, you are the king; distance and captures count.',
 
-  'about.title': 'ABOUT',
-  'about.what.title': 'WHAT THIS IS',
-  'about.what.1':
-    'ChessRun crosses an endless runner with chess: the board scrolls on every move and you survive using real chess moves.',
-  'about.what.2':
-    'The three modes share one engine. That engine knows nothing about React - every rule lives in pure functions covered by tests.',
-  'about.scores.title': 'SCORES AND PRIVACY',
-  'about.scores.1':
-    'No account, no email, no password. Your browser generates a device token on first run and your scores are signed with it.',
-  'about.scores.2':
-    "Your scores and badges live on this device, in the browser's local storage. Runs that enter the weekly ranking are also written to the server: score, mode, name, chosen badge and a digest (SHA-256) of the device token — the token itself is never stored. Rankings are weekly; of past weeks only the top three remain.",
-  'about.scores.3':
-    'A copy of your badges, lifetime counters and recent runs is also kept on the server under the same token digest, so they can come back when you switch devices or your browser data is wiped. If you create a recovery code in Settings, your device token is written to the server encrypted; the server never sees the code, so it cannot decrypt it — whoever has the code has your identity, so write it down.',
-  'about.privacy.title': 'WHAT WE COUNT',
-  'about.privacy.1':
-    'To improve the game we keep anonymous usage statistics: which mode is played how much, how long runs last, how they end, and from which country and in which language.',
-  'about.privacy.2':
-    "No cookies, no account, and the device token is never sent to these statistics. Visitors are counted by hashing the IP address with a salt that changes daily; the IP itself is never stored, and because the salt is deleted after two days, yesterday's counts cannot be reversed.",
-  'about.privacy.3':
-    'What we deliberately do not collect: city, screen resolution, raw browser identity, other sites you visit. Raw records are deleted after 35 days; only daily totals remain. If your browser says Do Not Track, nothing is sent at all.',
-  'about.tech.title': 'TECHNICAL',
-  'about.tech.1':
-    'There are no audio files: every effect is generated live with a WebAudio oscillator. The visuals speak the same language - 8-bit, hard envelopes, square waves.',
-  'about.tech.2':
-    'The daily seed is derived from the date and all randomness comes from a seeded generator: the same seed builds the same board on every device.',
-  'about.credit.title': 'WHO MADE IT',
-  'about.credit.1': 'ChessRun is a SmartKraft project.',
-  'about.credit.2': 'Questions, bugs, ideas: {mail}',
-  'about.credit.3': 'Home-screen pieces: «Chessnut» set by Alexis Luengas - Apache 2.0.',
-  'about.license.show': 'Show licence text (Apache 2.0)',
-  'about.license.hide': 'Hide licence text',
-  'about.device': 'DEVICE',
-  'about.version': 'VERSION',
 
   'game.menu': 'Menu',
   'game.leave.title': 'RUN WILL END',
@@ -919,6 +854,7 @@ const en: Partial7 = {
 
   'flash.kingBonus': 'KING TAKEN! +{points} points, +{lives} life',
   'flash.capture': '{piece} +{points}',
+  'flash.queenFreeze': 'No scroll this turn!',
   'flash.transform': '→ you are now a {piece}',
   'flash.check': 'CHECK! +{points}',
   'flash.checkStreak': 'CHECK ×{streak} +{points}',
@@ -1224,23 +1160,12 @@ const de: Partial7 = {
   'feedback.game': 'Spiel',
   'feedback.last': 'Letzter Lauf',
   'feedback.reply': 'Antworten gehen an diese Adresse.',
-  'feedback.copy': 'Text kopieren',
-  'feedback.copied': 'Adresse, Betreff und Text kopiert',
   'settings.langPartial':
     'Lange Texte und Spieltexte sind noch nicht übersetzt - Englisch wird angezeigt.',
 
   'help.title': 'SPIELANLEITUNG',
   'help.notice.title': 'DAS IST KEIN SCHACH',
   'help.notice.body': 'Die Schachregeln, die du kennst, gelten hier nicht: das Brett rückt nach jedem Zug, du wirst zu der Figur, die du schlägst, und der König kann geschlagen werden - Matt ist nicht das Ende, sondern eine Belohnung. Lies die Regeln einmal, um besser zu spielen.',
-  'about.title': 'ÜBER',
-  'about.credit.title': 'WER ES GEMACHT HAT',
-  'about.credit.1': 'ChessRun ist ein SmartKraft-Projekt.',
-  'about.credit.2': 'Fragen, Fehler, Ideen: {mail}',
-  'about.credit.3': 'Figuren der Startseite: Set «Chessnut» von Alexis Luengas - Apache 2.0.',
-  'about.license.show': 'Lizenztext anzeigen (Apache 2.0)',
-  'about.license.hide': 'Lizenztext ausblenden',
-  'about.device': 'GERÄT',
-  'about.version': 'VERSION',
   'help.core.title': 'REGELN FÜR ALLE DREI MODI',
   'help.core.1':
     'Die Zugfolge ist immer gleich: du ziehst, das Brett rückt eine Reihe, der Gegner zieht. Beim Rücken kommt oben eine neue Reihe, die unterste wird gelöscht; bleibst du unten, fällst du.',
@@ -1272,6 +1197,8 @@ const de: Partial7 = {
     'Der König zieht ein Feld pro Runde, das Brett rückt eine Reihe vor: Zum Überleben musst du jede Runde steigen.',
   'help.kingRun.4':
     'Im Schach ohne sicheres Feld bist du matt und der Lauf endet. Nicht im Schach, aber kein sicheres Feld: das ist Festgefahren - ein Recht verfällt, das Brett wird neu gemischt.',
+  'help.kingRun.5':
+    'Schlägst du eine Dame, rückt das Brett in dieser Runde nicht vor: die unterste Reihe wird nicht gelöscht, die erklommene Reihe ist wirklich gewonnen. Der Griff nach einer ungedeckten Dame lohnt das Risiko.',
   'help.trio.1': 'Dame, Turm und Läufer gehören dir. Pro Runde ziehst du genau eine davon.',
   'help.trio.2':
     'Das Brett rückt weiterhin bei jedem Zug vor, also fallen die beiden ungezogenen Figuren eine Reihe. Alle drei am Leben zu halten ist die eigentliche Aufgabe.',
@@ -1353,30 +1280,6 @@ const de: Partial7 = {
   'score.trioThreatVal': '+{n} · höchstens {cap} pro Zug',
   'score.trioMate': 'Trio: Matt',
   'score.noteKingRun': 'Keine Schachpunkte in Flucht, du bist der König; Distanz und Schläge zählen.',
-  'about.what.title': 'WAS DAS IST',
-  'about.what.1':
-    'ChessRun kreuzt einen Endless Runner mit Schach: Das Brett rückt bei jedem Zug vor, und du überlebst mit echten Schachzügen.',
-  'about.what.2':
-    'Die drei Modi teilen sich eine Engine. Diese Engine weiß nichts von React - jede Regel lebt in reinen Funktionen, abgesichert durch Tests.',
-  'about.scores.title': 'PUNKTE UND DATENSCHUTZ',
-  'about.scores.1':
-    'Kein Konto, keine E-Mail, kein Passwort. Dein Browser erzeugt beim ersten Start ein Gerätetoken, mit dem deine Punkte signiert werden.',
-  'about.scores.2':
-    'Deine Punkte und Abzeichen liegen auf diesem Gerät, im lokalen Speicher des Browsers. Läufe, die in die Wochenrangliste eingehen, werden auch an den Server geschrieben: Punktzahl, Modus, Name, gewähltes Abzeichen und ein Digest (SHA-256) des Gerätetokens — das Token selbst wird nie gespeichert. Die Rangliste ist wöchentlich; von vergangenen Wochen bleiben nur die ersten drei.',
-  'about.scores.3':
-    'Eine Kopie deiner Abzeichen, Gesamtzähler und letzten Läufe liegt unter demselben Token-Digest auch auf dem Server, damit sie bei Gerätewechsel oder gelöschten Browserdaten zurückkommen. Erstellst du in den Einstellungen einen Wiederherstellungscode, wird dein Gerätetoken verschlüsselt auf den Server geschrieben; der Server kennt den Code nicht und kann ihn nicht entschlüsseln — wer den Code hat, hat deine Identität, also schreib ihn auf.',
-  'about.privacy.title': 'WAS WIR ZÄHLEN',
-  'about.privacy.1':
-    'Um das Spiel zu verbessern, führen wir anonyme Nutzungsstatistiken: welcher Modus wie oft gespielt wird, wie lange Läufe dauern, wie sie enden, aus welchem Land und in welcher Sprache.',
-  'about.privacy.2':
-    'Keine Cookies, kein Konto, und das Gerätetoken wird nie an diese Statistik gesendet. Besucher werden gezählt, indem die IP-Adresse mit einem täglich wechselnden Salt gehasht wird; die IP selbst wird nirgends gespeichert, und weil der Salt nach zwei Tagen gelöscht wird, lassen sich gestrige Zählungen nicht zurückrechnen.',
-  'about.privacy.3':
-    'Was wir bewusst nicht erfassen: Stadt, Bildschirmauflösung, rohe Browser-Kennung, andere Seiten, die du besuchst. Rohdaten werden nach 35 Tagen gelöscht; es bleiben nur Tagessummen. Sagt dein Browser „Do Not Track“, wird gar nichts gesendet.',
-  'about.tech.title': 'TECHNIK',
-  'about.tech.1':
-    'Es gibt keine Audiodateien: Jeder Effekt entsteht live mit einem WebAudio-Oszillator. Die Optik spricht dieselbe Sprache - 8-Bit, harte Hüllkurven, Rechteckwellen.',
-  'about.tech.2':
-    'Der Tages-Seed leitet sich aus dem Datum ab, und aller Zufall kommt aus einem gesetzten Generator: Derselbe Seed baut auf jedem Gerät dasselbe Brett.',
   'game.menu': 'Menü',
   'game.leave.title': 'LAUF WIRD BEENDET',
   'game.leave.body': 'Beim Verlassen endet dieser Lauf hier; die bisherigen Punkte bleiben im Logbuch.',
@@ -1414,6 +1317,7 @@ const de: Partial7 = {
   'phase.enemyMove': 'Der Gegner zieht…',
   'flash.kingBonus': 'KÖNIG GESCHLAGEN! +{points} Punkte, +{lives} Leben',
   'flash.capture': '{piece} +{points}',
+  'flash.queenFreeze': 'Das Brett rückt diese Runde nicht vor!',
   'flash.transform': '→ jetzt bist du {piece}',
   'flash.check': 'SCHACH! +{points}',
   'flash.checkStreak': 'SCHACH ×{streak} +{points}',
@@ -1712,23 +1616,12 @@ const es: Partial7 = {
   'feedback.game': 'Juego',
   'feedback.last': 'Última carrera',
   'feedback.reply': 'Las respuestas llegan a esta dirección.',
-  'feedback.copy': 'Copiar texto',
-  'feedback.copied': 'Dirección, asunto y cuerpo copiados',
   'settings.langPartial':
     'Los textos largos y del juego aún no están traducidos - se muestra en inglés.',
 
   'help.title': 'CÓMO SE JUEGA',
   'help.notice.title': 'ESTO NO ES AJEDREZ',
   'help.notice.body': 'Las reglas de ajedrez que conoces no valen aquí: el tablero se desplaza tras cada jugada, te conviertes en la pieza que capturas y el rey se puede capturar - el mate no es el final, es una recompensa. Lee las reglas una vez para jugar mejor.',
-  'about.title': 'ACERCA DE',
-  'about.credit.title': 'QUIÉN LO HIZO',
-  'about.credit.1': 'ChessRun es un proyecto de SmartKraft.',
-  'about.credit.2': 'Preguntas, errores, ideas: {mail}',
-  'about.credit.3': 'Piezas de la portada: set «Chessnut» de Alexis Luengas - Apache 2.0.',
-  'about.license.show': 'Mostrar texto de la licencia (Apache 2.0)',
-  'about.license.hide': 'Ocultar texto de la licencia',
-  'about.device': 'DISPOSITIVO',
-  'about.version': 'VERSIÓN',
   'help.core.title': 'REGLAS COMUNES A LOS TRES MODOS',
   'help.core.1':
     'El orden del turno nunca cambia: mueves tú, el tablero se desplaza una fila, mueve el rival. Al desplazarse entra una fila nueva arriba y se borra la de abajo; si te quedas en la última fila, caes.',
@@ -1760,6 +1653,8 @@ const es: Partial7 = {
     'El rey avanza una casilla por turno y el tablero una fila: para sobrevivir tienes que subir cada turno.',
   'help.kingRun.4':
     'En jaque sin casilla segura te dan mate y la partida termina. Sin jaque pero sin casilla segura: eso es un bloqueo - se gasta un derecho y el tablero se recoloca.',
+  'help.kingRun.5':
+    'Si comes una dama, el tablero no avanza ese turno: la fila de abajo no se borra y la fila que subiste queda ganada de verdad. Ir a por una dama sin defensa vale el riesgo.',
   'help.trio.1': 'La dama, la torre y el alfil son tuyos. Cada turno mueves exactamente una.',
   'help.trio.2':
     'El tablero sigue avanzando con cada movimiento, así que las dos piezas que no mueves bajan una fila. Mantener vivas a las tres es el verdadero problema.',
@@ -1841,30 +1736,6 @@ const es: Partial7 = {
   'score.trioThreatVal': '+{n} · máximo {cap} por turno',
   'score.trioMate': 'Trío: mate',
   'score.noteKingRun': 'En Huida no hay puntos por jaque, tú eres el rey; cuentan la distancia y las capturas.',
-  'about.what.title': 'QUÉ ES ESTO',
-  'about.what.1':
-    'ChessRun cruza un endless runner con el ajedrez: el tablero avanza con cada movimiento y sobrevives usando jugadas de ajedrez reales.',
-  'about.what.2':
-    'Los tres modos comparten un motor. Ese motor no sabe nada de React: cada regla vive en funciones puras cubiertas por pruebas.',
-  'about.scores.title': 'PUNTUACIONES Y PRIVACIDAD',
-  'about.scores.1':
-    'Sin cuenta, sin correo, sin contraseña. Tu navegador genera un token de dispositivo la primera vez y tus puntuaciones se firman con él.',
-  'about.scores.2':
-    'Tus puntuaciones e insignias viven en este dispositivo, en el almacenamiento local del navegador. Las partidas que entran en la clasificación semanal también se escriben en el servidor: puntuación, modo, nombre, insignia elegida y un resumen (SHA-256) del token de dispositivo — el token en sí nunca se guarda. La clasificación es semanal; de las semanas pasadas solo quedan los tres primeros.',
-  'about.scores.3':
-    'Una copia de tus insignias, contadores acumulados y últimas partidas se guarda también en el servidor bajo el mismo resumen de token, para que vuelvan si cambias de dispositivo o se borran los datos del navegador. Si creas un código de recuperación en Ajustes, tu token de dispositivo se escribe cifrado en el servidor; el servidor no conoce el código y no puede descifrarlo — quien tenga el código tiene tu identidad, así que anótalo.',
-  'about.privacy.title': 'QUÉ CONTAMOS',
-  'about.privacy.1':
-    'Para mejorar el juego guardamos estadísticas de uso anónimas: qué modo se juega cuánto, cuánto duran las partidas, cómo terminan, desde qué país y en qué idioma.',
-  'about.privacy.2':
-    'Sin cookies, sin cuenta, y el token de dispositivo nunca se envía a estas estadísticas. Los visitantes se cuentan aplicando un hash a la IP con una sal que cambia cada día; la IP en sí nunca se guarda y, como la sal se borra a los dos días, los recuentos de ayer no pueden revertirse.',
-  'about.privacy.3':
-    'Lo que deliberadamente no recogemos: ciudad, resolución de pantalla, identidad bruta del navegador, otros sitios que visitas. Los registros brutos se borran a los 35 días; solo quedan los totales diarios. Si tu navegador dice «no rastrear», no se envía nada.',
-  'about.tech.title': 'TÉCNICA',
-  'about.tech.1':
-    'No hay archivos de audio: cada efecto se genera en directo con un oscilador WebAudio. Lo visual habla el mismo idioma: 8 bits, envolventes duras, ondas cuadradas.',
-  'about.tech.2':
-    'La semilla diaria se deriva de la fecha y todo el azar sale de un generador con semilla: la misma semilla construye el mismo tablero en cualquier dispositivo.',
   'game.menu': 'Menú',
   'game.leave.title': 'LA CARRERA TERMINARÁ',
   'game.leave.body': 'Si sales, esta carrera termina aquí; los puntos hasta ahora quedan en tu registro.',
@@ -1902,6 +1773,7 @@ const es: Partial7 = {
   'phase.enemyMove': 'Mueve el rival…',
   'flash.kingBonus': '¡REY CAPTURADO! +{points} puntos, +{lives} vida',
   'flash.capture': '{piece} +{points}',
+  'flash.queenFreeze': '¡El tablero no avanza este turno!',
   'flash.transform': '→ ahora eres {piece}',
   'flash.check': '¡JAQUE! +{points}',
   'flash.checkStreak': 'JAQUE ×{streak} +{points}',
@@ -2199,23 +2071,12 @@ const fr: Partial7 = {
   'feedback.game': 'Jeu',
   'feedback.last': 'Dernière course',
   'feedback.reply': 'Les réponses arrivent à cette adresse.',
-  'feedback.copy': 'Copier le texte',
-  'feedback.copied': 'Adresse, objet et corps copiés',
   'settings.langPartial':
     'Les textes longs et ceux du jeu ne sont pas encore traduits - affichés en anglais.',
 
   'help.title': 'COMMENT JOUER',
   'help.notice.title': "CE N'EST PAS DES ÉCHECS",
   'help.notice.body': "Les règles des échecs que tu connais ne s'appliquent pas ici : l'échiquier défile après chaque coup, tu deviens la pièce que tu prends et le roi peut être pris - le mat n'est pas la fin, c'est une récompense. Lis les règles une fois pour mieux jouer.",
-  'about.title': 'À PROPOS',
-  'about.credit.title': 'QUI L\'A FAIT',
-  'about.credit.1': 'ChessRun est un projet SmartKraft.',
-  'about.credit.2': 'Questions, bugs, idées : {mail}',
-  'about.credit.3': 'Pièces de l\'accueil : set «Chessnut» d\'Alexis Luengas - Apache 2.0.',
-  'about.license.show': 'Afficher le texte de la licence (Apache 2.0)',
-  'about.license.hide': 'Masquer le texte de la licence',
-  'about.device': 'APPAREIL',
-  'about.version': 'VERSION',
   'help.core.title': 'RÈGLES COMMUNES AUX TROIS MODES',
   'help.core.1':
     "L'ordre du tour ne change jamais : tu joues, l'échiquier défile d'une rangée, l'adversaire joue. Au défilement une nouvelle rangée arrive en haut et celle du bas est effacée ; reste en bas et tu tombes.",
@@ -2247,6 +2108,8 @@ const fr: Partial7 = {
     'Le roi avance d\'une case par tour et l\'échiquier d\'une rangée : pour survivre, il faut monter à chaque tour.',
   'help.kingRun.4':
     "En échec sans case sûre, tu es mat et la partie s'arrête. Pas en échec mais aucune case sûre : c'est un blocage - un droit brûle, l'échiquier se remélange.",
+  'help.kingRun.5':
+    "Prends une dame et l'échiquier ne défile pas ce tour : la rangée du bas n'est pas effacée, la rangée gravie est vraiment gagnée. Tenter une dame non défendue vaut le risque.",
   'help.trio.1':
     'La dame, la tour et le fou sont à toi. À chaque tour tu en joues exactement une.',
   'help.trio.2':
@@ -2329,30 +2192,6 @@ const fr: Partial7 = {
   'score.trioThreatVal': '+{n} · au plus {cap} par tour',
   'score.trioMate': 'Trio : mat',
   'score.noteKingRun': "Pas de points d'échec en Fuite, tu es le roi ; distance et prises comptent.",
-  'about.what.title': 'DE QUOI IL S\'AGIT',
-  'about.what.1':
-    'ChessRun croise un endless runner et les échecs : l\'échiquier avance à chaque coup et tu survis avec de vrais coups d\'échecs.',
-  'about.what.2':
-    'Les trois modes partagent un moteur. Ce moteur ignore tout de React : chaque règle vit dans des fonctions pures couvertes par des tests.',
-  'about.scores.title': 'SCORES ET VIE PRIVÉE',
-  'about.scores.1':
-    'Pas de compte, pas d\'e-mail, pas de mot de passe. Ton navigateur génère un jeton d\'appareil au premier lancement et tes scores sont signés avec.',
-  'about.scores.2':
-    'Tes scores et badges vivent sur cet appareil, dans le stockage local du navigateur. Les parties qui entrent au classement hebdomadaire sont aussi écrites sur le serveur : score, mode, nom, badge choisi et une empreinte (SHA-256) du jeton d\'appareil — le jeton lui-même n\'est jamais stocké. Le classement est hebdomadaire ; des semaines passées ne restent que les trois premiers.',
-  'about.scores.3':
-    'Une copie de tes badges, compteurs cumulés et dernières parties est aussi conservée sur le serveur sous la même empreinte de jeton, pour revenir si tu changes d\'appareil ou si les données du navigateur sont effacées. Si tu crées un code de récupération dans les réglages, ton jeton d\'appareil est écrit chiffré sur le serveur ; le serveur ne connaît pas le code et ne peut pas le déchiffrer — qui a le code a ton identité, note-le.',
-  'about.privacy.title': 'CE QUE NOUS COMPTONS',
-  'about.privacy.1':
-    'Pour améliorer le jeu nous tenons des statistiques d\'usage anonymes : quel mode est joué combien, combien de temps durent les parties, comment elles finissent, depuis quel pays et dans quelle langue.',
-  'about.privacy.2':
-    'Pas de cookies, pas de compte, et le jeton d\'appareil n\'est jamais envoyé à ces statistiques. Les visiteurs sont comptés en hachant l\'adresse IP avec un sel qui change chaque jour ; l\'IP elle-même n\'est jamais stockée et, le sel étant supprimé au bout de deux jours, les comptes d\'hier ne peuvent pas être inversés.',
-  'about.privacy.3':
-    'Ce que nous ne collectons volontairement pas : la ville, la résolution d\'écran, l\'identité brute du navigateur, les autres sites que tu visites. Les données brutes sont supprimées après 35 jours ; seuls les totaux quotidiens restent. Si ton navigateur dit « ne pas me pister », rien n\'est envoyé.',
-  'about.tech.title': 'TECHNIQUE',
-  'about.tech.1':
-    'Aucun fichier audio : chaque effet est généré en direct par un oscillateur WebAudio. Le visuel parle la même langue - 8 bits, enveloppes sèches, ondes carrées.',
-  'about.tech.2':
-    'La graine du jour vient de la date et tout le hasard sort d\'un générateur ensemencé : la même graine construit le même échiquier sur tous les appareils.',
   'game.menu': 'Menu',
   'game.leave.title': "LA COURSE VA S'ARRÊTER",
   'game.leave.body': "Si tu quittes, cette course s'arrête ici ; les points acquis restent dans ton carnet.",
@@ -2390,6 +2229,7 @@ const fr: Partial7 = {
   'phase.enemyMove': 'L\'adversaire joue…',
   'flash.kingBonus': 'ROI PRIS ! +{points} points, +{lives} vie',
   'flash.capture': '{piece} +{points}',
+  'flash.queenFreeze': "L'échiquier ne défile pas ce tour !",
   'flash.transform': '→ tu es maintenant {piece}',
   'flash.check': 'ÉCHEC ! +{points}',
   'flash.checkStreak': 'ÉCHEC ×{streak} +{points}',
@@ -2542,7 +2382,6 @@ export function hasFullProse(lang: Lang): boolean {
  */
 const PROSE_PREFIXES = [
   'help.',
-  'about.',
   'game.',
   'hint.',
   'phase.',

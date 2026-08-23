@@ -1,10 +1,8 @@
-import { getIdentity, shortToken } from '../ui/identity'
 import type { StringKey } from '../ui/i18n'
 import type { DemoId } from '../ui/demos'
 import { MODES } from '../ui/modes'
 import { GLYPH } from '../ui/pieces'
 import { LessonStage } from './LessonStage'
-import { LicenseText } from './LicenseText'
 import {
   CHECK_SCORE,
   KING_BONUS_LIVES,
@@ -21,12 +19,12 @@ import {
 import type { PieceType } from '../engine/types'
 import { useEscape } from '../ui/escape'
 import { useT } from '../ui/text'
-import { APP_VERSION, CONTACT_MAIL } from '../ui/version'
 
-export type PageId = 'help' | 'about'
+// Hakkında artık pencere değil: /about statik sayfası (public/about.html).
+// Bu bileşen yalnızca Nasıl Oynanır kılavuzunu çizer.
+export type PageId = 'help'
 
 interface PageProps {
-  page: PageId
   onClose: () => void
 }
 
@@ -59,7 +57,7 @@ const HELP: Section[] = [
     titleKey: 'mode.kingRun.name',
     glyph: '♚',
     lessons: ['kingSafe', 'kingClimb', 'kingEnd'],
-    bodyKeys: ['help.kingRun.1', 'help.kingRun.2', 'help.kingRun.3', 'help.kingRun.4'],
+    bodyKeys: ['help.kingRun.1', 'help.kingRun.2', 'help.kingRun.3', 'help.kingRun.5', 'help.kingRun.4'],
   },
   {
     titleKey: 'mode.trio.name',
@@ -73,35 +71,16 @@ const HELP: Section[] = [
 /** Puan tablosu satırları - etiket anahtarı + motor sabitinden değer */
 const PIECE_ORDER: PieceType[] = ['p', 'n', 'b', 'r', 'q', 'k']
 
-const ABOUT: Section[] = [
-  { titleKey: 'about.what.title', bodyKeys: ['about.what.1', 'about.what.2'] },
-  {
-    titleKey: 'about.scores.title',
-    bodyKeys: ['about.scores.1', 'about.scores.2', 'about.scores.3'],
-  },
-  // İstatistik toplamaya başladığımız gün bu bölüm de yayında olmalı:
-  // ne sayıyoruz, neyi bilerek saymıyoruz, ne kadar tutuyoruz.
-  {
-    titleKey: 'about.privacy.title',
-    bodyKeys: ['about.privacy.1', 'about.privacy.2', 'about.privacy.3'],
-  },
-  { titleKey: 'about.tech.title', bodyKeys: ['about.tech.1', 'about.tech.2'] },
-  // Künye: kim yaptı + iletişim. Adres i18n metnine {mail} ile giriyor,
-  // böylece beş çeviri de tek kaynaktan (CONTACT_MAIL) besleniyor.
-  { titleKey: 'about.credit.title', bodyKeys: ['about.credit.1', 'about.credit.2', 'about.credit.3'] },
-]
-
 /**
- * Nasıl oynanır ve Hakkında - ayarlar penceresindeki iki düğmenin hedefi.
+ * Nasıl oynanır - ayarlar penceresindeki düğmenin hedefi.
  *
- * Tam ekran açılıyor: pencerenin içine sığmayacak kadar uzunlar ve okuma
+ * Tam ekran açılıyor: pencerenin içine sığmayacak kadar uzun ve okuma
  * sırasında arkadaki tahtanın akması dikkat dağıtıyordu. Tasarım dili yine
  * aynı - monospace, altın yalnızca başlıklarda.
  */
-export function Page({ page, onClose }: PageProps) {
+export function Page({ onClose }: PageProps) {
   const t = useT()
-  const identity = getIdentity()
-  const sections = page === 'help' ? HELP : ABOUT
+  const sections = HELP
 
   // Escape yalnızca en üstteki pencereyi kapatır (ui/escape yığını)
   useEscape(onClose)
@@ -112,20 +91,18 @@ export function Page({ page, onClose }: PageProps) {
         <button type="button" className="page-back" onClick={onClose}>
           ← {t('common.back')}
         </button>
-        <span className="page-ttl">{page === 'help' ? t('help.title') : t('about.title')}</span>
+        <span className="page-ttl">{t('help.title')}</span>
       </header>
 
       <div className="page-bd">
-        {page === 'help' && (
-          <aside className="page-notice" role="note">
-            <b>{t('help.notice.title')}</b>
-            <p>{t('help.notice.body')}</p>
-          </aside>
-        )}
+        <aside className="page-notice" role="note">
+          <b>{t('help.notice.title')}</b>
+          <p>{t('help.notice.body')}</p>
+        </aside>
         {sections.map((section, n) => (
           <section key={section.titleKey} className={`page-sec ${section.lessons ? 'spread' : ''}`}>
             <h2>
-              {page === 'help' && <span className="page-num">{n + 1}</span>}
+              <span className="page-num">{n + 1}</span>
               {section.glyph && <span className="page-glyph">{section.glyph}</span>}
               {t(section.titleKey)}
               {section.soon && <em className="page-soon">{t('common.soon')}</em>}
@@ -134,34 +111,19 @@ export function Page({ page, onClose }: PageProps) {
             <div className="page-rules">
             {section.lessons && <h3 className="page-sub">{t('manual.rules')}</h3>}
             <ul>
-              {section.bodyKeys.map((key) =>
-                key === 'about.credit.2' ? (
-                  <li key={key}>
-                    {t(key, { mail: '' })}
-                    <a className="page-mail" href={`mailto:${CONTACT_MAIL}`}>
-                      {CONTACT_MAIL}
-                    </a>
-                  </li>
-                ) : key === 'about.credit.3' ? (
-                  <li key={key}>
-                    {t(key)}
-                    <LicenseText />
-                  </li>
-                ) : (
-                  <li key={key}>{t(key)}</li>
-                ),
-              )}
+              {section.bodyKeys.map((key) => (
+                <li key={key}>{t(key)}</li>
+              ))}
             </ul>
             </div>
           </section>
         ))}
 
-        {page === 'help' && (
-          <section className="page-sec">
-            <h2>
-              <span className="page-num">{HELP.length + 1}</span>
-              {t('score.title')}
-            </h2>
+        <section className="page-sec">
+          <h2>
+            <span className="page-num">{HELP.length + 1}</span>
+            {t('score.title')}
+          </h2>
             <table className="page-score">
               <tbody>
                 <tr>
@@ -207,23 +169,8 @@ export function Page({ page, onClose }: PageProps) {
                 </tr>
               </tbody>
             </table>
-            <p className="page-note">{t('score.noteKingRun')}</p>
-          </section>
-        )}
-
-        {page === 'about' && (
-          <div className="page-meta">
-            <span>
-              {t('about.version')} <b>{APP_VERSION}</b>
-            </span>
-            <span>
-              {t('about.device')} <b>#{shortToken(identity.token)}</b>
-            </span>
-            <span>
-              <b>{identity.name}</b>
-            </span>
-          </div>
-        )}
+          <p className="page-note">{t('score.noteKingRun')}</p>
+        </section>
       </div>
     </div>
   )

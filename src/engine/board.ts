@@ -1,5 +1,5 @@
 import {
-  BASE_ROW_PIECES,
+  DIFFICULTY,
   OPENING_SAFE_ROWS,
   ROWS,
   SPAWN_WEIGHTS,
@@ -136,6 +136,8 @@ export interface CreateBoardOptions {
    * oyuncunun onları kurtaracak sırası hiç gelmiyor.
    */
   playerRow?: number
+  /** Açılış satırlarının yoğunluğu - modun eğri tabanı (createGame geçirir) */
+  openingPieces?: number
   rng?: Rng
 }
 
@@ -146,6 +148,7 @@ export function createBoard({
   playerPiece = START_PIECE,
   withKing = true,
   playerRow = ROWS - 2,
+  openingPieces = DIFFICULTY.classic.base,
   rng = systemRng,
 }: CreateBoardOptions): { board: Board; player: Pos } {
   const cols = clampCols(requestedCols)
@@ -159,7 +162,7 @@ export function createBoard({
     board.push(
       nearPlayer
         ? emptyRow(cols)
-        : spawnRow({ cols, pieces: BASE_ROW_PIECES, enemyColor, rng }),
+        : spawnRow({ cols, pieces: openingPieces, enemyColor, rng }),
     )
   }
 

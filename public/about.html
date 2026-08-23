@@ -1,0 +1,1023 @@
+<!doctype html>
+<!-- Ön tanımlı dil İngilizce (çıplak URL önizlemesi kuralı, bkz. index.html);
+     sayfanın kendisi beş dilde, açılışta ziyaretçinin diline geçer. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#04060c" />
+<title>About · ChessRun</title>
+<meta name="description" content="What ChessRun is, who made it and what counts: the game, the developer, no ads, privacy and technical notes." />
+<link rel="canonical" href="https://chessrun.app/about" />
+<link rel="icon" href="/icon.svg" />
+<style>
+/* Yerel yazı tipleri: CSP font-src 'self' */
+@font-face {
+  font-family: 'Press Start 2P';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/press-start-2p-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Press Start 2P';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/press-start-2p-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'VT323';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/vt323-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'VT323';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/vt323-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+  /* ============================================================
+     HAKKINDA · ATTRACT EKRANI (B2 final)
+     Okunurluk: gövde 22px VT323 + 0.5px kalınlaştırma gölgesi,
+     satır 1.58, 56ch. +1 damgası: G3-A (tahta gerçekten büyüyor).
+     ============================================================ */
+  :root {
+    --px: 'Press Start 2P', ui-monospace, monospace;
+    --vt: 'VT323', ui-monospace, monospace;
+    --bg: #04060c;
+    --white: #f2f7ff;
+    --body: #dbe6f7;
+    --dim: #8496ad;
+    --gold: #ffd23f;
+    --gold-dim: rgba(255, 210, 63, 0.4);
+    --cyan: #35e0e0;
+    --sq-light: #dfe5ec;
+    --sq-dark: #94a3b4;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: var(--vt);
+    padding: 34px 16px 60px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Yıldız alanı: attract ekranlarının arka fonu */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(1px 1px at 12% 22%, rgba(238, 244, 255, 0.5) 50%, transparent 51%),
+      radial-gradient(1px 1px at 78% 9%, rgba(238, 244, 255, 0.35) 50%, transparent 51%),
+      radial-gradient(1px 1px at 55% 41%, rgba(53, 224, 224, 0.4) 50%, transparent 51%),
+      radial-gradient(1px 1px at 31% 67%, rgba(238, 244, 255, 0.3) 50%, transparent 51%),
+      radial-gradient(1px 1px at 89% 55%, rgba(255, 210, 63, 0.35) 50%, transparent 51%),
+      radial-gradient(1px 1px at 8% 88%, rgba(238, 244, 255, 0.35) 50%, transparent 51%),
+      radial-gradient(1px 1px at 66% 81%, rgba(238, 244, 255, 0.25) 50%, transparent 51%),
+      radial-gradient(1px 1px at 43% 12%, rgba(238, 244, 255, 0.3) 50%, transparent 51%);
+    background-size: 520px 520px;
+  }
+
+  /* Tarama çizgisi: metni ezmeyecek kadar silik */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    pointer-events: none;
+    background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.10) 0 1px, transparent 1px 5px);
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  /* ---- Logo: kovalayan ışık çerçevesi ---- */
+  .title-frame {
+    position: relative;
+    padding: 6px;
+    background: repeating-conic-gradient(var(--gold) 0% 25%, transparent 0% 50%);
+    background-size: 12px 12px;
+    animation: chase 0.8s steps(2) infinite;
+  }
+
+  @keyframes chase { to { background-position: 12px 0; } }
+
+  .title-inner {
+    background: var(--bg);
+    padding: 32px 16px 28px;
+    text-align: center;
+  }
+
+  .title-inner h1 {
+    margin: 0;
+    font-family: var(--px);
+    font-size: clamp(24px, 6.4vw, 42px);
+    letter-spacing: 0.05em;
+    color: var(--gold);
+    text-shadow:
+      0 0 22px rgba(255, 210, 63, 0.5),
+      4px 4px 0 rgba(0, 0, 0, 0.9);
+  }
+
+  .title-inner p {
+    margin: 18px 0 0;
+    font-family: var(--px);
+    font-size: 9px;
+    letter-spacing: 0.5em;
+    color: var(--cyan);
+  }
+
+  .title-inner p i {
+    font-style: normal;
+    color: var(--white);
+    animation: blink 1.4s steps(1) infinite;
+  }
+
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ---- Gövde metni: VT323 ama okunur ----
+     0.5px sağa kopya gölge harfleri kalınlaştırıyor; bulanıklık yok,
+     piksel hissi bozulmuyor. */
+  .hello,
+  .sec p,
+  .sec li {
+    text-shadow: 0.5px 0 0 currentColor;
+  }
+
+  .hello {
+    margin: 36px auto;
+    max-width: 46ch;
+    text-align: center;
+    font-size: 22px;
+    line-height: 1.5;
+    color: var(--body);
+  }
+
+  /* ---- Satranç deseni ayraç: iki sıralı gerçek dama ---- */
+  .rank {
+    height: 20px;
+    margin: 42px 0 36px;
+    background:
+      repeating-conic-gradient(rgba(255, 210, 63, 0.4) 0% 25%, rgba(255, 210, 63, 0.06) 0% 50%);
+    background-size: 20px 20px;
+  }
+
+  .rank.cy {
+    background:
+      repeating-conic-gradient(rgba(53, 224, 224, 0.36) 0% 25%, rgba(53, 224, 224, 0.05) 0% 50%);
+    background-size: 20px 20px;
+  }
+
+  /* ---- Bölümler ---- */
+  .sec { position: relative; }
+
+  .sec h2 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 20px;
+    font-family: var(--px);
+    font-size: 11.5px;
+    line-height: 1.7;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--a, var(--gold));
+    text-shadow: 0 0 14px rgba(255, 210, 63, 0.25);
+  }
+
+  .sec.alt { --a: var(--cyan); }
+  .sec.alt h2 { text-shadow: 0 0 14px rgba(53, 224, 224, 0.25); }
+
+  .sec h2 .no {
+    flex: 0 0 auto;
+    padding: 5px 8px;
+    background: var(--a, var(--gold));
+    color: #0b0e14;
+    font-size: 9px;
+    text-shadow: none;
+  }
+
+  .sec h2 .pc {
+    margin-left: auto;
+    flex: 0 0 auto;
+    font-family: var(--vt);
+    font-size: 32px;
+    line-height: 0;
+    color: var(--a, var(--gold));
+    opacity: 0.9;
+  }
+
+  .sec p {
+    margin: 0 0 14px;
+    max-width: 56ch;
+    font-size: 22px;
+    line-height: 1.58;
+    color: var(--body);
+  }
+
+  .sec p:last-child { margin-bottom: 0; }
+
+  .low { color: var(--dim); text-shadow: none !important; }
+  .aside { font-size: 19px; color: var(--dim); }
+
+  /* ---- +1 damgası: tahta gerçekten büyüyor (G3-A) ----
+     8x8 soluk mini tahta; ilk sıranın yanına dokuzuncu kare piksel
+     piksel uzayarak ekleniyor, bir süre durup döngü başa sarıyor. */
+  .plus1 {
+    margin: 28px 0 4px;
+    padding: 24px 14px 18px;
+    border: 2px solid var(--gold-dim);
+    display: grid;
+    justify-items: center;
+    gap: 18px;
+  }
+
+  .b3 {
+    position: relative;
+    --c3: 24px;
+    padding: 0 var(--c3) 0 0;
+  }
+
+  .b3 .board {
+    width: calc(var(--c3) * 8);
+    height: calc(var(--c3) * 8);
+    background: repeating-conic-gradient(rgba(148, 163, 180, 0.85) 0% 25%, rgba(223, 229, 236, 0.85) 0% 50%);
+    background-size: calc(var(--c3) * 2) calc(var(--c3) * 2);
+    opacity: 0.5;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18);
+  }
+
+  .b3 .x {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: grid;
+    place-items: center;
+    width: var(--c3);
+    height: var(--c3);
+    background: var(--gold);
+    color: #0b0e14;
+    font-family: var(--px);
+    font-style: normal;
+    font-size: 7.5px;
+    box-shadow: 0 0 16px rgba(255, 210, 63, 0.55);
+    transform-origin: left center;
+    animation:
+      growx 3s steps(5, jump-none) infinite,
+      glowpulse 3s steps(2) infinite;
+  }
+
+  @keyframes growx { 0% { transform: scaleX(0); } 30%, 100% { transform: scaleX(1); } }
+  @keyframes glowpulse { 50% { box-shadow: 0 0 22px rgba(255, 210, 63, 0.85); } }
+
+  .plus1-line {
+    margin: 0;
+    font-family: var(--px);
+    font-size: 8.5px;
+    letter-spacing: 0.1em;
+    line-height: 2.2;
+    text-align: center;
+    color: var(--gold);
+  }
+
+  /* ---- Listeler ---- */
+  .sec ul {
+    display: grid;
+    gap: 9px;
+    margin: 0 0 14px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .sec li {
+    position: relative;
+    padding-left: 26px;
+    font-size: 22px;
+    line-height: 1.45;
+    color: var(--body);
+  }
+
+  .sec li::before {
+    content: '►';
+    position: absolute;
+    left: 0;
+    top: 2px;
+    font-size: 14px;
+    color: var(--a, var(--gold));
+    text-shadow: none;
+  }
+
+  .sec ul.no li::before { content: '✕'; color: #ff5f6b; }
+
+  .sub {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 28px 0 14px;
+    font-family: var(--px);
+    font-size: 8.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--a, var(--gold));
+  }
+
+  .sub::after {
+    content: '';
+    flex: 1;
+    height: 2px;
+    background: repeating-linear-gradient(to right, var(--a, var(--gold)) 0 4px, transparent 4px 8px);
+    opacity: 0.5;
+  }
+
+  .lic { font-size: 20px; color: var(--dim); }
+  .lic b { color: var(--white); font-weight: 400; }
+
+  a { color: var(--gold); text-decoration: none; border-bottom: 2px solid rgba(255, 210, 63, 0.4); }
+  a:hover { border-bottom-color: var(--gold); }
+
+  /* ---- Final: YAPIM jeneriği, imza ekranı ---- */
+  .credits {
+    margin-top: 48px;
+    padding: 36px 16px 32px;
+    border-top: 3px double rgba(255, 255, 255, 0.18);
+    border-bottom: 3px double rgba(255, 255, 255, 0.18);
+    text-align: center;
+    display: grid;
+    gap: 18px;
+  }
+
+  .credits .line1 {
+    margin: 0;
+    font-family: var(--px);
+    font-size: 8.5px;
+    letter-spacing: 0.34em;
+    color: var(--dim);
+  }
+
+  .sig {
+    margin: 0;
+    font-family: var(--px);
+    font-size: clamp(13px, 3.6vw, 19px);
+    line-height: 1.8;
+    color: var(--gold);
+    text-shadow:
+      0 0 18px rgba(255, 210, 63, 0.55),
+      0 0 50px rgba(255, 210, 63, 0.2),
+      3px 3px 0 rgba(0, 0, 0, 0.85);
+  }
+
+  .sig small {
+    display: block;
+    margin-top: 10px;
+    font-family: var(--px);
+    font-size: 8px;
+    letter-spacing: 0.3em;
+    color: var(--white);
+    text-shadow: none;
+  }
+
+  .credits .line3 {
+    margin: 0;
+    font-family: var(--px);
+    font-size: 7.5px;
+    letter-spacing: 0.2em;
+    line-height: 2.3;
+    color: var(--dim);
+  }
+
+  .credits .line3 b { color: var(--gold); font-weight: 400; }
+
+  .press {
+    display: block;
+    margin: 28px 0 0;
+    text-align: center;
+    font-family: var(--px);
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--white);
+    animation: blink 1.2s steps(1) infinite;
+  }
+
+  a.press { border-bottom: 0; color: var(--white); }
+
+  /* Logo da eve döner */
+  .title-inner h1 a { color: inherit; border-bottom: 0; }
+
+  @media (max-width: 520px) {
+    body { padding: 22px 12px 50px; }
+    .sec p, .sec li { font-size: 21px; }
+    .hello { font-size: 21px; }
+    .sec h2 { font-size: 10px; }
+    .sec h2 .pc { font-size: 27px; }
+    .b3 { --c3: 19px; }
+    .b3 .x { font-size: 6.5px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; }
+  }
+
+  /* ---- Dil seçici ---- */
+  [hidden] { display: none !important; }
+
+  .lang-pick {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 22px 0 0;
+  }
+
+  .lang-pick button {
+    padding: 8px 10px;
+    border: 2px solid rgba(255, 255, 255, 0.22);
+    background: transparent;
+    color: var(--dim);
+    font-family: var(--px);
+    font-size: 8px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+
+  .lang-pick button:hover { border-color: rgba(255, 255, 255, 0.45); color: var(--white); }
+
+  .lang-pick button.on {
+    border-color: var(--gold);
+    background: var(--gold);
+    color: #0b0e14;
+  }
+
+  /* ---- Dil seçici ---- */
+  [hidden] { display: none !important; }
+
+  .lang-pick {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 22px 0 0;
+  }
+
+  .lang-pick button {
+    padding: 8px 10px;
+    border: 2px solid rgba(255, 255, 255, 0.22);
+    background: transparent;
+    color: var(--dim);
+    font-family: var(--px);
+    font-size: 8px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+
+  .lang-pick button:hover { border-color: rgba(255, 255, 255, 0.45); color: var(--white); }
+
+  .lang-pick button.on {
+    border-color: var(--gold);
+    background: var(--gold);
+    color: #0b0e14;
+  }
+
+  /* ---- Dil seçici ---- */
+  [hidden] { display: none !important; }
+
+  .lang-pick {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 22px 0 0;
+  }
+
+  .lang-pick button {
+    padding: 8px 10px;
+    border: 2px solid rgba(255, 255, 255, 0.22);
+    background: transparent;
+    color: var(--dim);
+    font-family: var(--px);
+    font-size: 8px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+
+  .lang-pick button:hover { border-color: rgba(255, 255, 255, 0.45); color: var(--white); }
+
+  .lang-pick button.on {
+    border-color: var(--gold);
+    background: var(--gold);
+    color: #0b0e14;
+  }
+
+  /* ---- Dil seçici ---- */
+  [hidden] { display: none !important; }
+
+  .lang-pick {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 22px 0 0;
+  }
+
+  .lang-pick button {
+    padding: 8px 10px;
+    border: 2px solid rgba(255, 255, 255, 0.22);
+    background: transparent;
+    color: var(--dim);
+    font-family: var(--px);
+    font-size: 8px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+
+  .lang-pick button:hover { border-color: rgba(255, 255, 255, 0.45); color: var(--white); }
+
+  .lang-pick button.on {
+    border-color: var(--gold);
+    background: var(--gold);
+    color: #0b0e14;
+  }
+
+  /* ---- Dil seçici ---- */
+  [hidden] { display: none !important; }
+
+  .lang-pick {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 22px 0 0;
+  }
+
+  .lang-pick button {
+    padding: 8px 10px;
+    border: 2px solid rgba(255, 255, 255, 0.22);
+    background: transparent;
+    color: var(--dim);
+    font-family: var(--px);
+    font-size: 8px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+
+  .lang-pick button:hover { border-color: rgba(255, 255, 255, 0.45); color: var(--white); }
+
+  .lang-pick button.on {
+    border-color: var(--gold);
+    background: var(--gold);
+    color: #0b0e14;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="title-frame">
+    <div class="title-inner">
+      <h1><a href="/">CHESSRUN</a></h1>
+      <p><i>*</i> <span data-lang="de" hidden>ÜBER</span><span data-lang="en" hidden>ABOUT</span><span data-lang="es" hidden>ACERCA DE</span><span data-lang="fr" hidden>À PROPOS</span><span data-lang="tr">HAKKINDA</span> <i>*</i></p>
+    </div>
+  </header>
+
+  <nav class="lang-pick" aria-label="Dil / Language">
+      <button type="button" data-pick="de">DE</button>
+      <button type="button" data-pick="en">EN</button>
+      <button type="button" data-pick="es">ES</button>
+      <button type="button" data-pick="fr">FR</button>
+      <button type="button" data-pick="tr" class="on">TR</button>
+  </nav>
+
+<div class="lng" data-lang="de" hidden>
+
+  <p class="hello">Hallo, lieber Besucher, schön, dass du den Weg auf die Über-Seite gefunden hast. Hier erfährst du, wie dieses Spiel entstanden ist, und erfährst ein wenig darüber, wer ich bin und was ich mache.</p>
+
+  <section class="sec">
+    <h2><span class="no">01</span>Dieses Spiel<span class="pc" aria-hidden="true">♟</span></h2>
+    <p>Einigen wir uns zuerst auf eines: Das ist kein Schachspiel, aber es ist auch nicht losgelöst vom Schach. Es ist eine Übung, die über den starren Rahmen der Schachregeln hinausgeht; ein Experiment, begonnen, um den Spieler weiterzubringen und seine Sichtweise zu vertiefen.</p>
+    <p>Im Schach steht fest, wo du auf dem Brett beginnst, wie weit eine Figur höchstens ziehen kann, und dass du auf einem der 64 Felder gewinnst oder verlierst. Im echten Leben kannst du weder endgültig gewinnen, noch weißt du, wann das Spiel endet. Deshalb erlebst du hier ein Spiel ohne Ziellinie, dessen Ende trotzdem gewiss ist. Viel Spaß.</p>
+  </section>
+  <div class="rank cy" aria-hidden="true"></div>
+
+  <section class="sec alt">
+    <h2><span class="no">02</span>Der Entwickler<span class="pc" aria-hidden="true">♚</span></h2>
+    <p>Als jemand, der nie in das für ihn gezogene schwarz-weiße Raster aus 64 Feldern passte, habe ich zweimal das Studium abgebrochen; ich verteidigte die Schönheit anderer Farben als Schwarz und Weiß. Der erste Abbruch war eine Entscheidung, der zweite ein Zwang. Die gut zehn Jahre danach habe ich ohne Abschluss in den verschiedensten Jobs gearbeitet.</p>
+    <p>Ohne Diplom, aber mit Erfahrung in vielen verschiedenen Bereichen, sammle ich weiter Erfahrung in dem wichtigsten Beruf meines Lebens, der 2023 begann: dem Vatersein.</p>
+    <p>Mit dem Bewusstsein, das diese Verantwortung mit sich bringt, versuche ich, dem 8x8-Brett ein +1-Feld hinzuzufügen: Während ich den jungen Spieler coache, den ich als Lehrling großziehe, versuche ich ihm beizubringen, trotz der Härte des Lebens frei zu denken und auf seinem eigenen Weg nicht an Grenzen zu scheitern.</p>
+    <p>Deshalb entwickle und prototypisiere ich Produkte unter dem Namen SmartKraft. ChessRun ist SmartKrafts Versuch, Menschen mit anderen Blickwinkeln auf unterhaltsame Weise zu erreichen.</p>
+    <p class="low">Mir ist etwas klar geworden: Für etwas zu kämpfen, das fast unmöglich ist, ist nicht das Schwere; das Schwere ist, dass es niemand sieht...</p>
+    <p class="low">Ich habe noch immer kein Diplom, und ich will noch immer nicht in 64 Feldern leben müssen...</p>
+    <div class="plus1" role="img" aria-label="Ein blasses 8x8-Brett; neben der ersten Reihe wächst Pixel für Pixel ein neuntes goldenes Feld">
+      <div class="b3" aria-hidden="true">
+        <div class="board"></div>
+        <i class="x">+1</i>
+      </div>
+      <p class="plus1-line">GENAU DESHALB WERDEN<br>SMARTKRAFT.CH / CHESSRUN.APP<br>ZUM +1.</p>
+    </div>
+  </section>
+  <div class="rank" aria-hidden="true"></div>
+
+  <section class="sec">
+    <h2><span class="no">03</span>Die Werbung<span class="pc" aria-hidden="true">♝</span></h2>
+    <p>Ich arbeite nicht mit Google oder ähnlichen Werbediensten zusammen. Ich sammle keine Verhaltensdaten unter dem Etikett «Cookies»; ich habe mit niemandem einen Werbevertrag.</p>
+    <p>Wenn du hier also eine SmartKraft-Werbung siehst, denk daran: Sie kommt von keinem externen Dienst, sondern ist schlicht die Art der Seite, für sich selbst zu werben. Es werden keine Daten gesammelt, und alle sehen denselben Inhalt.</p>
+    <p>Auch in Zukunft wird es keine bezahlte Werbung geben.</p>
+    <p class="aside">(Es sei denn, ein Meteor wie der, der die Dinosaurier auslöschte, trifft meine kleine Welt...)</p>
+  </section>
+  <div class="rank cy" aria-hidden="true"></div>
+
+  <section class="sec alt">
+    <h2><span class="no">04</span>SmartKraft<span class="pc" aria-hidden="true">♞</span></h2>
+    <p>SmartKraft ist meine Werkstatt: vom Prototyp zum Produkt, von der Idee zum funktionierenden Gerät. Ich arbeite an IoT- und Mikrocontroller-Geräten; von der Elektronik bis zur Software liegt jede Schicht der Arbeit auf derselben Werkbank.</p>
+    <p>ChessRun ist die erste öffentliche Arbeit dieser Werkstatt auf der Softwareseite. Für die Hardwareseite und mehr: <a href="https://smartkraft.ch">smartkraft.ch</a></p>
+  </section>
+  <div class="rank" aria-hidden="true"></div>
+
+  <section class="sec">
+    <h2><span class="no">05</span>Lizenz und Infrastruktur<span class="pc" aria-hidden="true">♜</span></h2>
+    <p class="lic">Figuren der Startseite: das Set <b>«Chessnut»</b> von Alexis Luengas, Apache 2.0. <a href="/chessnut-apache-2.0.txt">Lizenztext (Apache 2.0)</a></p>
+    <h3 class="sub">Punkte und Privatsphäre</h3>
+    <p>Kein Konto, keine E-Mail, kein Passwort. Beim ersten Start erzeugt dein Browser für sich ein Geräte-Token; deine Punkte werden damit signiert.</p>
+    <p>Deine Punkte und Abzeichen liegen auf diesem Gerät, im lokalen Speicher deines Browsers. Läufe, die in die Wochenwertung eingehen, werden zusätzlich auf dem Server gespeichert: Punktzahl, Modus, Name, gewähltes Abzeichen und ein Digest des Geräte-Tokens (SHA-256); das Token selbst wird nie gespeichert. Die Wertung ist wöchentlich; aus alten Wochen bleiben nur die besten drei Plätze.</p>
+    <p>Eine Kopie deiner Abzeichen, Gesamtzähler und letzten Läufe liegt unter demselben Token-Digest auch auf dem Server, damit sie zurückkommen, wenn du das Gerät wechselst oder deine Browserdaten gelöscht werden. Erstellst du in den Einstellungen einen Wiederherstellungscode, wird dein Geräte-Token verschlüsselt auf den Server geschrieben; der Server kennt den Code nicht und kann das Token nicht entschlüsseln. Wer den Code kennt, übernimmt deine Identität; schreib ihn dir irgendwo auf.</p>
+    <h3 class="sub">Was ich zähle</h3>
+    <p>Um das Spiel zu verbessern, führe ich als ChessRun anonyme Nutzungsstatistiken: welcher Modus wie oft gespielt wird, wie lange Läufe dauern, wie sie enden, aus welchem Land und in welcher Sprache gespielt wird.</p>
+    <p>Keine Cookies, keine Konten; das Geräte-Token wird mit dieser Statistik nie mitgeschickt. Besucher werden gezählt, indem die IP-Adresse mit einem täglich wechselnden Salt gehasht wird; die IP selbst wird nirgends gespeichert, und weil das Salt nach zwei Tagen gelöscht wird, lassen sich die Zählungen von gestern nicht zurückrechnen.</p>
+    <p>Was ich bewusst nicht sammle:</p>
+    <ul class="no">
+      <li>deine Stadt</li>
+      <li>deine Bildschirmauflösung</li>
+      <li>deinen rohen Browser-Fingerabdruck</li>
+      <li>andere Seiten, die du besuchst</li>
+    </ul>
+    <p>Rohdaten werden nach 35 Tagen gelöscht; übrig bleiben nur Tagessummen. Sagt dein Browser «Do Not Track», wird gar nichts gesendet.</p>
+    <h3 class="sub">Technik</h3>
+    <p>Es gibt keine Audiodateien: Jeder Effekt wird live von einem WebAudio-Oszillator erzeugt. Die Optik spricht dieselbe Sprache: 8-Bit, harte Hüllkurven, Rechteckwellen.</p>
+    <p>Der tägliche Seed wird aus dem Datum abgeleitet, der Zufall kommt aus einem geseedeten Generator: Derselbe Seed baut auf jedem Gerät dasselbe Brett.</p>
+  </section>
+
+  <footer class="credits" aria-label="SEU, Emek Ulas">
+    <p class="line1">EINE SMARTKRAFT-PRODUKTION</p>
+    <p class="sig">
+      SEU // Emek Ulas
+      <small>IDEE · DESIGN · PRODUKT</small>
+    </p>
+    <p class="line3">
+      VERSION <b>1.0</b> · <a href="mailto:chessrun@smartkraft.ch">CHESSRUN@SMARTKRAFT.CH</a><br>
+      © 2026 SMARTKRAFT
+    </p>
+  </footer>
+
+</div>
+
+<div class="lng" data-lang="en" hidden>
+
+  <p class="hello">Hello, dear visitor, glad you found your way to the about page. Here you can learn how this game came to be, and get to know a little about who I am and what I do.</p>
+
+  <section class="sec">
+    <h2><span class="no">01</span>This game<span class="pc" aria-hidden="true">♟</span></h2>
+    <p>Let's agree on something first: this is not a chess game, but it is not detached from chess either. It is an exercise that steps outside the strict frame of chess rules; an experiment begun to help the player grow and deepen the way they see things.</p>
+    <p>In chess, the square where you start is fixed, how far each piece can travel is fixed, and it is certain that you will win or lose on one of the 64 squares. In real life you can neither win outright nor know when the game will end. So what you experience here is a game with no finish line, yet certain to end. Have fun.</p>
+  </section>
+  <div class="rank cy" aria-hidden="true"></div>
+
+  <section class="sec alt">
+    <h2><span class="no">02</span>The developer<span class="pc" aria-hidden="true">♚</span></h2>
+    <p>As someone who never fit the black-and-white 64-square boundary drawn for me, I dropped out of university twice; I kept defending the beauty of colors other than black and white. The first time was a choice; the second was forced on me. I spent the ten-odd years since working all kinds of jobs, without a diploma.</p>
+    <p>Without a diploma but experienced in many different fields, I keep getting better at the most important job of my life, which began in 2023: fatherhood.</p>
+    <p>With the awareness this responsibility brings, I am trying to add a +1 square to the 8x8 board: while coaching the apprentice player I am raising, I try to teach them to think freely despite life's hardships and not to trip and fall over the limits placed along their own path.</p>
+    <p>That is why I build and prototype products under the name SmartKraft. ChessRun is SmartKraft's attempt to reach people with different perspectives, through something fun.</p>
+    <p class="low">I realized something: fighting to achieve a goal, even one close to impossible, is not the hard part; the hard part is that nobody sees it...</p>
+    <p class="low">I still have no diploma, and I still don't want to be forced to live inside 64 squares...</p>
+    <div class="plus1" role="img" aria-label="A faded 8x8 board; a ninth golden square grows pixel by pixel next to the first rank">
+      <div class="b3" aria-hidden="true">
+        <div class="board"></div>
+        <i class="x">+1</i>
+      </div>
+      <p class="plus1-line">THIS IS WHY<br>SMARTKRAFT.CH / CHESSRUN.APP<br>ARE THE +1.</p>
+    </div>
+  </section>
+  <div class="rank" aria-hidden="true"></div>
+
+  <section class="sec">
+    <h2><span class="no">03</span>The ads<span class="pc" aria-hidden="true">♝</span></h2>
+    <p>I do not work with Google or any similar ad service. I do not collect behavioral data under the guise of cookies; I have no advertising deals with anyone.</p>
+    <p>So when you see a SmartKraft ad here, remember it does not come from an external service: it is simply the site advertising itself. No data is collected, and everyone sees the same content.</p>
+    <p>And I will not be adding paid ads in the future either.</p>
+    <p class="aside">(Unless a meteor like the one that wiped out the dinosaurs hits my little world, of course...)</p>
+  </section>
+  <div class="rank cy" aria-hidden="true"></div>
+
+  <section class="sec alt">
+    <h2><span class="no">04</span>SmartKraft<span class="pc" aria-hidden="true">♞</span></h2>
+    <p>SmartKraft is my workshop: from prototype to product, from idea to working device. I work on IoT and microcontroller devices; from electronics to software, every layer of the work sits on the same workbench.</p>
+    <p>ChessRun is this workshop's first public work on the software side. For the hardware side and more: <a href="https://smartkraft.ch">smartkraft.ch</a></p>
+  </section>
+  <div class="rank" aria-hidden="true"></div>
+
+  <section class="sec">
+    <h2><span class="no">05</span>License and infrastructure<span class="pc" aria-hidden="true">♜</span></h2>
+    <p class="lic">Home page pieces: the <b>«Chessnut»</b> set by Alexis Luengas, Apache 2.0. <a href="/chessnut-apache-2.0.txt">License text (Apache 2.0)</a></p>
+    <h3 class="sub">Scores and privacy</h3>
+    <p>No account, no e-mail, no password. On first launch your browser generates a device token for itself; your scores are signed with it.</p>
+    <p>Your scores and badges live on this device, in your browser's local storage. Runs that enter the weekly ranking are also written to the server: score, mode, name, selected badge and a digest of the device token (SHA-256); the token itself is never stored. The ranking is weekly; from past weeks only the top three remain.</p>
+    <p>A copy of your badges, lifetime counters and recent runs is also kept on the server under the same token digest, so they can come back when you switch devices or your browser data gets wiped. If you create a recovery code in the settings, your device token is written to the server encrypted; the server cannot open it because it does not know the code. Anyone who knows the code can take over your identity, so write it down somewhere.</p>
+    <h3 class="sub">What I count</h3>
+    <p>To improve the game, I keep anonymous usage statistics under the ChessRun name: which modes get played and how much, how long runs last, how they end, and which country and language people play from.</p>
+    <p>No cookies, no accounts; the device token is never sent with these statistics. Visitors are counted by hashing the IP address with a salt that changes daily; the IP itself is never written anywhere, and since the salt is deleted after two days, yesterday's counts cannot be traced back to any address.</p>
+    <p>What I deliberately do not collect:</p>
+    <ul class="no">
+      <li>your city</li>
+      <li>your screen resolution</li>
+      <li>your raw browser fingerprint</li>
+      <li>other sites you visit</li>
+    </ul>
+    <p>Raw records are deleted after 35 days; only daily totals remain. If your browser says "Do Not Track", nothing is sent at all.</p>
+    <h3 class="sub">Technical</h3>
+    <p>There are no audio files: every effect is generated on the fly by a WebAudio oscillator. The visuals speak the same language: 8-bit, hard envelopes, square waves.</p>
+    <p>The daily seed is derived from the date, and randomness comes from a seeded generator: the same seed builds the same board on every device.</p>
+  </section>
+
+  <footer class="credits" aria-label="SEU, Emek Ulas">
+    <p class="line1">A SMARTKRAFT PRODUCTION</p>
+    <p class="sig">
+      SEU // Emek Ulas
+      <small>IDEA · DESIGN · PRODUCT</small>
+    </p>
+    <p class="line3">
+      VERSION <b>1.0</b> · <a href="mailto:chessrun@smartkraft.ch">CHESSRUN@SMARTKRAFT.CH</a><br>
+      © 2026 SMARTKRAFT
+    </p>
+  </footer>
+
+</div>
+
+<div class="lng" data-lang="es" hidden>
+
+  <p class="hello">Hola, querido visitante, me alegra que hayas llegado a esta página. Aquí puedes conocer cómo nació este juego y saber un poco quién soy y a qué me dedico.</p>
+
+  <section class="sec">
+    <h2><span class="no">01</span>Este juego<span class="pc" aria-hidden="true">♟</span></h2>
+    <p>Aclaremos algo primero: esto no es un juego de ajedrez, pero tampoco es ajeno al ajedrez. Es un ejercicio que se sale del marco rígido de las reglas del ajedrez; un experimento iniciado para hacer crecer al jugador y profundizar su mirada.</p>
+    <p>En el ajedrez está claro dónde empiezas en el tablero, hasta dónde puede llegar cada pieza y que ganarás o perderás en una de las 64 casillas. En la vida real, en cambio, ni puedes ganar del todo ni sabes cuándo terminará la partida. Por eso aquí vives un juego sin línea de meta, pero cuyo final es seguro. ¡Que te diviertas!</p>
+  </section>
+  <div class="rank cy" aria-hidden="true"></div>
+
+  <section class="sec alt">
+    <h2><span class="no">02</span>El desarrollador<span class="pc" aria-hidden="true">♚</span></h2>
+    <p>Como alguien que nunca encajó en el límite blanco y negro de 64 casillas que dibujaron para mí, dejé la universidad dos veces; defendía la belleza de colores distintos del blanco y el negro. La primera vez fue una elección; la segunda, una obligación. Los más de diez años siguientes los pasé trabajando en oficios muy distintos, sin diploma.</p>
+    <p>Sin diploma pero con experiencia en campos muy diversos, sigo mejorando en el oficio más importante de mi vida, que empezó en 2023: ser padre.</p>
+    <p>Con la conciencia que trae esta responsabilidad, intento añadir una casilla +1 al tablero de 8x8: mientras entreno al aprendiz que estoy criando, trato de enseñarle a pensar libre pese a la dureza de la vida y a no tropezar con los límites en su propio camino.</p>
+    <p>Por eso desarrollo productos y prototipos bajo el nombre SmartKraft. ChessRun es el intento de SmartKraft de llegar, de una forma divertida, a personas con miradas diferentes.</p>
+    <p class="low">Me di cuenta de algo: luchar por lograr algo, aunque roce lo imposible, no es lo difícil; lo difícil es que nadie lo vea...</p>
+    <p class="low">Sigo sin diploma, y sigo sin querer vivir obligado dentro de 64 casillas...</p>
+    <div class="plus1" role="img" aria-label="Un tablero 8x8 apagado; junto a la primera fila crece píxel a píxel una novena casilla dorada">
+      <div class="b3" aria-hidden="true">
+        <div class="board"></div>
+        <i class="x">+1</i>
+      </div>
+      <p class="plus1-line">POR ESO<br>SMARTKRAFT.CH / CHESSRUN.APP<br>SON EL +1.</p>
+    </div>
+  </section>
+  <div class="rank" aria-hidden="true"></div>
+
+  <section class="sec">
+    <h2><span class="no">03</span>La publicidad<span class="pc" aria-hidden="true">♝</span></h2>
+    <p>No colaboro con Google ni con servicios de anuncios parecidos. No recojo datos de comportamiento bajo la etiqueta de cookies; no tengo acuerdos publicitarios con nadie.</p>
+    <p>Así que cuando veas aquí un anuncio de SmartKraft, recuerda que no viene de un servicio externo: es la forma que tiene el sitio de anunciarse a sí mismo. No se recogen datos y todo el mundo ve el mismo contenido.</p>
+    <p>Tampoco añadiré anuncios de pago en el futuro.</p>
+    <p class="aside">(Salvo que un meteorito como el que acabó con los dinosaurios golpee mi pequeño mundo, claro...)</p>
+  </section>
+  <div class="rank cy" aria-hidden="true"></div>
+
+  <section class="sec alt">
+    <h2><span class="no">04</span>SmartKraft<span class="pc" aria-hidden="true">♞</span></h2>
+    <p>SmartKraft es mi taller: del prototipo al producto, de la idea al aparato que funciona. Trabajo con IoT y dispositivos con microcontroladores; de la electrónica al software, todas las capas del trabajo están sobre la misma mesa.</p>
+    <p>ChessRun es el primer proyecto de este taller que sale al público por el lado del software. Para el hardware y más detalles: <a href="https://smartkraft.ch">smartkraft.ch</a></p>
+  </section>
+  <div class="rank" aria-hidden="true"></div>
+
+  <section class="sec">
+    <h2><span class="no">05</span>Licencia e infraestructura<span class="pc" aria-hidden="true">♜</span></h2>
+    <p class="lic">Piezas de la portada: set <b>«Chessnut»</b>, de Alexis Luengas, Apache 2.0. <a href="/chessnut-apache-2.0.txt">Texto de la licencia (Apache 2.0)</a></p>
+    <h3 class="sub">Puntuaciones y privacidad</h3>
+    <p>Sin cuenta, sin correo, sin contraseña. La primera vez que lo abres, tu navegador genera un token de dispositivo; tus puntuaciones se firman con él.</p>
+    <p>Tus puntuaciones e insignias viven en este dispositivo, en el almacenamiento local del navegador. Las carreras que entran en la clasificación semanal se escriben también en el servidor: puntuación, modo, nombre, insignia elegida y un resumen del token del dispositivo (SHA-256); el token en sí nunca se guarda. La clasificación es semanal; de las semanas pasadas solo quedan los tres primeros.</p>
+    <p>Una copia de tus insignias, contadores de por vida y últimas carreras se guarda también en el servidor bajo el mismo resumen del token, para que vuelvan cuando cambies de dispositivo o se borren los datos del navegador. Si creas un código de recuperación en los ajustes, tu token se escribe cifrado en el servidor; como el servidor no conoce el código, no puede descifrar el token. Quien conozca el código se queda con tu identidad; apúntalo en algún sitio.</p>
+    <h3 class="sub">Qué cuento</h3>
+    <p>Para mejorar el juego, desde ChessRun llevo estadísticas de uso anónimas: cuánto se juega cada modo, cuánto duran las carreras, cómo terminan, desde qué país y en qué idioma se juega.</p>
+    <p>Sin cookies, sin cuentas; el token del dispositivo nunca se envía con estas estadísticas. Los visitantes se cuentan aplicando a la dirección IP un hash con una sal que cambia a diario; la IP en sí no se escribe en ninguna parte y, como la sal se borra a los dos días, los recuentos de ayer no pueden revertirse.</p>
+    <p>Lo que no recojo a propósito:</p>
+    <ul class="no">
+      <li>tu ciudad</li>
+      <li>la resolución de tu pantalla</li>
+      <li>la huella bruta de tu navegador</li>
+      <li>otros sitios que visitas</li>
+    </ul>
+    <p>Los registros en bruto se borran a los 35 días; solo quedan los totales diarios. Si tu navegador dice "no rastrear" (Do Not Track), no se envía nada.</p>
+    <h3 class="sub">Técnica</h3>
+    <p>No hay archivos de audio: todos los efectos se generan al vuelo con un oscilador de WebAudio. Lo visual habla el mismo idioma: 8 bits, envolventes duras, onda cuadrada.</p>
+    <p>La semilla diaria se deriva de la fecha y el azar sale de un generador con semilla: la misma semilla construye el mismo tablero en cualquier dispositivo.</p>
+  </section>
+
+  <footer class="credits" aria-label="SEU, Emek Ulas">
+    <p class="line1">UNA PRODUCCIÓN SMARTKRAFT</p>
+    <p class="sig">
+      SEU // Emek Ulas
+      <small>IDEA · DISEÑO · PRODUCTO</small>
+    </p>
+    <p class="line3">
+      VERSIÓN <b>1.0</b> · <a href="mailto:chessrun@smartkraft.ch">CHESSRUN@SMARTKRAFT.CH</a><br>
+      © 2026 SMARTKRAFT
+    </p>
+  </footer>
+
+</div>
+
+<div class="lng" data-lang="fr" hidden>
+
+  <p class="hello">Bonjour cher visiteur, content que tu aies trouvé le chemin de la page à propos. Tu pourras y découvrir comment ce jeu est né, et en apprendre un peu sur qui je suis et ce que je fais.</p>
+
+  <section class="sec">
+    <h2><span class="no">01</span>Ce jeu<span class="pc" aria-hidden="true">♟</span></h2>
+    <p>Mettons-nous d'abord d'accord: ce n'est pas un jeu d'échecs, mais ce n'est pas non plus étranger aux échecs. C'est un exercice qui déborde du cadre rigide des règles des échecs; une expérience lancée pour faire progresser le joueur et approfondir son regard.</p>
+    <p>Aux échecs, ta case de départ est connue, la distance maximale que chaque pièce peut parcourir est connue, et il est certain que tu gagneras ou perdras sur l'une des 64 cases. Dans la vraie vie, tu ne peux ni gagner pour de bon, ni savoir quand la partie s'arrête. Ici, tu vis donc un jeu sans ligne d'arrivée, mais dont la fin est certaine. Amuse-toi bien.</p>
+  </section>
+  <div class="rank cy" aria-hidden="true"></div>
+
+  <section class="sec alt">
+    <h2><span class="no">02</span>Le développeur<span class="pc" aria-hidden="true">♚</span></h2>
+    <p>N'ayant jamais tenu à l'intérieur de la frontière noir et blanc des 64 cases tracée pour moi, j'ai quitté deux fois l'université; je défendais la beauté des couleurs autres que le noir et le blanc. Le premier abandon était un choix, le second une contrainte. J'ai passé la dizaine d'années qui a suivi à travailler dans des métiers très variés, sans diplôme.</p>
+    <p>Sans diplôme mais riche d'expériences dans des domaines très différents, je continue de progresser dans le métier le plus important de ma vie, commencé en 2023: être père.</p>
+    <p>Avec la conscience qu'apporte cette responsabilité, j'essaie d'ajouter une case +1 à l'échiquier 8x8: tout en entraînant l'apprenti joueur que j'élève, je tâche de lui apprendre à penser librement malgré la dureté de la vie et à ne pas trébucher sur les limites qu'il croisera sur son propre chemin.</p>
+    <p>C'est pourquoi je développe des produits et des prototypes sous le nom SmartKraft. ChessRun est la tentative de SmartKraft de toucher des gens aux regards différents, de façon amusante.</p>
+    <p class="low">J'ai compris une chose: se battre pour accomplir quelque chose, même presque impossible, n'est pas le plus dur; le plus dur, c'est que personne ne le voie...</p>
+    <p class="low">Je n'ai toujours pas de diplôme, et je refuse toujours de devoir vivre dans 64 cases...</p>
+    <div class="plus1" role="img" aria-label="Un échiquier 8x8 estompé; à côté de la première rangée, une neuvième case dorée grandit pixel par pixel">
+      <div class="b3" aria-hidden="true">
+        <div class="board"></div>
+        <i class="x">+1</i>
+      </div>
+      <p class="plus1-line">VOILÀ POURQUOI<br>SMARTKRAFT.CH / CHESSRUN.APP<br>SONT LE +1.</p>
+    </div>
+  </section>
+  <div class="rank" aria-hidden="true"></div>
+
+  <section class="sec">
+    <h2><span class="no">03</span>La publicité<span class="pc" aria-hidden="true">♝</span></h2>
+    <p>Je ne travaille ni avec Google ni avec aucun service publicitaire du même genre. Je ne collecte pas de données de comportement sous couvert de cookies; je n'ai d'accord publicitaire avec personne.</p>
+    <p>Alors quand tu vois ici une publicité SmartKraft, souviens-toi qu'elle ne vient d'aucun service externe: c'est simplement la façon qu'a le site de faire sa propre publicité. Aucune donnée n'est collectée, et tout le monde voit le même contenu.</p>
+    <p>Il n'y aura pas non plus de publicité payante à l'avenir.</p>
+    <p class="aside">(Sauf si une météorite comme celle qui a anéanti les dinosaures frappe mon petit monde, bien sûr...)</p>
+  </section>
+  <div class="rank cy" aria-hidden="true"></div>
+
+  <section class="sec alt">
+    <h2><span class="no">04</span>SmartKraft<span class="pc" aria-hidden="true">♞</span></h2>
+    <p>SmartKraft, c'est mon atelier: du prototype au produit, de l'idée à l'appareil qui fonctionne. Je travaille sur l'IoT et les appareils à microcontrôleur; de l'électronique au logiciel, toutes les couches du travail sont sur le même établi.</p>
+    <p>ChessRun est le premier travail public de cet atelier côté logiciel. Pour le matériel et le reste: <a href="https://smartkraft.ch">smartkraft.ch</a></p>
+  </section>
+  <div class="rank" aria-hidden="true"></div>
+
+  <section class="sec">
+    <h2><span class="no">05</span>Licence et infrastructure<span class="pc" aria-hidden="true">♜</span></h2>
+    <p class="lic">Pièces de la page d'accueil: le set <b>«Chessnut»</b> d'Alexis Luengas, Apache 2.0. <a href="/chessnut-apache-2.0.txt">Texte de la licence (Apache 2.0)</a></p>
+    <h3 class="sub">Scores et vie privée</h3>
+    <p>Pas de compte, pas d'e-mail, pas de mot de passe. Au premier lancement, ton navigateur se génère un jeton d'appareil; tes scores sont signés avec.</p>
+    <p>Tes scores et tes badges restent sur cet appareil, dans le stockage local du navigateur. Les courses qui entrent au classement hebdomadaire sont aussi écrites sur le serveur: score, mode, nom, badge choisi et une empreinte du jeton d'appareil (SHA-256); le jeton lui-même n'est jamais stocké. Le classement est hebdomadaire; des semaines passées, seuls les trois premiers restent.</p>
+    <p>Une copie de tes badges, de tes compteurs à vie et de tes dernières courses est aussi conservée sur le serveur sous la même empreinte, pour que tout revienne si tu changes d'appareil ou si les données du navigateur sont effacées. Si tu crées un code de récupération dans les réglages, ton jeton est écrit chiffré sur le serveur; le serveur ne connaît pas le code et ne peut pas le déchiffrer. Qui connaît le code prend ton identité; note-le quelque part.</p>
+    <h3 class="sub">Ce que je compte</h3>
+    <p>Pour améliorer le jeu, je tiens, en tant que ChessRun, des statistiques d'usage anonymes: quel mode est joué et à quelle fréquence, combien de temps durent les courses, comment elles se terminent, depuis quel pays et dans quelle langue.</p>
+    <p>Pas de cookies, pas de comptes; le jeton d'appareil n'est jamais envoyé avec ces statistiques. Les visiteurs sont comptés en hachant l'adresse IP avec un sel qui change chaque jour; l'IP elle-même n'est écrite nulle part, et comme le sel est supprimé au bout de deux jours, impossible de remonter des comptages d'hier aux adresses IP.</p>
+    <p>Ce que je choisis de ne pas collecter:</p>
+    <ul class="no">
+      <li>ta ville</li>
+      <li>la résolution de ton écran</li>
+      <li>l'empreinte brute de ton navigateur</li>
+      <li>les autres sites que tu visites</li>
+    </ul>
+    <p>Les enregistrements bruts sont supprimés après 35 jours; il ne reste que les totaux quotidiens. Si ton navigateur dit "Do Not Track", rien n'est envoyé du tout.</p>
+    <h3 class="sub">Technique</h3>
+    <p>Aucun fichier audio: tous les effets sont générés à la volée par un oscillateur WebAudio. Le visuel parle la même langue: 8 bits, enveloppes dures, onde carrée.</p>
+    <p>La graine du jour est dérivée de la date, le hasard sort d'un générateur initialisé par une graine: la même graine construit le même échiquier sur chaque appareil.</p>
+  </section>
+
+  <footer class="credits" aria-label="SEU, Emek Ulas">
+    <p class="line1">UNE PRODUCTION SMARTKRAFT</p>
+    <p class="sig">
+      SEU // Emek Ulas
+      <small>IDÉE · DESIGN · PRODUIT</small>
+    </p>
+    <p class="line3">
+      VERSION <b>1.0</b> · <a href="mailto:chessrun@smartkraft.ch">CHESSRUN@SMARTKRAFT.CH</a><br>
+      © 2026 SMARTKRAFT
+    </p>
+  </footer>
+
+</div>
+
+<div class="lng" data-lang="tr">
+
+  <p class="hello">Merhaba sevgili ziyaretçi, hakkında sayfasına gelmene sevindim. Böylece geliştirme sürecini öğrenebilir, benim kim olduğumu ve ne yaptığımı biraz olsun tanıyabilirsin.</p>
+
+  <section class="sec">
+    <h2><span class="no">01</span>Bu oyun<span class="pc" aria-hidden="true">♟</span></h2>
+    <p>Öncelikle anlaşalım: bu bir satranç oyunu değil, ama satrançtan bağımsız da değil. Satranç kurallarının katı çerçevesinin dışına taşan bir alıştırma; oyuncuyu geliştirmek, bakış açısını derinleştirmek amacıyla başlanmış bir deneme.</p>
+    <p>Satrançta tahtada oyuna başlayacağın yer belli, figürlerin gidebileceği en uzak mesafe belli, 64 kareden birinde kazanacağın ya da kaybedeceğin belli. Gerçek hayatta ise ne tamamen kazanabilirsin ne de oyunun ne zaman biteceğini bilirsin. Bu yüzden burada sonu olmayan ama biteceği kesin olan bir oyunu deneyimliyorsun. İyi eğlenceler.</p>
+  </section>
+  <div class="rank cy" aria-hidden="true"></div>
+
+  <section class="sec alt">
+    <h2><span class="no">02</span>Geliştirici<span class="pc" aria-hidden="true">♚</span></h2>
+    <p>Benim için çizilen siyah/beyaz 64 kare sınırına uymayan biri olarak iki defa üniversiteyi bıraktım; siyah ve beyazdan farklı renklerin güzelliğini savunuyordum. İlk bırakışım tercihti, ikincisi zorunluluk. Aradan geçen on küsur yılı diplomasız olarak çeşitli işlerde çalışarak geçirdim.</p>
+    <p>Diplomasız ama çok farklı alanlarda deneyimli biri olarak, 2023'te başlayan en önemli işim olan babalık mesleğinde deneyimlerimi geliştirmeye devam ediyorum.</p>
+    <p>Bu sorumluluğun getirdiği farkındalıkla 8x8 tahtaya +1 kare daha eklemeye çalışıyorum: yetiştirmekte olduğum çırak oyuncumun koçluğunu yaparken, hayatın zorluğuna rağmen özgür düşünebilmeyi ve kendi ilerleyişinde sınırlara takılıp düşmemeyi öğretmeye uğraşıyorum.</p>
+    <p>Bu yüzden SmartKraft ismi altında ürün geliştirme ve prototipleme çalışmaları yapıyorum. ChessRun, SmartKraft'ın farklı bakış açılarına sahip insanlara eğlenceli bir yöntemle ulaşma çabasıdır.</p>
+    <p class="low">Fark ettim ki bir şeyi, imkânsıza yakın olsa da, başarmak için mücadele etmek zor değil; zor olan, bunu kimsenin görmemesi...</p>
+    <p class="low">Hâlâ diplomasızım, hâlâ 64 kare içerisinde yaşamak zorunda olmak istemiyorum...</p>
+    <div class="plus1" role="img" aria-label="8x8 soluk tahta; ilk sıranın yanına piksel piksel büyüyen dokuzuncu altın kare ekleniyor">
+      <div class="b3" aria-hidden="true">
+        <div class="board"></div>
+        <i class="x">+1</i>
+      </div>
+      <p class="plus1-line">İŞTE BU YÜZDEN<br>SMARTKRAFT.CH / CHESSRUN.APP<br>+1 OLUYOR.</p>
+    </div>
+  </section>
+  <div class="rank" aria-hidden="true"></div>
+
+  <section class="sec">
+    <h2><span class="no">03</span>Reklamlar<span class="pc" aria-hidden="true">♝</span></h2>
+    <p>Google ya da benzeri reklam servisleriyle iş birliği yapmıyorum. Çerezler adı altında davranış verilerini toplamıyorum; kimseyle reklam anlaşmam yok.</p>
+    <p>Bu yüzden bir SmartKraft reklamı gördüğünde bunun dış servislerden gelmediğini, sitenin kendi kendisinin reklamını yapma şekli olduğunu unutma. Veri toplanmadan herkese aynı içerik gösteriliyor.</p>
+    <p>İleride de ücretli reklam eklemeyeceğim.</p>
+    <p class="aside">(Küçük dünyama, dinozorları yok eden meteordan çarpmazsa tabii...)</p>
+  </section>
+  <div class="rank cy" aria-hidden="true"></div>
+
+  <section class="sec alt">
+    <h2><span class="no">04</span>SmartKraft<span class="pc" aria-hidden="true">♞</span></h2>
+    <p>SmartKraft benim atölyem: prototipten ürüne, fikirden çalışan cihaza. IoT ve mikrodenetleyicili cihazlar üzerine çalışıyorum; elektronikten yazılıma işin her katmanı aynı masada.</p>
+    <p>ChessRun bu atölyenin yazılım tarafından çıkan ilk halka açık iş. Donanım tarafı ve detaylar için: <a href="https://smartkraft.ch">smartkraft.ch</a></p>
+  </section>
+  <div class="rank" aria-hidden="true"></div>
+
+  <section class="sec">
+    <h2><span class="no">05</span>Lisans ve altyapı<span class="pc" aria-hidden="true">♜</span></h2>
+    <p class="lic">Ana sayfa figürleri: <b>«Chessnut»</b> seti, Alexis Luengas, Apache 2.0. <a href="/chessnut-apache-2.0.txt">Lisans metni (Apache 2.0)</a></p>
+    <h3 class="sub">Skorlar ve gizlilik</h3>
+    <p>Hesap yok, e-posta yok, parola yok. Tarayıcın ilk açılışta kendine bir cihaz jetonu üretiyor; skorların bu jetonla imzalanıyor.</p>
+    <p>Skorların ve rozetlerin bu cihazda, tarayıcının yerel deposunda duruyor. Haftalık sıralamaya giden koşular sunucuya da yazılıyor: skor, mod, ad, seçili rozet ve cihaz jetonunun özeti (SHA-256); jetonun kendisi hiç saklanmıyor. Sıralama haftalık; eski haftalardan yalnızca ilk üç kalıyor.</p>
+    <p>Rozetlerin, ömür boyu sayaçların ve son koşuların bir kopyası da aynı jeton özetiyle sunucuda tutuluyor ki cihaz değiştirdiğinde ya da tarayıcı verilerin silindiğinde geri gelebilsin. Ayarlardan bir kurtarma kodu oluşturursan cihaz jetonun şifrelenmiş olarak sunucuya yazılır; sunucu kodu bilmediği için şifreyi açamaz. Kodu bilen kimliğini alır; kodu bir yere yaz.</p>
+    <h3 class="sub">Neleri sayıyorum</h3>
+    <p>Oyunu geliştirmek için ChessRun olarak anonim kullanım istatistiği tutuyorum: hangi mod ne kadar oynanıyor, koşular ne kadar sürüyor, nasıl bitiyor, hangi ülkeden ve hangi dilde oynanıyor.</p>
+    <p>Çerez yok, hesap yok; cihaz jetonu bu istatistiğe hiç gönderilmiyor. Ziyaretçi sayımı, IP adresinin günlük değişen bir tuzla hash'lenmesiyle yapılıyor; IP'nin kendisi hiçbir yere yazılmıyor ve tuz iki günde silindiği için dünkü sayımlar geriye döndürülemiyor.</p>
+    <p>Bilerek toplamadıklarım:</p>
+    <ul class="no">
+      <li>şehir</li>
+      <li>ekran çözünürlüğü</li>
+      <li>ham tarayıcı kimliği</li>
+      <li>ziyaret ettiğin başka siteler</li>
+    </ul>
+    <p>Ham kayıtlar 35 gün sonra siliniyor; geriye yalnızca günlük toplamlar kalıyor. Tarayıcın "izleme" (Do Not Track) diyorsa hiçbir şey gönderilmiyor.</p>
+    <h3 class="sub">Teknik</h3>
+    <p>Ses dosyası yok: bütün efektler WebAudio osilatörüyle anlık üretiliyor. Görsel de aynı dili konuşuyor: 8-bit, sert zarflar, kare dalga.</p>
+    <p>Günlük tohum tarihten üretiliyor, rastgelelik tohumlanmış bir üreteçten geliyor: aynı tohum her cihazda aynı tahtayı kuruyor.</p>
+  </section>
+
+  <footer class="credits" aria-label="SEU, Emek Ulas">
+    <p class="line1">BİR SMARTKRAFT YAPIMI</p>
+    <p class="sig">
+      SEU // Emek Ulas
+      <small>FİKİR · TASARIM · ÜRÜN</small>
+    </p>
+    <p class="line3">
+      SÜRÜM <b>1.0</b> · <a href="mailto:chessrun@smartkraft.ch">CHESSRUN@SMARTKRAFT.CH</a><br>
+      © 2026 SMARTKRAFT
+    </p>
+  </footer>
+
+</div>
+
+  <a class="press" href="/">INSERT COIN</a>
+
+</div>
+
+<script src="/about.js"></script>
+
+</body>
+</html>

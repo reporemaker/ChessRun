@@ -2,6 +2,7 @@ import type { AwardsResponse, HelloBody, PulseResponse, SubmitBody, WeeklyRespon
   DailyResponse,
   DailyStartBody,
 } from '@shared/leaderboard'
+import { tuningActive } from '../engine/tuning'
 import type { GameMode } from '../engine/types'
 import { badgeOf, readBadges, readSelectedBadge } from './badges'
 import { getIdentity } from './identity'
@@ -24,6 +25,20 @@ import { schedulePush } from './sync'
 const ENDPOINT = import.meta.env.VITE_LEADERBOARD_URL as string | undefined
 
 export const leaderboardEnabled = Boolean(ENDPOINT)
+
+/**
+ * Bir koşu sunucuya İŞLENDİ: açık sıralama görünümleri yeniden çeksin.
+ *
+ * Bu olay olmadan tablo hep bir koşu geride görünüyordu: gönderim arka
+ * planda (`void submitRun`) sürerken oyun sonunda açılan sıralama tabloyu
+ * koşudan ÖNCE çekiyor, sonraki tazeleme de ancak profil gönderimiyle
+ * (~2 sn gecikmeli schedulePush zinciri) geliyordu.
+ */
+export const RANKS_EVENT = 'chessrun:ranks'
+
+function announceRanks(): void {
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(RANKS_EVENT))
+}
 
 export type { WeeklyEntry, WeeklyResponse } from '@shared/leaderboard'
 
@@ -72,6 +87,23 @@ function enqueue(run: RunRecord): void {
 }
 
 let flushing = false
+
+/**
+ * Gönderim düşünce (ağ yok ya da sunucu 429: hız/patlama sınırı) kuyruğu
+ * sekme açıkken kendiliğinden yeniden dene. 90 sn: sunucunun patlama
+ * penceresinden (60 sn) uzun - ilk denemede geçmesi beklenir. Tek zamanlayıcı;
+ * kuyruk boşalana kadar her başarısız turdan sonra yeniden kurulur.
+ */
+const RETRY_DELAY_MS = 90_000
+let retryTimer: ReturnType<typeof setTimeout> | null = null
+
+function scheduleFlush(): void {
+  if (retryTimer !== null) return
+  retryTimer = setTimeout(() => {
+    retryTimer = null
+    void flushSubmitQueue()
+  }, RETRY_DELAY_MS)
+}
 
 const HELLO_KEY = 'chessrun:hello'
 
@@ -124,19 +156,32 @@ export async function flushSubmitQueue(): Promise<void> {
       sent++
     }
     // Kuyruktan giden koşular deftere çoktan işlenmişti; profil de yetişsin
-    if (sent > 0) schedulePush()
+    if (sent > 0) {
+      announceRanks()
+      schedulePush()
+    }
+    // Gönderilemeyen kaldıysa (ağ / sunucu sınırı) biraz sonra yine dene
+    if (readQueue().length > 0) scheduleFlush()
   } finally {
     flushing = false
   }
 }
 
 export async function submitRun(run: RunRecord): Promise<boolean> {
+  // Zorluk testi kipi: koşu sunucuya asla gitmez, lig kirlenmez
+  if (tuningActive()) return false
   if (!ENDPOINT) return false
   const ok = await postRun(run)
   if (!ok) {
+    // Ağ yok ya da sunucu geçici reddetti (429 hız/patlama sınırı, 503):
+    // kuyruğa yaz, birazdan kendiliğinden yeniden dene. Sunucu kalıcı
+    // geçersiz bulduğunu sessiz 204'le "alındı" sayar - o kuyruğa düşmez.
     enqueue(run)
+    scheduleFlush()
     return false
   }
+  // Koşu sunucuda: açık sıralama görünümleri hemen tazelensin
+  announceRanks()
   // Başarılı gönderim = ağ var: bekleyenleri de gönder
   void flushSubmitQueue()
   // Koşu deftere/sayaçlara/rozetlere işlendi - profil de sunucuya çıksın

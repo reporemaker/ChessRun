@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { colsOf, emptyRow, makePiece, scrollBoard, spawnRow } from './board'
 import {
-  BASE_ROW_PIECES,
+  DIFFICULTY,
   CHECK_SCORE,
   DEFAULT_COLS,
   MATE_SCORE,
@@ -431,8 +431,15 @@ describe('koridor genişliği', () => {
 
 describe('zorluk', () => {
   it('düşman yoğunluğu seviyeyle artar ve tavanı aşmaz', () => {
-    expect(rowPieces(0, 'p')).toBeLessThan(rowPieces(36, 'p'))
-    expect(rowPieces(1000, 'q')).toBeLessThanOrEqual(MAX_ROW_PIECES)
+    expect(rowPieces(0, 'p')).toBeLessThan(rowPieces(40, 'p'))
+    expect(rowPieces(100000, 'q')).toBeLessThanOrEqual(MAX_ROW_PIECES)
+  })
+
+  it('eğriler mod bazlı ve elle ayarlanan değerlerde sabit (23 Ağustos 2026)', () => {
+    // Bu sayılar ölçüm + Seu'nun el ayarıyla kondu; yanlışlıkla değişirse test kırılsın
+    expect(DIFFICULTY.classic).toEqual({ step: 20, base: 0.3, inc: 0.08 })
+    expect(DIFFICULTY.kingRun).toEqual({ step: 10, base: 0.3, inc: 0.15 })
+    expect(DIFFICULTY.trio).toEqual({ step: 15, base: 0.5, inc: 0.1 })
   })
 
   it('ağır taş baskısı: vezirle düşman daha yoğun doğar', () => {
@@ -441,21 +448,19 @@ describe('zorluk', () => {
 
   it('dar koridorda satır başına daha az taş doğar - baskı orantılı kalır', () => {
     expect(rowPieces(0, 'n', 4)).toBeCloseTo(rowPieces(0, 'n', 8) / 2)
-    expect(rowPieces(0, 'n', 8)).toBe(BASE_ROW_PIECES)
+    expect(rowPieces(0, 'n', 8)).toBe(DIFFICULTY.classic.base)
 
     // Asıl ölçüt kare başına düşen baskı: her genişlikte aynı olmalı
     for (const cols of [4, 5, 6, 7, 8]) {
-      expect(rowPieces(0, 'n', cols) / cols).toBeCloseTo(BASE_ROW_PIECES / 8)
+      expect(rowPieces(0, 'n', cols) / cols).toBeCloseTo(DIFFICULTY.classic.base / 8)
     }
   })
 
-  it('yeni satırların %75\'inde tam bir taş doğar', () => {
-    expect(BASE_ROW_PIECES).toBe(0.75)
-
+  it('yeni satırların %75\'inde tam bir taş doğar (0.75 yoğunlukta)', () => {
     let withPiece = 0
     const rows = 6000
     for (let i = 0; i < rows; i++) {
-      const row = spawnRow({ cols: 8, pieces: BASE_ROW_PIECES, enemyColor: 'b' })
+      const row = spawnRow({ cols: 8, pieces: 0.75, enemyColor: 'b' })
       const count = row.cells.filter(Boolean).length
       expect(count).toBeLessThanOrEqual(1) // 0.75 → ya bir taş ya hiç
       if (count === 1) withPiece++

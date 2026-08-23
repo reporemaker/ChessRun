@@ -1,5 +1,6 @@
 import { nextWeek } from '@shared/week'
 import { COL_CHOICES } from '../engine/config'
+import { tuningActive } from '../engine/tuning'
 import { colsOf } from '../engine/game'
 import type { GameEvent, GameMode, GameState, PieceType } from '../engine/types'
 import type { StringKey } from './i18n'
@@ -576,6 +577,8 @@ export interface BadgeAward {
  * yani ucuz. Zaten kazanılmış kademe bir daha tetiklenmiyor.
  */
 export function claimBadges(context: BadgeContext, now = new Date()): BadgeAward[] {
+  // Zorluk testi kipinde rozet kazanılmaz - kolay eğride her rozet düşerdi
+  if (tuningActive()) return []
   const earned = readBadges()
   const fresh: BadgeAward[] = []
 

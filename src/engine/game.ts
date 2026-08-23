@@ -35,6 +35,7 @@ import {
   TRIO_THREAT_SCORE,
   TRIO_TYPES,
   minColsOf,
+  curveOf,
   rowPieces,
   rowPiecesOf,
 } from './config'
@@ -81,6 +82,8 @@ export function createGame({
     // Üçlü tahtanın ortasından başlıyor: kadro dipte doğduğunda oyuncunun
     // sırası gelmeden iki taş birden düşüyordu
     playerRow: mode === 'trio' ? ROWS - 4 : ROWS - 2,
+    // Açılış yoğunluğu da modun eğrisinden - taban artık mod bazlı
+    openingPieces: curveOf(mode).base,
     rng,
   })
 
@@ -251,6 +254,11 @@ export function applyPlayerMove(state: GameState, to: Pos): GameState {
         next.playerType = target.type
         next.chain.push(target.type)
         next.events.push({ kind: 'transform', to: target.type })
+      }
+
+      // Kaçış'ta vezir yemenin ödülü: tahta bu tur kaymaz (bkz. queenFroze)
+      if (next.mode === 'kingRun' && target.type === 'q') {
+        next.events.push({ kind: 'queenFreeze' })
       }
     }
   }
@@ -507,9 +515,27 @@ function landingFor(state: GameState, pos: Pos, index: number): Pos {
   return start
 }
 
+/**
+ * Kaçış'ın vezir ödülü: bu turun kayma fazı atlanacak mı?
+ *
+ * Şah turda en çok bir satır tırmanır ve kayma bunu aynen geri alır - net
+ * ilerleme sıfır. Korunmasız bir vezire şahla uzanmak ise modun en riskli
+ * hamlesi; ödülü bu yüzden puan değil *yer*: vezir yenen tur tahta kaymaz,
+ * alt satır silinmez, tırmanılan satır gerçekten kazanılır. Ölçüm (600'er
+ * tohumlu koşu): koşuları ~%45 uzatıyor ve hiçbir kuralla çatışmıyor.
+ * Diğer aday ("şah +2 kare yukarı sıçrar") üst kare dolu ya da vurulur
+ * olduğu için denemelerin %29'unda sessizce tetiklenemiyordu - elendi.
+ */
+export function queenFroze(state: GameState): boolean {
+  return state.events.some((event) => event.kind === 'queenFreeze')
+}
+
 /** 2. faz: tahtanın bir satır ilerlemesi */
 export function applyScroll(state: GameState): GameState {
   if (state.status !== 'playing') return state
+
+  // Vezir yenen tur tahta kaymaz: Kaçış ödülü, satır puanı da işlemez
+  if (queenFroze(state)) return state
 
   const next = cloneState(state)
 

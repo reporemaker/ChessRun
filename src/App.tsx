@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { DEFAULT_COLS, minColsOf } from './engine/config'
 import { Game, type GameConfig, type GameHandle } from './components/Game'
 import { DailyGame } from './components/DailyGame'
@@ -8,12 +8,18 @@ import { RankingPopup } from './components/RankingPopup'
 import { BadgesPopup } from './components/BadgesPopup'
 import { Settings } from './components/Settings'
 import { claimLeague } from './ui/badges'
-import { fetchAwards, flushSubmitQueue, sayHello } from './ui/leaderboard'
+import { RANKS_EVENT, fetchAwards, flushSubmitQueue, sayHello } from './ui/leaderboard'
 import { PROFILE_EVENT, RESET_EVENT, pullProfile, pushProfile } from './ui/sync'
 import { getSettings, useSettings } from './ui/settings'
 import { DAILY_REPLAY_ALLOWED, dailyPlayed } from './ui/dailyLock'
 import { fetchDaily, leaderboardEnabled } from './ui/leaderboard'
 import { type PlayMode, type Route, parseRoute, pathOf, routeOfMode } from './ui/route'
+
+/* Zorluk testi paneli yalnızca geliştirmede: koşul derlemede sabit false
+   olduğu için modül üretim paketine hiç girmiyor. */
+const TuningPanel = import.meta.env.DEV
+  ? lazy(() => import('./components/TuningPanel').then((m) => ({ default: m.TuningPanel })))
+  : null
 import { type ResumeTicket, clearResume, readResume, resumeMatches } from './ui/resume'
 import { ResumePrompt } from './components/ResumePrompt'
 import { setBeforeReload } from './ui/reload'
@@ -103,11 +109,9 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(
     () => import.meta.env.DEV && window.location.search.includes('dev=settings'),
   )
-  // Aynı geliştirme kısayolu bilgi sayfaları için: ?dev=page&page=about
+  // Aynı geliştirme kısayolu kılavuz için: ?dev=page (Hakkında artık /about)
   const [page, setPage] = useState<PageId | null>(() =>
-    import.meta.env.DEV && window.location.search.includes('dev=page')
-      ? ((new URLSearchParams(window.location.search).get('page') ?? 'about') as PageId)
-      : null,
+    import.meta.env.DEV && window.location.search.includes('dev=page') ? 'help' : null,
   )
   const { lang } = useSettings()
   /* Paylaşım bağlantısı: ?g=classic|kingRun|trio|daily(&d=gün) → ana sayfada o
@@ -276,11 +280,14 @@ export default function App() {
     // Moderatör sıfırlaması bir gönderim cevabıyla da gelebilir - fişler tazelensin
     const onReset = () => setBadgeVersion((v) => v + 1)
     const onProfile = () => setRankVersion((v) => v + 1)
+    // Koşu sunucuya işlenince: sıralama bir koşu geride kalmasın (RANKS_EVENT)
     window.addEventListener(RESET_EVENT, onReset)
     window.addEventListener(PROFILE_EVENT, onProfile)
+    window.addEventListener(RANKS_EVENT, onProfile)
     return () => {
       window.removeEventListener(RESET_EVENT, onReset)
       window.removeEventListener(PROFILE_EVENT, onProfile)
+      window.removeEventListener(RANKS_EVENT, onProfile)
     }
   }, [])
 
@@ -400,9 +407,15 @@ export default function App() {
         />
       )}
 
-      {page && <Page page={page} onClose={() => setPage(null)} />}
+      {page && <Page onClose={() => setPage(null)} />}
 
       {offer && <ResumePrompt ticket={offer} onResume={() => resumeFromTicket(offer)} onSkip={skipTicket} />}
+
+      {TuningPanel && (
+        <Suspense fallback={null}>
+          <TuningPanel />
+        </Suspense>
+      )}
     </>
   )
 }

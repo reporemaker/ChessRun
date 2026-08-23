@@ -222,7 +222,7 @@ interface PlayerResolution {
   /** Yazılacak satır (INSERT ya da UPDATE); yasaklıysa ya da dakikalık sınır aşıldıysa null */
   statement: D1PreparedStatement | null
   banned: boolean
-  /** Dakikada BURST_MAX_RUNS'tan çok koşu: bu koşu yazılmaz (sessiz) */
+  /** Dakikada BURST_MAX_RUNS'tan çok koşu: bu koşu yazılmaz (istemciye 429) */
   throttled?: boolean
   /** Sunucunun listede göstereceği ad */
   name: string
@@ -339,6 +339,9 @@ export function playedAtOf(at: string, nowMs: number): number {
   return Math.min(parsed, nowMs)
 }
 
+/** `submitRun` sonucu: uç 'throttled'ı 429'a çevirir, gerisi 204. */
+export type SubmitOutcome = 'stored' | 'duplicate' | 'banned' | 'throttled'
+
 /**
  * Koşuyu yazar. Sıra: tekrar koruması (`lb_run_seen`) → oyuncu satırı (ad
  * kuralları `resolvePlayer`) → haftalık TOPLAM (her koşu eklenir; runs/best
@@ -347,7 +350,7 @@ export function playedAtOf(at: string, nowMs: number): number {
  * Haftalık lig = o hafta biriktirilen toplam puan (19 Ağustos kararı): "kim
  * en çok oynadı, en çok puan topladı". En iyi tek koşu değil.
  */
-export async function submitRun(db: D1Database, clean: CleanSubmit, nowMs: number): Promise<void> {
+export async function submitRun(db: D1Database, clean: CleanSubmit, nowMs: number): Promise<SubmitOutcome> {
   const hash = await hashToken(clean.token)
   const short = shortOf(clean.token)
 
@@ -357,10 +360,36 @@ export async function submitRun(db: D1Database, clean: CleanSubmit, nowMs: numbe
     .prepare(`INSERT OR IGNORE INTO lb_run_seen (token_hash, at, ts) VALUES (?1, ?2, ?3)`)
     .bind(hash, clean.at, nowMs)
     .run()
-  if ((seen.meta?.changes ?? 1) === 0) return
+  if ((seen.meta?.changes ?? 1) === 0) return 'duplicate'
 
+  try {
+    return await storeRun(db, clean, hash, short, nowMs)
+  } catch (err) {
+    // Koşu yazılamadıysa "görüldü" işareti kalmasın: uç 503 döner, istemci
+    // kuyruğa yazar, yeniden denemede işaret yokmuş gibi sayılabilir.
+    await unsee(db, hash, clean.at)
+    throw err
+  }
+}
+
+async function unsee(db: D1Database, hash: string, at: string): Promise<void> {
+  try {
+    await db.prepare(`DELETE FROM lb_run_seen WHERE token_hash = ?1 AND at = ?2`).bind(hash, at).run()
+  } catch {
+    // silinemediyse yapacak bir şey yok - asıl hata çağırana gidiyor
+  }
+}
+
+async function storeRun(db: D1Database, clean: CleanSubmit, hash: string, short: string, nowMs: number): Promise<SubmitOutcome> {
   const player = await resolvePlayer(db, hash, short, clean, nowMs, true)
-  if (player.banned || !player.statement) return
+  if (player.throttled) {
+    // Sınıra takılan koşu "görüldü" de sayılmasın: istemci 429'la kuyruğa
+    // yazar, pencere geçince AYNI koşu yeniden gelir ve o zaman sayılır.
+    // (Eski davranış işareti bırakıyordu - koşu kalıcı olarak kayboluyordu.)
+    await unsee(db, hash, clean.at)
+    return 'throttled'
+  }
+  if (player.banned || !player.statement) return 'banned'
 
   /* Günlük çarpan: günün mücadelesi DEĞİLSE ve koşunun günü verildiyse, o
      gün için oyuncunun kaydedilmiş günlük puanına bak; yalnızca mücadeleden
@@ -418,6 +447,7 @@ export async function submitRun(db: D1Database, clean: CleanSubmit, nowMs: numbe
   // Aynı izoledeki bir sonraki tablo okuması taze olsun (koşu bitince oyuncu
   // hemen bakıyor; başka izolede en çok BOARD_TTL_MS gecikir)
   boardCache.delete(`${clean.week}|${clean.mode}`)
+  return 'stored'
 }
 
 export interface WeeklyRow {

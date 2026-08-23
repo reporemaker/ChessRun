@@ -45,6 +45,8 @@ export interface RankingView {
   rank: number | null
   /** Bu haftaki TOPLAM puanın (sunucudan; yoksa yerel defterden toplanır) */
   score: number
+  /** Bu haftaki koşu sayın (sunucudan; yoksa yerel defterden) */
+  runs?: number
   /** Sunucu yoksa null */
   players: number | null
   /** Bu görünüm yerel (sunucu cevabı değil): sıra ve oyuncu sayısı bilinmiyor */
@@ -104,6 +106,7 @@ export function readRanking(mode?: GameMode, now: Date = new Date()): RankingVie
   return {
     rank: null,
     score: weekTotal(runs),
+    runs: runs.length,
     players: null,
     pending: true,
     rows,
@@ -167,6 +170,7 @@ export async function fetchRanking(mode: GameMode, now: Date = new Date()): Prom
     // Sunucu bu hafta için toplam biliyorsa o; bilmiyorsa (henüz
     // gönderilmedi / ağ yoktu) yerel toplam - sıfır göstermek yalan olur.
     score: data.me?.score ?? local.score,
+    runs: data.me?.runs ?? local.runs,
     players: data.players,
     pending: false,
     rows,

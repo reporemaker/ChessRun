@@ -1,4 +1,5 @@
 import { hashSeed } from '../engine/random'
+import { tuningActive } from '../engine/tuning'
 import type { GameMode, PieceType } from '../engine/types'
 import { getIdentity, runPayload, signPayload } from './identity'
 
@@ -337,7 +338,9 @@ export async function recordRun(input: RunInput, now = new Date()): Promise<RunR
     sig: (await signPayload(payload)) ?? undefined,
   }
 
-  writeRuns([...readRuns(), run])
+  // Zorluk testi kipinde koşu deftere YAZILMAZ - kayıt gerçek istatistiği
+  // kirletmesin; dönen kayıt yalnızca kapanış ekranı için.
+  if (!tuningActive()) writeRuns([...readRuns(), run])
   return run
 }
 

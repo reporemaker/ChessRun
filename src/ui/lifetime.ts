@@ -1,3 +1,4 @@
+import { tuningActive } from '../engine/tuning'
 import type { GameMode, PieceType } from '../engine/types'
 import type { RunTally } from './badges'
 
@@ -261,6 +262,8 @@ export function addRun(life: Lifetime, tally: RunTally, run: RunFacts): Lifetime
 
 /** Koşu bitti: oku, ekle, yaz. Game.recordAndReport çağırıyor. */
 export function recordLifetime(tally: RunTally, run: RunFacts): Lifetime {
+  // Zorluk testi kipinde ömür boyu sayaçlar ilerlemez
+  if (tuningActive()) return readLifetime()
   const next = addRun(readLifetime(), tally, run)
   write(next)
   return next

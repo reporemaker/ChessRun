@@ -271,20 +271,28 @@ export default {
 
     if (path.startsWith('/lb/')) {
       // Sıralama apex'te ve herkese açık - Access'in arkasına GİRMEMELİ.
-      // Yazma ucu istatistikle aynı kuralı taşıyor: her durumda 204.
       const now = Date.now()
       // Hız sınırı: IP başına (bkz. wrangler.toml). Okumada 429 (istemci
-      // yerel görünüme düşer), yazmada 204 (kuyruğa alınır, sonra gelir).
+      // yerel görünüme düşer). Koşu gönderiminde de 429: istemci kuyruğa
+      // yazar, sonra yeniden dener - sessiz 204 koşuyu kalıcı kaybediyordu.
+      // Diğer yazma uçları sessiz 204 (istatistik kaybı kabul).
       if (!(await allowed(env.LB_LIMIT, request))) {
-        return request.method === 'GET' || request.method === 'HEAD'
-          ? new Response('rate limited', { status: 429, headers: { 'retry-after': '10', 'cache-control': 'no-store' } })
-          : noContent()
+        const rateLimited = new Response('rate limited', { status: 429, headers: { 'retry-after': '10', 'cache-control': 'no-store' } })
+        if (request.method === 'GET' || request.method === 'HEAD') return rateLimited
+        return path === '/lb/runs' ? rateLimited : noContent()
       }
       try {
         if (path === '/lb/runs') {
           if (request.method !== 'POST') return noContent()
           const clean = cleanSubmit(await readBody(request), now, await bannedWords(env.DB, now))
-          if (clean) await submitRun(env.DB, clean, now)
+          // Geçersiz gövde (bot / imkânsız skor): sessiz 204 - hile deneyene
+          // neyin takıldığını söylemeyiz. Geçerli ama dakikalık sınıra takılan
+          // koşu GEÇİCİ reddedilir: 429 → istemci kuyruğa alır, sonra yeniden
+          // dener; koşu `lb_run_seen`den de silindi, tekrar sayılabilir.
+          const outcome = clean ? await submitRun(env.DB, clean, now) : 'invalid'
+          if (outcome === 'throttled') {
+            return new Response('throttled', { status: 429, headers: { 'retry-after': '60', 'cache-control': 'no-store' } })
+          }
           return noContent()
         }
         if (path === '/lb/daily/start') {
@@ -325,8 +333,11 @@ export default {
         if (path === '/lb/awards') return await awards(env.DB, request.headers.get('x-chessrun-token'), now)
       } catch (err) {
         console.error(JSON.stringify({ msg: 'lb failed', path, err: String(err) }))
-        if (path === '/lb/runs' || path === '/lb/recovery') return noContent()
-        return new Response('unavailable', { status: 503 })
+        // Koşu gönderiminde D1 hatası 503: istemci kuyruğa alır, sonra yeniden
+        // dener (tekrar koruması `lb_run_seen` çifte saymayı önler). Sessiz
+        // 204 koşuyu kalıcı kaybediyordu.
+        if (path === '/lb/recovery') return noContent()
+        return new Response('unavailable', { status: 503, headers: { 'cache-control': 'no-store' } })
       }
       return new Response('not found', { status: 404 })
     }

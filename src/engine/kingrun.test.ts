@@ -115,6 +115,44 @@ describe('vurulan kareye girilemez', () => {
   })
 })
 
+describe('vezir ödülü: tahta o tur kaymaz', () => {
+  it('vezir yenince queenFreeze doğar ve kayma fazı atlanır', () => {
+    const state = kingRunState()
+    put(state, { row: 5, col: 3 }, 'q')
+
+    const moved = applyPlayerMove(state, { row: 5, col: 3 })
+    expect(moved.events.some((e) => e.kind === 'queenFreeze')).toBe(true)
+
+    const after = applyScroll(moved)
+    expect(after).toBe(moved) // kayma hiç olmadı: durum aynen kaldı
+    expect(after.distance).toBe(0)
+    expect(after.score).toBe(9) // satır puanı da işlemedi, yalnız vezirin değeri
+  })
+
+  it('vezir dışındaki yemeler tahtayı yine kaydırır', () => {
+    const state = kingRunState()
+    put(state, { row: 5, col: 3 }, 'r')
+
+    const moved = applyPlayerMove(state, { row: 5, col: 3 })
+    expect(moved.events.some((e) => e.kind === 'queenFreeze')).toBe(false)
+
+    const after = applyScroll(moved)
+    expect(after.distance).toBe(1)
+    expect(after.events.some((e) => e.kind === 'scroll')).toBe(true)
+  })
+
+  it('ödül Kaçış\'a özgü: Av modunda vezir yemek kaymayı durdurmaz', () => {
+    const state = kingRunState({ mode: 'classic', lives: 3 })
+    put(state, { row: 5, col: 3 }, 'q')
+
+    const moved = applyPlayerMove(state, { row: 5, col: 3 })
+    expect(moved.events.some((e) => e.kind === 'queenFreeze')).toBe(false)
+
+    const after = applyScroll(moved)
+    expect(after.distance).toBe(1)
+  })
+})
+
 describe('bitiş koşulları', () => {
   it('tehdit altındayken bunu bildirir', () => {
     const safe = kingRunState()

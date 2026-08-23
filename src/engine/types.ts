@@ -47,6 +47,8 @@ export type GameEvent =
   | { kind: 'transform'; to: PieceType }
   | { kind: 'lifeLost'; reason: 'captured' | 'fellOff' }
   | { kind: 'scroll' }
+  /** Kaçış: vezir yendi - ödül olarak tahta bu tur kaymaz, alt satır silinmez */
+  | { kind: 'queenFreeze' }
   /** Oyuncu rakip şaha şah çekti - rakip bu turda savunmak zorunda */
   | { kind: 'check'; points: number; streak: number }
   /** Şahı kurtaracak hamle kalmadı: rakip başka bir taşını rastgele oynadı */

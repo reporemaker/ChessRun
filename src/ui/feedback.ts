@@ -19,8 +19,7 @@ import { APP_VERSION, CONTACT_MAIL } from './version'
  * adrese gider, ayrı bir "hata bildir" maili yok. Emoji ve uzun tire yok.
  *
  * Bilinen zayıflık: masaüstünde webmail kullananlarda mailto hiçbir şey
- * açmayabilir; bu yüzden `feedbackText` panoya kopyalanabilir yedek üretir
- * ve adres metin olarak da görünür.
+ * açmayabilir; adres Hakkında sayfasında metin olarak da görünür.
  */
 function uaShort(): string {
   const ua = typeof navigator === 'undefined' ? '' : navigator.userAgent
@@ -118,10 +117,4 @@ export function feedbackMail(lang: Lang, mode?: GameMode): FeedbackMail {
 /** Settings/Game/DailyGame çağrıları: yalnızca href */
 export function feedbackHref(lang: Lang, mode?: GameMode): string {
   return feedbackMail(lang, mode).href
-}
-
-/** Webmail yedeği: adres + konu + gövde, panoya kopyalanacak metin */
-export function feedbackText(lang: Lang, mode?: GameMode): string {
-  const mail = feedbackMail(lang, mode)
-  return `${CONTACT_MAIL}\n${mail.subject}\n\n${mail.body}`
 }

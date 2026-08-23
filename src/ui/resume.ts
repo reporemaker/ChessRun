@@ -21,6 +21,7 @@
  */
 import type { DailyState } from '../engine/daily'
 import { type Rng, createRng, systemRng } from '../engine/random'
+import { tuningActive } from '../engine/tuning'
 import type { GameState } from '../engine/types'
 import type { GameConfig } from '../components/Game'
 import type { RunTally } from './badges'
@@ -78,6 +79,9 @@ function storage(): Storage | null {
 }
 
 export function saveResume(ticket: Omit<ResumeTicket, 'v' | 'savedAt'>, now = Date.now()): void {
+  // Zorluk testi kipindeki koşu devam fişi bırakmaz: normal kipte geri
+  // yüklenirse eğri ortadan değişmiş olurdu
+  if (tuningActive()) return
   const store = storage()
   if (!store) return
   try {

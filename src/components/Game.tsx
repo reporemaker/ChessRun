@@ -14,9 +14,11 @@ import {
   movesToKing,
   needsBoardRefresh,
   playerInCheck,
+  queenFroze,
   safeMoves,
   selectPiece,
 } from '../engine/game'
+import { tuningActive } from '../engine/tuning'
 import { key } from '../engine/moves'
 import type { EndReason } from '@shared/events'
 import type { Color, GameEvent, GameMode, GameState, PieceType, Pos, Row } from '../engine/types'
@@ -26,7 +28,7 @@ import { type TipId, TIP_KEY, readSeenTips, storeSeenTips } from '../ui/coach'
 import { getIdentity, shortToken } from '../ui/identity'
 import { LANGS } from '../ui/i18n'
 import type { StringKey } from '../ui/i18n'
-import { submitRun } from '../ui/leaderboard'
+import { RANKS_EVENT, submitRun } from '../ui/leaderboard'
 import { GLYPH, PIECE_NAME_KEY } from '../ui/pieces'
 import {
   type RunRecord,
@@ -45,7 +47,7 @@ import { weekTotal } from '../ui/ranking'
 import { useRanking } from '../ui/useRanking'
 import { setCols, setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
 import type { ShareInput } from '../ui/share'
-import { FeedbackLinks } from './FeedbackLinks'
+import { FeedbackLink } from './FeedbackLinks'
 import { endReasonOf, trackRun } from '../ui/stats'
 import { type Translate, useT } from '../ui/text'
 import { playEvents, playSound, unlockSound } from '../ui/sound'
@@ -93,7 +95,7 @@ interface GameProps {
   config: GameConfig
   onExit: () => void
   onOpenSettings: () => void
-  onOpenPage: (page: 'help' | 'about') => void
+  onOpenPage: (page: 'help') => void
   onOpenRanking: () => void
   onOpenBadges: () => void
   badgeVersion: number
@@ -159,6 +161,13 @@ export function Game({
     const timer = setTimeout(() => setRankTick((n) => n + 1), 2000)
     return () => clearTimeout(timer)
   }, [result])
+  // Koşu sunucuya İŞLENDİ (RANKS_EVENT): kart hemen tazelensin - 2 sn'lik
+  // zamanlayıcı yavaş bir gönderimde karttaki toplamı bir koşu geride bırakabiliyordu
+  useEffect(() => {
+    const onRanks = () => setRankTick((n) => n + 1)
+    window.addEventListener(RANKS_EVENT, onRanks)
+    return () => window.removeEventListener(RANKS_EVENT, onRanks)
+  }, [])
   const { view: ranking, status: rankStatus } = useRanking(config.mode, `${result?.run.at ?? ''}-${rankTick}`)
 
   /* Reklam yalnızca gerçek bir slot tanımlıysa çiziliyor - tanımsızken
@@ -323,7 +332,7 @@ export function Game({
     const durationMs = performance.now() - runStart.current
     const counts = tally.current
     const cols = colsOf(state.board)
-    const level = levelOf(state.distance) + 1
+    const level = levelOf(state.distance, state.mode) + 1
 
     const boosted = applyDailyBonus(state.score, dailyToday.current)
     const run = await recordRun({
@@ -374,14 +383,15 @@ export function Game({
     const run = await recordAndReport(state, endReasonOf(state.events))
 
     const after = readStanding(state.mode)
-    const isBest = run.score > 0 && run.score > (before.allTime?.score ?? 0)
+    // Test kipinde kolay eğri gerçek rekoru "kırmış" görünmesin
+    const isBest = !tuningActive() && run.score > 0 && run.score > (before.allTime?.score ?? 0)
     const runs = readRuns()
 
     setHiScore(after.allTime?.score ?? run.score)
     setResult({
       run,
       isBest,
-      isWeekBest: !isBest && run.score > 0 && run.score > (before.thisWeek?.score ?? 0),
+      isWeekBest: !tuningActive() && !isBest && run.score > 0 && run.score > (before.thisWeek?.score ?? 0),
       allTime: after.allTime?.score ?? run.score,
       weekBest: after.thisWeek?.score ?? run.score,
       weekTotal: weekTotal(runsOfWeek(runsOfMode(runs, state.mode), isoWeekKey(new Date()))),
@@ -464,12 +474,17 @@ export function Game({
       if (!alive()) return
     }
 
-    const scrolled = applyScroll(base)
-    setGhostRow(base.board[ROWS - 1])
-    setPhase('scroll')
-    commit(scrolled)
-    await pause(PHASE_MS.scroll)
-    if (!alive()) return
+    // Kaçış'ta vezir yenen tur tahta kaymaz (queenFroze): kayma fazı ve
+    // animasyonu bütünüyle atlanır, rakip yine oynar
+    const frozen = queenFroze(base)
+    const scrolled = frozen ? base : applyScroll(base)
+    if (!frozen) {
+      setGhostRow(base.board[ROWS - 1])
+      setPhase('scroll')
+      commit(scrolled)
+      await pause(PHASE_MS.scroll)
+      if (!alive()) return
+    }
 
     if (scrolled.status === 'playing') {
       const answered = applyEnemyMove(scrolled)
@@ -699,9 +714,11 @@ export function Game({
             mated={game.events.some((event) => event.kind === 'checkmated')}
             weekly={{
               earned: result?.run.score ?? applyDailyBonus(game.score, dailyToday.current),
-              // Yerel toplam bu koşuyu kesin içerir; sunucu daha büyük biliyorsa (başka cihaz) o
-              total: Math.max(result?.weekTotal ?? 0, rankStatus === 'live' ? ranking.score : 0),
-              runs: result?.weekRuns ?? 0,
+              // Ligin sözü sunucu: turnuva sayfasıyla AYNI sayı görünmeli.
+              // (Eski Math.max, sunucunun saymadığı koşuları maskeliyordu.)
+              // Sunucu yok/ulaşılamıyorsa yerel defter - sıfır yalan olur.
+              total: rankStatus === 'live' ? ranking.score : result?.weekTotal ?? 0,
+              runs: (rankStatus === 'live' ? ranking.runs : undefined) ?? result?.weekRuns ?? 0,
               rank: rankStatus === 'live' ? ranking.rank : null,
               players: rankStatus === 'live' ? ranking.players : null,
               live: rankStatus === 'live',
@@ -779,7 +796,7 @@ export function Game({
           </span>
           <span className="gv-cell">
             <span className="gv-lb">{t('hud.level')}</span>
-            <span className="gv-n md">{levelOf(game.distance) + 1}</span>
+            <span className="gv-n md">{levelOf(game.distance, game.mode) + 1}</span>
           </span>
           <span className="gv-cell">
             <span className="gv-lb">{livesLabel}</span>
@@ -971,10 +988,12 @@ export function Game({
           </button>
         </div>
         <div className="gv-btns">
-          <button type="button" onClick={() => onOpenPage('about')}>
+          {/* Hakkında: pencere değil /about statik sayfası; koşu devam
+              fişiyle (ui/resume) geri çağrılır */}
+          <button type="button" onClick={() => window.location.assign('/about')}>
             {t('settings.about')}
           </button>
-          <FeedbackLinks lang={settings.lang} mode={config.mode} />
+          <FeedbackLink lang={settings.lang} mode={config.mode} />
         </div>
 
         {AD_SLOT && <div className="gv-ad">REKLAM</div>}
@@ -1036,6 +1055,10 @@ function describeEvents(events: GameEvent[], t: Translate): Flash | null {
         parts.push(
           t('flash.capture', { piece: t(PIECE_NAME_KEY[event.piece]), points: event.points }),
         )
+        break
+      case 'queenFreeze':
+        parts.push(t('flash.queenFreeze'))
+        tone = 'great'
         break
       case 'transform':
         parts.push(t('flash.transform', { piece: t(PIECE_NAME_KEY[event.to]) }))

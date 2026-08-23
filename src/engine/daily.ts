@@ -1,5 +1,6 @@
 import { cloneBoard, colsOf, emptyRow, makePiece } from './board'
 import { PIECE_VALUE, ROWS } from './config'
+import { TUNING_REFERENCE, difficultyTuning } from './tuning'
 import { attackersOf } from './fairness'
 import { chebyshev, enemyThreats, key, pseudoMoves, samePos } from './moves'
 import { type Rng, createRng, hashSeed, shuffled } from './random'
@@ -89,9 +90,14 @@ export const DAILY_KING_GAP_ROWS = 6
 /**
  * Satır başına beklenen taş: satır indeksiyle (yani zamanla) artar, oyuncunun
  * ne yaptığına BAĞLI DEĞİL - herkes aynı gün aynı satırları görsün diye.
+ *
+ * 23 Ağustos 2026: eğri yumuşak açılış + hızlı sertleşmeye çekildi
+ * (zorluk paneli 6 · 0.30 · 0.20'nin karşılığı; koşular ~30 saniyede
+ * bitiyordu). Eski değerler 0.85 ve 1/90; yenisiyle taban 0.34'e iniyor,
+ * artış ~2.7 katına çıkıyor, tavana ~53. satırda varılıyor (eskiden 95).
  */
-export const DAILY_BASE_ROW_PIECES = 0.85
-export const DAILY_ROW_PIECES_PER_ROW = 1 / 90
+export const DAILY_BASE_ROW_PIECES = 0.34
+export const DAILY_ROW_PIECES_PER_ROW = 1 / 33.75
 export const DAILY_MAX_ROW_PIECES = 1.9
 
 /**
@@ -181,9 +187,27 @@ function rowRng(seed: number, index: number): Rng {
   return createRng(hashSeed(`${seed >>> 0}:${index}`))
 }
 
-/** Satır indeksine göre beklenen taş sayısı */
+/**
+ * Satır indeksine göre beklenen taş sayısı.
+ *
+ * Yerel test kipi: bu modun eğrisi satır bazlı (basamaksız) olduğu için
+ * üç düğme ORAN olarak uygulanır - taban, Av'daki tabana göre ölçeklenir;
+ * satır başına artış da basamak yüksekliği/aralığındaki değişimle aynı
+ * oranda hızlanır ya da yavaşlar. Böylece aynı kaydırıcılar dört oyunda
+ * aynı yönde hissettirir.
+ */
 export function dailyRowPieces(index: number): number {
-  return Math.min(DAILY_MAX_ROW_PIECES, DAILY_BASE_ROW_PIECES + index * DAILY_ROW_PIECES_PER_ROW)
+  const tuning = difficultyTuning()
+  if (!tuning) {
+    return Math.min(DAILY_MAX_ROW_PIECES, DAILY_BASE_ROW_PIECES + index * DAILY_ROW_PIECES_PER_ROW)
+  }
+  // Ölçek çıpası ESKİ günlük eğrisi (0.85 · 1/90): canlı sabitler zaten
+  // panelin 6 · 0.30 · 0.20 karşılığı; yeni sabitlerden ölçeklemek aynı
+  // ayarı iki kez uygulamak olurdu. Panel 6 · 0.30 · 0.20'ye getirilirse
+  // sonuç canlı eğriyle bire bir aynıdır.
+  const base = 0.85 * (tuning.base / TUNING_REFERENCE.base)
+  const perRow = (1 / 90) * (tuning.inc / TUNING_REFERENCE.inc) * (TUNING_REFERENCE.step / tuning.step)
+  return Math.min(DAILY_MAX_ROW_PIECES, base + index * perRow)
 }
 
 function weightedType(rng: Rng): PieceType {

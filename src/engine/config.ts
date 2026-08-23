@@ -1,3 +1,4 @@
+import { difficultyTuning } from './tuning'
 import type { GameMode, PieceType } from './types'
 
 /**
@@ -97,18 +98,38 @@ export const STUCK_SCORE = 5
  * Tur akışı: oyuncu oynar → tahta bir satır kayar → rakip oynar.
  * Kayma her turda olduğu için piyon yerinde sayar; ilerlemek ancak
  * daha hareketli bir taşa dönüşmekle mümkün.
+ *
+ * Zorluk eğrisi MOD BAZLI (23 Ağustos 2026): koşular ~50 saniyede
+ * bittiği için üç oyunun eğrisi ayrı ayrı elle ayarlandı (yerel zorluk
+ * paneli + 100'er koşuluk bot ölçümü). Eski ortak eğri 12 satırda bir
+ * +0.15, taban 0.75 idi; yeni eğriler ortalama koşuyu 1.5-2 katına
+ * çıkarırken usta ucunu sonlu bırakıyor.
+ *
+ * `base` = satır başına doğan taşın tabanı - kare başına olasılık değil,
+ * satır başına beklenen adet: 0.3 → satırların %30'unda bir taş doğar.
+ * `step` = kaç satırda bir seviye atlanır, `inc` = seviye başına artış.
  */
-export const ROWS_PER_LEVEL = 12
+export interface DifficultyCurve {
+  step: number
+  base: number
+  inc: number
+}
 
-/**
- * Yeni satırda doğan taş sayısı - kare başına olasılık değil, satır başına
- * beklenen adet. `0.75` şu demek: satırların **%75'inde tam bir taş** doğar,
- * kalan %25'i bomboş gelir. Tam kısmı garanti, kesir kısmı olasılık olduğu
- * için 1.5 → "bir taş kesin, ikincisi %50" anlamına gelir.
- */
-export const BASE_ROW_PIECES = 0.75
-export const ROW_PIECES_PER_LEVEL = 0.15
+export const DIFFICULTY: Record<GameMode, DifficultyCurve> = {
+  classic: { step: 20, base: 0.3, inc: 0.08 },
+  kingRun: { step: 10, base: 0.3, inc: 0.15 },
+  trio: { step: 15, base: 0.5, inc: 0.1 },
+  // Günlüğün motoru kendi sabitlerini taşıyor (daily.ts, satır bazlı eğri);
+  // bu satır o eğrinin panel karşılığı - tip bütünlüğü ve belge için
+  daily: { step: 6, base: 0.3, inc: 0.2 },
+}
+
 export const MAX_ROW_PIECES = 2.5
+
+/** Etkin eğri: yerel zorluk paneli (yalnız geliştirme) hepsini ezebilir */
+export function curveOf(mode: GameMode): DifficultyCurve {
+  return difficultyTuning() ?? DIFFICULTY[mode]
+}
 
 /**
  * Denge valfi: kale/vezirle oynarken düşman daha yoğun doğar.
@@ -194,13 +215,13 @@ export const TRIO_MAX_ROW_PIECES = MAX_ROW_PIECES
 /** Üçlünün en dar koridoru - 4 sütunda üç kayan taş birbirini kilitliyor */
 export const TRIO_MIN_COLS = 6
 
-/** Zorluk seviyesi */
-export function levelOf(distance: number): number {
-  return Math.floor(distance / ROWS_PER_LEVEL)
+/** Zorluk seviyesi - modun basamak aralığına göre */
+export function levelOf(distance: number, mode: GameMode = 'classic'): number {
+  return Math.floor(distance / curveOf(mode).step)
 }
 
 /**
- * Yeni satırda doğacak taş sayısının beklenen değeri.
+ * Yeni satırda doğacak taş sayısının beklenen değeri (klasik eğri).
  *
  * Genişlikle orantılı: 4 sütunluk koridorda satır başına aynı sayıda taş
  * doğurmak, tam tahtanın iki katı yoğunluk demek olurdu - dar koridor
@@ -212,9 +233,7 @@ export function rowPieces(
   playerType: PieceType,
   cols: number = MAX_COLS,
 ): number {
-  let pieces = BASE_ROW_PIECES + levelOf(distance) * ROW_PIECES_PER_LEVEL
-  if (HEAVY_PIECE_TYPES.includes(playerType)) pieces += HEAVY_PIECE_ROW_BONUS
-  return Math.min(MAX_ROW_PIECES, pieces) * (clampCols(cols) / MAX_COLS)
+  return rowPiecesOf('classic', distance, playerType, cols)
 }
 
 /**
@@ -227,10 +246,14 @@ export function rowPiecesOf(
   playerType: PieceType,
   cols: number = MAX_COLS,
 ): number {
-  if (mode !== 'trio') return rowPieces(distance, playerType, cols)
-
-  const pieces = (BASE_ROW_PIECES + levelOf(distance) * ROW_PIECES_PER_LEVEL) * TRIO_ROW_MULTIPLIER
-  return Math.min(TRIO_MAX_ROW_PIECES, pieces) * (clampCols(cols) / MAX_COLS)
+  const { base, inc } = curveOf(mode)
+  let pieces = base + levelOf(distance, mode) * inc
+  if (mode === 'trio') {
+    pieces *= TRIO_ROW_MULTIPLIER
+    return Math.min(TRIO_MAX_ROW_PIECES, pieces) * (clampCols(cols) / MAX_COLS)
+  }
+  if (HEAVY_PIECE_TYPES.includes(playerType)) pieces += HEAVY_PIECE_ROW_BONUS
+  return Math.min(MAX_ROW_PIECES, pieces) * (clampCols(cols) / MAX_COLS)
 }
 
 /** Modun en dar koridoru - Üçlü 4 sütuna sığmıyor */

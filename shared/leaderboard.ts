@@ -4,7 +4,7 @@ import type { Mode } from './events'
  * Haftalık sıralama sunucusunun sözleşmesi - oyun, Worker ve panel
  * arasındaki tek ortak tanım (istatistik için `events.ts` neyse bu da o).
  *
- *   POST /lb/runs                 gövde: SubmitBody                → 204 (her durumda)
+ *   POST /lb/runs                 gövde: SubmitBody                → 204 (alındı/geçersiz) · 429 (geçici: sınır - istemci kuyruğa alır) · 503 (D1 hatası - kuyruğa alır)
  *   GET  /lb/weekly?mode=&week=   başlık: x-chessrun-token (ist.)  → WeeklyResponse
  *   GET  /lb/pulse?day=                                            → PulseResponse
  *

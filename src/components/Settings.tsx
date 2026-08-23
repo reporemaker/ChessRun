@@ -28,7 +28,7 @@ export interface LiveGame {
 
 interface SettingsProps {
   onClose: () => void
-  onOpenPage: (page: 'help' | 'about') => void
+  onOpenPage: (page: 'help') => void
   /** Oyun sürüyorsa menüye dönüş bağlantısı - mobilde tek çıkış yolu */
   onExitGame?: () => void
   onOpenRanking: () => void
@@ -291,15 +291,15 @@ export function Settings({
               Hakkında · Öneri (mailto - form değil, bkz. ui/feedback.ts) ·
               Yükle / Ana ekrana ekle (uygulama olarak açıksa yok). Altında,
               istenirse, elle ekleme ipucu. Kurtarma kodu rozetler
-              penceresinde. Adres Hakkında sayfasında yazılı; webmail yedeği
-              (metni kopyala) yalnızca oyun sağ sütununda. */}
+              penceresinde. Hakkında artık pencere değil, /about statik
+              sayfası (public/about.html); adres orada yazılı. */}
           <div className="pop-links main">
             <button type="button" onClick={() => onOpenPage('help')}>
               {t('settings.howTo')}
             </button>
           </div>
           <div className="pop-links">
-            <button type="button" onClick={() => onOpenPage('about')}>
+            <button type="button" onClick={() => window.location.assign('/about')}>
               {t('settings.about')}
             </button>
             <FeedbackLink lang={settings.lang} />

@@ -7,6 +7,7 @@ import type {
   Viewport,
   VisitPayload,
 } from '@shared/events'
+import { tuningActive } from '../engine/tuning'
 import type { GameEvent, GameMode } from '../engine/types'
 import { getSettings } from './settings'
 import { claimVisit, countRun, sessionRuns, sessionStart, touchSession } from './session'
@@ -220,7 +221,15 @@ export function trackVisit(): void {
   post('visit', buildVisitPayload(readEnv(session.id)))
 }
 
+/** Zorluk testi kipinde biten koşunun özeti bu olayla panele düşer */
+export const TUNING_RUN_EVENT = 'chessrun:tuning-run'
+
 export function trackRun(facts: RunFacts): void {
+  // Zorluk testi kipi: istatistik sunucuya gitmez, koşu özeti panele gider
+  if (tuningActive()) {
+    window.dispatchEvent(new CustomEvent(TUNING_RUN_EVENT, { detail: facts }))
+    return
+  }
   if (!ENDPOINT || optedOut()) return
   const session = touchSession()
   countRun()
