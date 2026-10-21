@@ -1,4 +1,23 @@
+<p>
+  <a href="https://remaker.ch">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://remaker.ch/brand/remaker-logo-beyaz.png">
+      <img src="https://remaker.ch/brand/remaker-logo.png" alt="RE*maker" height="18">
+    </picture>
+  </a>
+  <br>
+  <sub>SEU // Emekulas // <a href="https://github.com/smrtkrft">SmartKraft</a></sub>
+</p>
+
 # ChessRun
+
+<p>
+  <img src="docs/ekran/menu.png" alt="ChessRun ana menü" width="250">
+  <img src="docs/ekran/av.png" alt="Av modu" width="250">
+  <img src="docs/ekran/uclu.png" alt="Üçlü modu" width="250">
+</p>
+
+[chessrun.app](https://chessrun.app)
 
 Sonsuz kayan bir satranç tahtasında geçen endless-runner. İki mod, ortak motor:
 
@@ -326,3 +345,8 @@ Kapsam sabit bir listeden değil sözlüğün kendisinden hesaplanıyor ([`missi
 - [ ] Klavye ile oynama
 - [ ] iOS için PNG ikonlar
 - [ ] Yenen taş için ayrı patlama animasyonu
+
+## Lisans
+
+Kod [AGPL-3.0](LICENSE). Oyunu değiştirip bir sunucuda yayımlayan, değiştirdiği kaynak kodu da oyuncularla paylaşmak zorundadır.
+Taş görselleri (chessnut) [Apache-2.0](LICENSES/chessnut-APACHE-2.0.txt).

@@ -36,3 +36,13 @@ rozet-secim.json
 *.njsproj
 *.sln
 *.sw?
+
+# Taslaklar ve iç notlar — depoya girmez
+g.html
+m.html
+n.html
+z.html
+yapilacaklar.md
+sonra_planlar.md
+rozetler.md
+hakkinda.md
