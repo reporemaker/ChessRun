@@ -1,355 +1,358 @@
-<p>
-  <a href="https://chessrun.app"><img align="right" src="https://img.shields.io/badge/%E2%96%B6%20Hemen%20oyna-chessrun.app-f5c518?style=for-the-badge&amp;labelColor=0b0e14" alt="▶ Hemen oyna: chessrun.app"></a>
-  <a href="https://remaker.ch">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://remaker.ch/brand/remaker-logo-beyaz.png">
-      <img src="https://remaker.ch/brand/remaker-logo.png" alt="RE*maker" height="34">
-    </picture>
-  </a>
-  <br>
-  <sub>SEU // Emekulas // <a href="https://github.com/smrtkrft">SmartKraft</a></sub>
-</p>
+<div align="center">
+
+<a href="https://remaker.ch">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://remaker.ch/brand/remaker-logo-beyaz.png">
+    <img src="https://remaker.ch/brand/remaker-logo.png" alt="RE*maker" height="44">
+  </picture>
+</a>
 
 # ChessRun
 
+<p><a href="https://chessrun.app"><img src="https://img.shields.io/badge/%E2%96%B6%20Play%20now-chessrun.app-f5c518?style=for-the-badge&amp;labelColor=0b0e14" alt="▶ Play now: chessrun.app" height="34"></a></p>
+
 <p>
-  <img src="docs/ekran/menu.png" alt="ChessRun ana menü" width="210">
+  <img src="docs/screenshots/menu.png" alt="ChessRun main menu" width="210">
   &nbsp;&nbsp;&nbsp;
-  <img src="docs/ekran/av.png" alt="Av modu" width="210">
+  <img src="docs/screenshots/hunt.png" alt="Hunt mode" width="210">
   &nbsp;&nbsp;&nbsp;
-  <img src="docs/ekran/uclu.png" alt="Üçlü modu" width="210">
+  <img src="docs/screenshots/trio.png" alt="Trio mode" width="210">
 </p>
 
-Tarayıcıda oynanır: [https://chessrun.app](https://chessrun.app). Kurulum yok, hesap yok; telefonda ve bilgisayarda çalışır.
+<sub><sub>SEU // Emekulas // <a href="https://github.com/smrtkrft">SmartKraft</a></sub></sub>
 
-Sonsuz kayan bir satranç tahtasında geçen endless-runner. İki mod, ortak motor:
+</div>
 
-| Mod | Sen | Amaç |
+Plays in the browser: [https://chessrun.app](https://chessrun.app). No install, no account; works on phone and desktop.
+
+An endless runner on an endlessly scrolling chessboard. Two modes, one engine:
+
+| Mode | You | Goal |
 |---|---|---|
-| **ChessRun** ♞ | Yediğin taşa dönüşürsün | Rakip şahı avla |
-| **Şah Kaçışı** ♚ | Şahsın, dönüşüm yok | Mat olmadan dayan |
+| **Hunt** ♞ | You become what you capture | Hunt the enemy king |
+| **Escape** ♚ | You are the king, no transformation | Survive without being mated |
 
-İkisi birbirinin aynadaki yansıması: klasik modda şahı **avlıyorsun**, Şah Kaçışı'nda şah **sensin**. Her gün ikisi de aynı tohumdan doğan ortak bir tahtayı oynatıyor (günlük meydan okuma).
+They mirror each other: in the classic mode you **hunt** the king, in Escape you **are** the king. Every day both modes share a board grown from the same seed (the daily challenge).
 
-## Oynanış
+## Gameplay
 
-Tahta 8 satır görünür; genişliği **oyun başında seçilir: 4–8 sütun**. Dar koridor bambaşka bir oyun — kaçacak yer az, ama düşman da az doğuyor. Bir tur üç fazdan oluşur ve her fazın kendi animasyonu vardır:
+The board shows 8 rows; its width is **chosen at the start: 4–8 columns**. A narrow corridor is a different game altogether — less room to run, but fewer enemies spawn too. A turn has three phases, each with its own animation:
 
 ```
-1. Sen oynarsın          → taşın hedefe kayar, yediğin taşa dönüşürsün
-   ↳ şah yediysen        → tahta dökülür ve baştan kurulur (sadece o zaman)
-2. Tahta bir satır kayar → üstten yeni satır iner, en alttaki dışarı çıkar
-3. Rakip oynar           → tek taşını oynatır
+1. You move               → your piece slides to the target, you become what you captured
+   ↳ if you took the king → the board crumbles and is rebuilt (only then)
+2. The board scrolls a row → a new row drops in at the top, the bottom one leaves
+3. The enemy moves        → it moves a single piece
 ```
 
-- Yediğin taşa dönüşürsün. **Bu iki yönlü çalışır:** vezirken piyon yersen piyona düşersin. Oyunun asıl kararı budur.
-- **Şah çekersen rakip savunmak zorunda.** Gerçek satrançtaki gibi: şahını kurtarmayan hiçbir hamleyi oynayamaz — ne yaklaşır, ne kuşatır. Şah çekmek bu yüzden sadece ödül avı değil, bir tempo silahı: bir turluğunu satın alırsın. **Üst üste çekersen puan katlanır** (2, 4, 6… en fazla ×5): oyunun asıl beceri ifadesi bu. Kurtaracak hamlesi yoksa (mat) donup kalmaz, başka bir taşını rastgele oynar; şah masada durur ve sen **+5** alırsın.
-- **Şahı yediğinde tahta baştan kurulur.** Kareler dökülür, yenileri iner: yeni taşlar, yeni konumlar. Amacı basit — kazandığın canı aynı turda geri vermeyesin.
-- **Beklemek serbest.** Satrancın "oynamak zorundasın" kuralı burada yok; bedeli bir satır geri düşmek.
-- Rakip şahı yersen **+25 puan ve +1 can**. Şah senden kaçar ve yendiğinde yerine yenisi doğar — tahtada her zaman bir şah vardır.
-- Rakip seni yerse ya da en alt satırda kalıp tahtadan düşersen **−1 can**. Can bitince oyun biter.
+- You become the piece you capture. **This works both ways:** take a pawn as a queen and you drop to a pawn. This is the real decision of the game.
+- **Give check and the enemy must defend.** Just like real chess: it cannot play any move that does not save its king — no approaching, no surrounding. So check is not just a reward hunt but a tempo weapon: you buy yourself a turn. **Consecutive checks multiply the score** (2, 4, 6… up to ×5): this is where skill really shows. If it has no saving move (mate) it does not freeze; it plays another piece at random, the king stays on the board and you get **+5**.
+- **Taking the king rebuilds the board.** The squares fall away and new ones drop in: new pieces, new positions. The point is simple — so you don't hand back the life you just earned in the same turn.
+- **Waiting is allowed.** Chess's "you must move" rule does not apply here; the price is dropping back one row.
+- Take the enemy king for **+25 points and +1 life**. The king runs from you, and when taken a new one spawns — there is always a king on the board.
+- If the enemy takes you, or you stay on the bottom row and fall off the board, **−1 life**. No lives left, game over.
 
-### Neden atla başlıyorsun?
+### Why do you start as a knight?
 
-Piyon değil, **at**. Kayma her turda olduğu için piyon 1 kare ilerlerken tahta onu 1 kare geri itiyor — net ilerlemesi sıfır. Hiçbir ava yetişemiyor, sadece kendisine gelen taşları bekliyor ve karşı piyonla karşılaştığında her zaman kaybediyor. At turda net 1 satır kazanabildiği için oyuncuya gerçek bir seçenek alanı bırakıyor. Değiştirmek için [`config.ts`](src/engine/config.ts) içindeki `START_PIECE`.
+A **knight**, not a pawn. Because the board scrolls every turn, a pawn moving 1 square forward is pushed 1 square back — net progress zero. It can't catch anything, it only waits for pieces to come to it, and it always loses to an enemy pawn. A knight can gain a net row per turn, which gives the player a real space of choices. To change it, edit `START_PIECE` in [`config.ts`](src/engine/config.ts).
 
-### Puanlama
+### Scoring
 
-| Taş | Piyon | At | Fil | Kale | Vezir | Şah |
+| Piece | Pawn | Knight | Bishop | Rook | Queen | King |
 |---|---|---|---|---|---|---|
-| Puan | 1 | 3 | 3 | 5 | 9 | 25 (+1 can) |
+| Points | 1 | 3 | 3 | 5 | 9 | 25 (+1 life) |
 
-### Basitleştirilmiş satranç kuralları
+### Simplified chess rules
 
-Bu bir satranç oyunu değil, satranç *hareketleriyle* oynanan bir runner. Bilerek dışarıda bırakılanlar:
+This is not a chess game, it is a runner played with chess *moves*. Deliberately left out:
 
-- Rok, geçerken alma (en passant), piyonun ilk çift adımı yok.
-- Piyon terfisi yok — yerine "yediğine dönüşme" mekaniği var.
-- **Hamle zorunluluğu yok.** Bekleyebilirsin; bedeli bir satır geri düşmek.
-- Şah mat oyunu bitirmez: rakip şahı ödül hedefi, mat da onu almanın önündeki son engelin kalkması.
-- Piyon yönü tahtanın akışına bağlı: oyuncu yukarı, rakip aşağı ilerler.
+- No castling, no en passant, no initial pawn double step.
+- No pawn promotion — the "become what you capture" mechanic replaces it.
+- **No obligation to move.** You can wait; the price is dropping back one row.
+- Checkmate does not end the game: the enemy king is a reward target, and mate just removes the last obstacle to taking it.
+- Pawn direction follows the flow of the board: the player moves up, the enemy moves down.
 
-## Sıkışmak ve kaybetmek
+## Getting stuck and losing
 
-Oyun sıkıştığında **seni kurtarmaz**. Yolunu kapatan taş kaldırılmaz; kaybetmek oyunun gerçek bir parçası. Elinde kalan tek şey beklemek: tahta kayar, bir satır geriye düşersin ve pozisyon değişir.
+The game **does not rescue you** when you get stuck. A piece blocking your way is not removed; losing is a real part of the game. The one thing you always have is waiting: the board scrolls, you drop back a row and the position changes.
 
-Buna karşılık iki hesap oyuncunun lehine yapılır ([`fairness.ts`](src/engine/fairness.ts), [`game.ts`](src/engine/game.ts)):
+In return, two calculations are done in the player's favour ([`fairness.ts`](src/engine/fairness.ts), [`game.ts`](src/engine/game.ts)):
 
-1. **Tehlike hamleden sonraki tahtada ölçülür.** Hamle öncesi tehdit haritasına bakmak yanıltıcı: oyuncunun kendi gövdesi arkasındaki kalenin hattını kapatıyor, oyuncu ilerleyince hat açılıyor ve o kale aniden onu vuruyor. HUD'daki "güvenli hamle" sayacı bu hesaba dayanır.
-2. **Kaymayla doğan pusular silinir.** Oyuncu güvenli olduğunu görerek indiği kareye, üstten yeni doğan bir kale yüzünden ölmemeli — görüp kaçınma şansı olmayan ölüm ceza değil, kaza. Hamleden *önce* de onu vuran taşlara dokunulmaz: bilerek alınan risk risktir. Temizlik tek geçişte yapılamıyor; önündeki taş kalkan bir kalenin hattı açılıyor ve o kale ancak ikinci geçişte görünür oluyor.
-3. **Şah yendiğinde yeni tahtada oyuncuyu vuran taş bulunmaz.** Aynı temizlik oraya da uygulanır, üstüne çevresinde 2 kare boş bırakılır ve yeni şah uzağa konur. Oyuncu en alt satırdaysa bir yukarı alınır — yoksa kazandığı canı bir sonraki kaymada geri verirdi.
+1. **Danger is measured on the board after the move.** Looking at the threat map before the move is misleading: the player's own body blocks the line of a rook behind it, the player moves on, the line opens and that rook suddenly hits them. The "safe moves" counter in the HUD is based on this calculation.
+2. **Ambushes created by the scroll are removed.** A player who lands on a square they saw was safe should not die because of a rook that just spawned at the top — death you had no chance to see and avoid is not a penalty, it's an accident. Pieces that already hit the square *before* the move are left alone: a risk taken knowingly is a risk. The cleanup cannot be done in a single pass; removing the piece in front of a rook opens its line, and that rook only becomes visible on the second pass.
+3. **When the king is taken, the new board has no piece hitting the player.** The same cleanup is applied there, plus 2 squares around the player are left empty and the new king is placed far away. If the player is on the bottom row they are moved up one — otherwise they would give back the life they just earned on the next scroll.
 
-Ayrıca `score === 0` olduğu sürece yeni satıra yakalanabilir bir piyon konur — hiçbir koşu 0 puanla bitmesin diye.
+Also, as long as `score === 0`, a catchable pawn is placed in the new row — so that no run ends with 0 points.
 
-## Zorluk eğrisi
+## Difficulty curve
 
-Doğma oranı kare başına olasılıkla değil, **satır başına beklenen taş sayısıyla** ifade ediliyor — "her karede %5 ihtimalle taş" gibi soyut bir sayı yerine doğrudan "satırların %75'inde bir taş" diyebilmek için. Tam kısmı garanti, kesir kısmı olasılık: `1.5` → bir taş kesin, ikincisi yazı tura.
+The spawn rate is expressed not as a per-square probability but as the **expected number of pieces per row** — so instead of an abstract "5% chance per square" we can say "a piece in 75% of rows". The integer part is guaranteed, the fraction is a probability: `1.5` → one piece for sure, the second is a coin flip.
 
-| Seviye | Beklenen | Ölçülen | Boş gelen satır |
+| Level | Expected | Measured | Empty rows |
 |---|---|---|---|
-| 1 (`BASE_ROW_PIECES`) | 0.75 | 0.750 | %25 |
-| 5 | 1.35 | 1.356 | %0 |
-| 13+ (tavan) | 2.50 | 2.496 | %0 |
+| 1 (`BASE_ROW_PIECES`) | 0.75 | 0.750 | 25% |
+| 5 | 1.35 | 1.356 | 0% |
+| 13+ (cap) | 2.50 | 2.496 | 0% |
 
-Her 12 satırda bir seviye artar, her seviye satır başına `+0.15` taş getirir ve tavan 2.5'te durur. Aynı satırdaki taşlar farklı sütunlara düşer (sütunlar karıştırılıp ilk N'i seçilir).
+The level rises every 12 rows, each level adds `+0.15` pieces per row, and the cap is 2.5. Pieces in the same row land in different columns (the columns are shuffled and the first N are taken).
 
-**Genişlikle orantılı:** 4 sütunluk koridorda satır başına aynı sayıda taş doğurmak, tam tahtanın iki katı yoğunluk demekti — dar koridor "daha sıkışık bir oyun" olsun diye seçiliyor, "iki kat cezalı" olsun diye değil. Oran `× sütun / 8` ile ölçekleniyor, kare başına düşen baskı her genişlikte aynı kalıyor. 300 simüle oyunda ölçülen etki:
+**Proportional to width:** spawning the same number of pieces per row in a 4-column corridor meant twice the density of the full board — the narrow corridor is chosen to be "a tighter game", not "twice the penalty". The rate scales by `× columns / 8`, so the pressure per square stays the same at every width. Effect measured over 300 simulated games:
 
-| Genişlik | Satır başına taş | Ortalama mesafe (önce → sonra) |
+| Width | Pieces per row | Average distance (before → after) |
 |---|---|---|
 | 4 | 0.38 | 12.3 → **22.2** |
 | 6 | 0.56 | 16.7 → **23.3** |
 | 8 | 0.75 | 20.3 → **21.8** |
 
-Doğan taşların dağılımında **piyon, diğer taşların toplamının üçte biri** kadar çıkar (`PAWN_SPAWN_RATIO`). Piyon kalabalığı hem tahtayı tıkıyor hem de yendiğinde oyuncuyu en zayıf taşa düşürdüğü için oyunu tekdüzeleştiriyordu.
+Among spawned pieces, **pawns appear one third as often as all other pieces combined** (`PAWN_SPAWN_RATIO`). Crowds of pawns both clogged the board and, because capturing one drops the player to the weakest piece, made the game monotonous.
 
-Denge valfi: **kale veya vezirle oynarken düşman daha yoğun doğar** (satır başına `+0.25` taş). Güçlü taşa dönüşmenin bir bedeli olsun diye. Kapatmak için [`config.ts`](src/engine/config.ts) içindeki `HEAVY_PIECE_ROW_BONUS` değerini `0` yap.
+Balance valve: **while you play as a rook or queen, enemies spawn more densely** (`+0.25` pieces per row), so becoming a strong piece has a cost. To turn it off, set `HEAVY_PIECE_ROW_BONUS` in [`config.ts`](src/engine/config.ts) to `0`.
 
-## Mimari
+## Architecture
 
-Oyun mantığı render'dan tamamen ayrık, saf fonksiyonlar olarak yazıldı. `src/engine/` React'i hiç tanımaz; girdi olarak durum ve hamle alır, yeni durum döndürür. Böylece kurallar birim testiyle doğrulanabiliyor, arayüz değiştirilse (canvas, native, farklı motor) motor aynen taşınabiliyor.
+The game logic is fully separate from rendering, written as pure functions. `src/engine/` knows nothing about React; it takes a state and a move and returns a new state. That way the rules can be verified with unit tests, and if the UI changes (canvas, native, another engine) the engine moves over as is.
 
-**Rastgelelik enjekte ediliyor:** `Math.random` motorun içinden tamamen çıkarıldı, yerine tohumlanabilir bir üreteç geldi ([`engine/random.ts`](src/engine/random.ts), mulberry32). Aynı tohum + aynı hamle dizisi birebir aynı oyunu üretiyor — günlük meydan okuma, koşu tekrarı ve sunucuda doğrulanabilir skor bunun üstünde duruyor. Test bunu tahta imzalarını kare kare karşılaştırarak doğruluyor.
+**Randomness is injected:** `Math.random` has been removed from the engine entirely and replaced by a seedable generator ([`engine/random.ts`](src/engine/random.ts), mulberry32). The same seed + the same move sequence produce exactly the same game — the daily challenge, run replay and server-verifiable scores all rest on this. A test verifies it by comparing board signatures square by square.
 
 ```
 src/
-  engine/            React'ten bağımsız oyun çekirdeği
-    types.ts         Durum ve olay tipleri
-    config.ts        Tüm dengeleme sabitleri ve zorluk fonksiyonları
-    random.ts        Tohumlanabilir üreteç (mulberry32) ve yardımcıları
-    moves.ts         Taş hareketleri, tehdit ve şah hesabı
-    board.ts         Tahta üretimi, satır doğurma, kaydırma, yenileme
-    fairness.ts      Güvenli hamle / vurulmayan kare hesabı
-    ai.ts            Rakip hamle seçimi (şah altında savunma zorunluluğu)
-    game.ts          Tur fazları + iki modun kuralları
-    game.test.ts     Klasik mod kuralları ve bütünlük testleri
-    kingrun.test.ts  Kaçış kuralları
-    trio.test.ts     Üçlü: kadro, kayıp, takviye, bütünlük
-    random.test.ts   Tekrarlanabilirlik: aynı tohum = aynı oyun
+  engine/            Game core, independent of React
+    types.ts         State and event types
+    config.ts        All balancing constants and difficulty functions
+    random.ts        Seedable generator (mulberry32) and helpers
+    moves.ts         Piece moves, threat and check calculation
+    board.ts         Board generation, row spawning, scrolling, rebuilding
+    fairness.ts      Safe move / unattacked square calculation
+    ai.ts            Enemy move selection (forced defence under check)
+    game.ts          Turn phases + rules of both modes
+    game.test.ts     Classic mode rules and integrity tests
+    kingrun.test.ts  Escape rules
+    trio.test.ts     Trio: squad, losses, reinforcements, integrity
+    random.test.ts   Reproducibility: same seed = same game
   components/
-    Home.tsx         Ana ekran: akan tahtanın üstünde dört kart
-    Settings.tsx     Ayarlar penceresi (yedi bölüm)
-    Pages.tsx        Nasıl oynanır / Hakkında — tam ekran
-    Game.tsx         Oyun görünümü (masaüstü konsol / mobil dört köşe)
-    Board.tsx        Tahta, FLIP animasyonu, kayma, yenilenme
-  ui/i18n.ts         Beş dilli düz sözlük + EN'e düşen yedek
-  ui/i18n.test.ts    Sözlük bekçisi: eksik anahtar ve değişken testleri
-  ui/text.ts         useT() — seçili dile bağlı çeviri kancası
-  ui/settings.ts     Taş rengi / ses / dil deposu (useSyncExternalStore)
-  ui/modes.ts        Ana sayfadaki mod kartları ve günün modu
-  ui/ranking.ts      Sıralamanın tek okuma noktası (sunucusuz durum dâhil)
-  ui/pieces.ts       Taş glifleri ve ad anahtarları
-  ui/timing.ts       Faz süreleri ve hız ayarı
-  ui/sound.ts        WebAudio ile üretilen retro efektler (dosya yok)
-  ui/coach.ts        İlk oyunun bağlamsal ipuçları
-  ui/identity.ts     Cihaz jetonu ve HMAC imzalama
-  ui/scores.ts       Skor defteri, rekorlar, haftalık yarışma, günlük, seri
-  ui/share.ts        Paylaşım kartı ve pano/paylaşım köprüsü
-  ui/leaderboard.ts  Sunucu ucu (VITE_LEADERBOARD_URL tanımlıysa etkin)
+    Home.tsx         Home screen: four cards over the flowing board
+    Settings.tsx     Settings window (seven sections)
+    Pages.tsx        How to play / About — full screen
+    Game.tsx         Game view (desktop console / mobile four corners)
+    Board.tsx        Board, FLIP animation, scrolling, rebuild
+  ui/i18n.ts         Flat five-language dictionary + fallback to EN
+  ui/i18n.test.ts    Dictionary guard: missing key and variable tests
+  ui/text.ts         useT() — translation hook bound to the selected language
+  ui/settings.ts     Piece colour / sound / language store (useSyncExternalStore)
+  ui/modes.ts        Mode cards on the home screen and the mode of the day
+  ui/ranking.ts      Single read point for the ranking (including serverless state)
+  ui/pieces.ts       Piece glyphs and name keys
+  ui/timing.ts       Phase durations and speed setting
+  ui/sound.ts        Retro effects generated with WebAudio (no files)
+  ui/coach.ts        Contextual hints for the first game
+  ui/identity.ts     Device token and HMAC signing
+  ui/scores.ts       Score book, records, weekly contest, daily, streak
+  ui/share.ts        Share card and clipboard/share bridge
+  ui/leaderboard.ts  Server endpoint (active if VITE_LEADERBOARD_URL is set)
 public/
-  manifest.webmanifest   PWA kimliği
-  sw.js                  Çevrimdışı önbellek
-  icon.svg               Uygulama ikonu (+ maskable varyantı)
+  manifest.webmanifest   PWA identity
+  sw.js                  Offline cache
+  icon.svg               App icon (+ maskable variant)
 ```
 
-Motor zamanlamayı hiç bilmez: turu üç saf fonksiyona bölüp arayüze veriyor, arayüz de aralarına animasyon süresi koyarak sırayla oynatıyor. Aynı fonksiyonlar testlerde animasyonsuz, arka arkaya çağrılıyor.
+The engine knows nothing about timing: it splits the turn into three pure functions and hands them to the UI, which plays them in order with animation time in between. In tests the same functions are called back to back without animation.
 
-### Animasyon
+### Animation
 
-- **Taş hareketi:** FLIP tekniği. Her taşın bir önceki karesi `offsetTop/offsetLeft` ile hatırlanıp Web Animations API ile yeni karesine kaydırılıyor. Ölçüm `transform`'dan etkilenmediği için kayma animasyonuyla çakışmıyor.
-- **Satır kayması:** tahta bir satır yukarıdan başlatılıp sıfıra indiriliyor. Silinen satır "hayalet satır" olarak DOM'da bırakıldığı için gerçekten aşağı doğru dışarı çıkıyormuş gibi görünüyor — ekran zıplamıyor.
-- **Tahta yenilenmesi — arcade yanıp sönmesi:** iki faz. Önce eski tahta yerinde dururken satırlar yukarıdan aşağı sırayla üç kez sert renk değiştirip eziliyor (`boardOut`, 598ms), sonra yeni tahta aynı sırayla açılıyor (`boardIn`, 558ms). Gecikme her karenin `--i` (satır indisi) değerinden geliyor, bu yüzden tarama hissi var.
+- **Piece movement:** the FLIP technique. Each piece's previous square is remembered via `offsetTop/offsetLeft` and the piece is slid to its new square with the Web Animations API. The measurement is not affected by `transform`, so it does not clash with the scroll animation.
+- **Row scroll:** the board starts one row higher and slides down to zero. The removed row is kept in the DOM as a "ghost row", so it really looks like it is leaving downwards — the screen does not jump.
+- **Board rebuild — arcade flashing:** two phases. First, with the old board still in place, the rows flash hard colour changes three times from top to bottom and are crushed (`boardOut`, 598ms), then the new board opens in the same order (`boardIn`, 558ms). The delay comes from each square's `--i` (row index), which gives it a scanning feel.
 
-  Karakteri veren şey keyframe'ler değil, **zamanlama fonksiyonu**: `steps(1, end)`. Ara kare üretilmediği için her geçiş sert kesiyor — eski donanımın yapabildiği tek şey buydu. Aynı keyframe'leri `ease` ile oynatınca efekt anında "modern" ve yumuşak görünüyor, 8-bit sertliği kayboluyor. Süreler CSS'e [`ui/timing.ts`](src/ui/timing.ts)'ten satır içi değişken olarak veriliyor ki animasyonla faz süresi ayrışmasın.
-- `prefers-reduced-motion` açıksa tüm animasyonlar kapanır.
+  What gives it character is not the keyframes but the **timing function**: `steps(1, end)`. With no in-between frames every transition cuts hard — that was all old hardware could do. Play the same keyframes with `ease` and the effect instantly looks "modern" and soft, and the 8-bit hardness is gone. Durations are passed to the CSS from [`ui/timing.ts`](src/ui/timing.ts) as inline variables, so the animation and the phase duration never drift apart.
+- With `prefers-reduced-motion` on, all animations are off.
 
-### Rakip yapay zekâsı
+### Enemy AI
 
-Rakip her tur tek bir taş oynar.
+The enemy moves a single piece each turn.
 
-**Şah altındaysa başka hiçbir şey yapamaz.** Hamleleri, "hamleyi oyna → oyuncu hâlâ şahı vuruyor mu → geri al" testinden geçirilir; bu tek test üç savunmanın üçünü birden kapsar (şahın kaçması, şah çeken taşın yenmesi, araya girilip hattın kapatılması) ve hâlâ vurulan bir kareye kaçmayı da eler. Hiçbir hamle geçemezse mat olmuştur: elenen hamleler arasından şah dışı bir taşla rastgele biri oynanır — oyun donmaz, ama şah da kurtulmaz.
+**Under check it can do nothing else.** Its moves go through a "play the move → does the player still hit the king → undo" test; this one test covers all three defences at once (the king escaping, the checking piece being taken, a piece stepping in to block the line) and also rules out escaping to a square that is still attacked. If no move passes, it is mate: one of the rejected moves with a non-king piece is played at random — the game doesn't freeze, but the king isn't saved either.
 
-Şah çekilmemişse öncelik sırası:
+When not in check, the priorities are:
 
-1. Oyuncuyu yiyebiliyorsa yer — hem de **en ucuz taşla**, ki değerli taşlar tahtada kalsın ve oyuncuya ödül olarak dursun.
-2. Şah, oyuncu 3 kare yaklaştığında kaçar.
-3. Diğer taşlar oyuncuya yaklaşır; oyuncuyu vurabilecek bir kareye geçen hamle önceliklidir.
+1. If it can take the player, it does — with **its cheapest piece**, so that valuable pieces stay on the board as rewards for the player.
+2. The king runs when the player comes within 3 squares.
+3. The other pieces approach the player; a move onto a square that can hit the player takes priority.
 
-Ağırlıklar [`src/engine/ai.ts`](src/engine/ai.ts) başındaki sabitlerden ayarlanır.
+The weights are set by the constants at the top of [`src/engine/ai.ts`](src/engine/ai.ts).
 
-## Kaçış
+## Escape
 
-Şah turda 1 kare gider, tahta turda 1 satır kayar: **net ilerleme sıfır.** İlk bakışta bu bir kusur — aslında modun tamamı bunun üstüne kurulu:
+The king moves 1 square per turn, the board scrolls 1 row per turn: **net progress zero.** At first sight this is a flaw — in fact the whole mode is built on it:
 
-> Hayatta kalmak için **her tur yukarı basmak zorundasın.** Basamadığın her tur seni bir satır dibe yaklaştırır. Elinde ~6 satırlık pay var.
+> To survive you **have to step up every turn.** Every turn you don't brings you one row closer to the bottom. You have a margin of about 6 rows.
 
-Bu yüzden puan "ilerleme" değil, **dayanılan satır sayısı** — kurguda zaten dünya senin yanından akıyor.
+That is why the score is not "progress" but **rows survived** — in the story the world flows past you anyway.
 
-| | Kural |
+| | Rule |
 |---|---|
-| Hamle | **Vurulan kareye giremezsin** (gerçek satranç şahı) |
-| Yeme | Korunmasız bitişik taşı yersin, korunanı yiyemezsin |
-| Ölüm | Mat (vuruluyorsun + güvenli kare yok) veya alt satırdan düşmek |
-| Can | Tek — koşu keskin biter |
-| Puan | Dayanılan satır + yeme puanı |
+| Move | **You can't step onto an attacked square** (a real chess king) |
+| Capture | You take an undefended adjacent piece, you can't take a defended one |
+| Death | Mate (attacked + no safe square) or falling off the bottom row |
+| Lives | One — the run ends sharply |
+| Score | Rows survived + capture points |
 
-Motorda yeni kural neredeyse yok: güvenli hamle hesabı ipucu katmanı olarak zaten vardı ([`unattackedMoves`](src/engine/fairness.ts)), burada **kuralın kendisi** oluyor.
+There are hardly any new rules in the engine: the safe move calculation already existed as a hint layer ([`unattackedMoves`](src/engine/fairness.ts)); here it becomes **the rule itself**.
 
-Bunun bir yan sonucu var ve testle sabitlendi: oyuncu hep vurulmayan kareye indiği ve kaymayla doğan pusular temizlendiği için **rakip onu asla yiyemez**. Geriye iki gerçek ölüm kalıyor. 300 simüle koşuda ölçülen: 20–34 satır dayanma, **%85 düşerek, %15 matla** bitiyor; turların %54–77'si tehdit altında geçiyor.
+This has a side effect, pinned down by a test: since the player always lands on an unattacked square and ambushes from the scroll are cleared, **the enemy can never take them**. Two real deaths remain. Measured over 300 simulated runs: 20–34 rows survived, **85% end by falling, 15% by mate**; 54–77% of turns are spent under threat.
 
-### Arcade kapanış
+### Arcade outro
 
-Koşu bittiğinde — **üç modda da** — eski atari kabinlerindeki üç perdeli kapanış oynuyor ([`ArcadeOutro.tsx`](src/components/ArcadeOutro.tsx)):
+When a run ends — **in all three modes** — a three-act ending from old arcade cabinets plays ([`ArcadeOutro.tsx`](src/components/ArcadeOutro.tsx)):
 
-1. **Ölüm** — tahta iki kez sert sert ters renge dönüyor, sonra tüplü televizyon gibi orta çizgiye çöküp beyaz bir noktaya kadar parlayarak sönüyor.
-2. **Başlık** — MAT OLDUN / OYUN BİTTİ `steps(1)` ile yanıp sönüyor, puan sayaç sayaç tırmanıyor.
-3. **Tablo** — en iyi 8 koşu satır satır yukarıdan düşüyor, senin satırın yanıp sönüyor, sıran yazıyor.
+1. **Death** — the board flips hard to inverse colours twice, then collapses to the centre line like a CRT television and fades out, glowing down to a white dot.
+2. **Title** — CHECKMATE / GAME OVER flashes with `steps(1)`, the score climbs counter by counter.
+3. **Table** — the top 8 runs drop in row by row from above, your row flashes, your rank is shown.
 
-Ekrana dokunmak sırayı atlıyor: izlemek isteyen izler, isteyen doğrudan tabloya geçer.
+Tapping the screen skips ahead: watch it if you like, or jump straight to the table.
 
-**Üç animasyonun mod dağılımı:**
+**The three animations across modes:**
 
-| | Av | Kaçış | Üçlü |
+| | Hunt | Escape | Trio |
 |---|---|---|---|
-| Şah yeme → tahta dökülme | ✅ | — | ✅ |
-| Sıkışma → karıştırma | ✅ | ✅ | ✅ |
-| Arcade kapanış → kırmızı alarm | ✅ | ✅ | ✅ |
+| King taken → board crumbles | ✅ | — | ✅ |
+| Stuck → reshuffle | ✅ | ✅ | ✅ |
+| Arcade outro → red alert | ✅ | ✅ | ✅ |
 
-Şah yeme animasyonu Kaçış'ta **çalışamaz**: o modda rakip şah doğmuyor (`withKing: mode !== 'kingRun'`), çünkü şah oyuncunun kendisi. Diğer ikisi üç modda da geçerli. Bitiş ekranı da tek yol: düz overlay kalktı, üç mod da aynı arcade kapanışı alıyor.
+The king-capture animation **can't run** in Escape: no enemy king spawns in that mode (`withKing: mode !== 'kingRun'`), because the king is the player. The other two apply in all three modes. The end screen has a single path too: the plain overlay is gone, all three modes get the same arcade outro.
 
 
-## Üçlü
+## Trio
 
-Üçüncü mod tek taş değil **kadro** yönetiyor: vezir, kale ve fil senin, ama turda yalnızca **birini** oynuyorsun. Tahta yine her hamlede kayıyor, yani oynamadığın iki taş bir satır dibe iniyor.
+The third mode manages not a single piece but a **squad**: the queen, rook and bishop are yours, but each turn you move only **one** of them. The board still scrolls on every move, so the two pieces you didn't move sink one row.
 
-Modun tamamı tek bir denklemin üstünde duruyor:
+The whole mode rests on one equation:
 
-> N taşın varsa ve turda bir hamle oynuyorsan, oynadığın taş **en az N satır** tırmanmalı. Aksi hâlde kadronun toplam yüksekliği her tur düşer.
+> If you have N pieces and make one move per turn, the piece you move must climb **at least N rows**. Otherwise the squad's total height drops every turn.
 
-Üçü de kayan taş olması bu yüzden zorunlu: at ya da piyonla bu denklem kapanmıyor. Aynı sebeple kadro tavanı **4**; beşinci taş hediye değil, herkesin sırasını seyrelten bir yük olurdu.
+That is why all three must be sliding pieces: with a knight or a pawn the equation doesn't close. For the same reason the squad cap is **4**; a fifth piece would not be a gift but a burden that thins out everyone's turns.
 
-| | Kural |
+| | Rule |
 |---|---|
-| Hamle | Turda tek taş. Kendi taşına dokunmak seçim, tur harcamaz |
-| Dönüşüm | Yok — kadro sabit |
-| Puan | Satır + yeme + **yeni tehdit** (tur başına en çok 3) + şah + mat (20) |
-| Kayıp | Taş düşer ya da yenir; koşu ancak kadro tükenince biter |
-| Ödül | Rakip şahı yemek eksik taşı geri getirir; kadro tamsa 4. taş katılır |
-| Koridor | En dar 6 — üç kayan taş 4 sütunda birbirini kilitliyor |
+| Move | One piece per turn. Touching your own piece selects it, it doesn't use up the turn |
+| Transformation | None — the squad is fixed |
+| Score | Rows + captures + **new threats** (at most 3 per turn) + king + mate (20) |
+| Loss | A piece falls off or is taken; the run only ends when the squad is gone |
+| Reward | Taking the enemy king brings back a missing piece; with a full squad a 4th piece joins |
+| Corridor | At least 6 wide — three sliding pieces lock each other up in 4 columns |
 
-Dördüncü taş her zaman **ikinci fil** ve zorunlu olarak karşı renk karede doğuyor: tek fil tahtanın yarısını hiç göremiyor.
+The fourth piece is always a **second bishop**, and it always spawns on the opposite colour: a single bishop never sees half the board.
 
-**Ölçümle bulunan iki şey.** Tasarımda "yoğunluk kabaca iki katı" yazıyordu; 300'er koşuluk ölçüm bunun modu bitirdiğini gösterdi — çarpan 2 iken koşu 10.5 tur, 1.5'te 13.6, 1'de 20.6 sürüyor ve ancak 1'de Av (17.6) ile Kaçış (23.0) turun arasına oturuyor. İkincisi daha sertti: pusu koruması yalnızca oynanan taşa uygulanırken kadronun tamamı ortalama **6 turda** yeniyordu ve düşerek kaybedilen taş sayısı **sıfırdı** — kayma her tur bedava saldırgan doğuruyor, üç hedeften birini ıskalamıyor ve oyuncunun tek hamlesi buna yetmiyor. Koruma kadronun tamamına yayıldı; oyuncunun *kendi hamlesiyle* girdiği tehditler dokunulmadan duruyor.
+**Two things found by measurement.** The design said "density roughly doubled"; measuring 300 runs each showed that this killed the mode — with a multiplier of 2 a run lasted 10.5 turns, 13.6 at 1.5, 20.6 at 1, and only at 1 did it sit between Hunt (17.6) and Escape (23.0). The second one was harsher: while the ambush protection was applied only to the piece being moved, the whole squad was taken in **6 turns** on average and the number of pieces lost by falling was **zero** — the scroll spawns free attackers every turn, it doesn't miss one of three targets, and the player's single move can't keep up. The protection was extended to the whole squad; threats the player walks into *with their own move* are left untouched.
 
-Puan kaynakları da ölçüldü (300 koşu, ortalama): satır 20.5 · yeme 28.1 · şah yemek 23.3 · şah çekme 8.7 · tehdit 6.4. Tehdit puanı bilerek küçük bir pay: baskı kurmayı ödüllendiriyor ama oyunu tek başına taşımıyor.
+The score sources were measured too (300 runs, average): rows 20.5 · captures 28.1 · king captures 23.3 · checks 8.7 · threats 6.4. The threat score is a deliberately small share: it rewards building pressure but doesn't carry the game on its own.
 
-## Günlük meydan okuma
+## Daily challenge
 
-Tohum tarihten üretiliyor (`hashSeed('2026-08-16')`), iki mod aynı tohumu paylaşıyor: **aynı gün herkeste aynı taşlar aynı yerde doğuyor.** Gün 00:00'da dönüyor, gün serisi (streak) üst üste oynanan günleri sayıyor — bugün oynanmadıysa seri dünden sayılıyor, yani gün bitmeden kırılmıyor.
+The seed is derived from the date (`hashSeed('2026-08-16')`), and both modes share the same seed: **on a given day everyone gets the same pieces spawning in the same places.** The day turns over at 00:00; the streak counts consecutive days played — if you haven't played today it counts from yesterday, so it doesn't break before the day is over.
 
-Bitiş ekranındaki paylaşım kartı Wordle mantığında ama bu oyuna özgü görselle: klasik modda **dönüşüm zinciri**, Şah Kaçışı'nda dayanılan satırların çubuğu.
+The share card on the end screen follows the Wordle idea, but with visuals specific to this game: the **transformation chain** in the classic mode, a bar of rows survived in Escape.
 
 ```
 ChessRun · 16.08.2026
 ♞→♝→♛→♟
-42 puan · 30 satır
-🔥 5 gün
+42 points · 30 rows
+🔥 5 days
 ```
 
 ## Tempo
 
-Bir tur **650ms** sürüyor (Normal). Eskiden 1220ms'ti: 20 turluk ortalama bir oyunun neredeyse tamamı animasyon izlemekle geçiyordu, oyuncunun eli her hamlede bir saniyeden fazla havada bekliyordu. Süreler kısaltıldı ve HUD'a bir hız anahtarı kondu:
+A turn takes **650ms** (Normal). It used to be 1220ms: almost all of an average 20-turn game was spent watching animations, with the player's hand waiting in the air for over a second on every move. Durations were shortened and a speed switch was added to the HUD:
 
-| Ayar | Çarpan | Tur süresi |
+| Setting | Multiplier | Turn duration |
 |---|---|---|
-| Yavaş | 1.6× | 1040ms |
+| Slow | 1.6× | 1040ms |
 | Normal | 1.0× | 650ms |
-| Hızlı | 0.55× | 358ms |
+| Fast | 0.55× | 358ms |
 
-Çarpan tek yerden ([`ui/timing.ts`](src/ui/timing.ts)) hem faz beklemelerine hem CSS animasyonlarına gidiyor — ikisi ayrışırsa animasyon yarıda kesilir. Seçim `localStorage`'da saklanıyor.
+The multiplier goes from a single place ([`ui/timing.ts`](src/ui/timing.ts)) to both the phase waits and the CSS animations — if the two drift apart, animations get cut off halfway. The choice is stored in `localStorage`.
 
-## Şah avı
+## King hunt
 
-Şah tahtadaki en değerli hedef ve oyunun asıl amacı: **+25 puan, +1 can, yepyeni bir tahta.** İki gösterge bunu görünür kılıyor:
+The king is the most valuable target on the board and the real goal of the game: **+25 points, +1 life, a brand new board.** Two indicators make this visible:
 
-- **♚ sayacı:** mevcut taşınla şaha kaç hamlede ulaşabileceğin. Genişlik ve araya giren taşlar hesaba katılarak BFS ile bulunuyor ([`movesToKing`](src/engine/game.ts)); 300 oyunluk ölçümde vakaların %94'ünde ölçülebiliyor, ortalama 3.01 hamle. Yan faydası: satranç bilmeyene taşının nasıl hareket ettiğini öğretiyor — "atken 3, file dönüşünce 1".
-- **ŞAH ×N rozeti:** zincir şah çarpanı.
+- **♚ counter:** how many moves it takes your current piece to reach the king. Found with BFS, taking width and blocking pieces into account ([`movesToKing`](src/engine/game.ts)); in a 300-game measurement it could be computed in 94% of cases, 3.01 moves on average. Side benefit: it teaches someone who doesn't know chess how their piece moves — "3 as a knight, 1 once you become a bishop".
+- **CHECK ×N badge:** the chained check multiplier.
 
-## Ses
+## Sound
 
-Ses dosyası yok: her efekt WebAudio osilatörüyle anlık üretiliyor ([`ui/sound.ts`](src/ui/sound.ts)). Kare/testere dalga, sert atak, kısa sönüm — tahtanın yanıp sönme animasyonuyla aynı 8-bit dili. Bir turda birden çok olay olabildiği için (yedi + dönüştü + şah çekti) hepsi üst üste çalınmıyor, öncelik sırasına göre en "büyük" olay seçiliyor. Ses HUD'dan kapatılabiliyor, tercih saklanıyor.
+There are no sound files: every effect is generated on the fly with a WebAudio oscillator ([`ui/sound.ts`](src/ui/sound.ts)). Square/sawtooth waves, hard attack, short decay — the same 8-bit language as the board's flashing animation. Since several events can happen in one turn (captured + transformed + gave check), they are not all played on top of each other; the "biggest" event is picked by priority. Sound can be turned off from the HUD and the choice is saved.
 
-## Arayüz göstergeleri
+## UI indicators
 
-Tahta bilerek sade: **güvenli/tehlikeli kare boyaması yok.** Oynanabilir boş kareler nötr gri bir noktayla işaretlenir — satranç uygulamalarındaki gibi, değerlendirme oyuncunun işi. Sayısal yardım HUD'da kalır: "güvenli hamle" sayacı, ♚ uzaklık sayacı ve şah çekildiğinde yanan **ŞAH** rozeti ile rakip şahın karesindeki altın hale.
+The board is deliberately plain: **no safe/dangerous square colouring.** Playable empty squares are marked with a neutral grey dot — as in chess apps, judging them is the player's job. Numeric help stays in the HUD: the "safe moves" counter, the ♚ distance counter, the **CHECK** badge that lights up when you give check, and the golden halo on the enemy king's square.
 
-Tahtanın üstünde sabit bir **CRT tarama çizgisi** var — kayan tahtayla birlikte hareket etmiyor, çerçeveye yapışık. Retro havanın yarısını o taşıyor.
+A fixed **CRT scanline** sits over the board — it doesn't move with the scrolling board, it is stuck to the frame. It carries half of the retro feel.
 
-### Öğretici: modal yerine bağlamsal ipuçları
+### Tutorial: contextual hints instead of a modal
 
-Kılavuz kareler kaldırıldığından beri satranç bilmeyen oyuncunun tutunacağı bir şey yoktu; ama oyunu durdurup ders anlatmak da runner temposunu öldürüyor. Çözüm: **tam ilgili anda çıkan, bir kez gösterilen tek satırlık ipuçları** ([`ui/coach.ts`](src/ui/coach.ts)). İlk hamlede "yeşil halkalı taş sensin", ilk dönüşümde "artık onun gibi hareket ediyorsun", ilk şahta çarpan kuralı, alt satıra yaklaşınca düşme uyarısı, hamlesi kalmayınca bekleme hatırlatması. Görülenler `localStorage`'da işaretleniyor.
+Since the guide squares were removed, a player who doesn't know chess had nothing to hold on to; but stopping the game to give a lesson kills the runner's tempo. The solution: **one-line hints that appear exactly at the relevant moment and are shown once** ([`ui/coach.ts`](src/ui/coach.ts)). On the first move "the piece with the green ring is you", on the first transformation "now you move like it", the multiplier rule on the first check, a falling warning when you approach the bottom row, a reminder to wait when you have no moves left. Seen hints are marked in `localStorage`.
 
-## Geliştirme
+## Development
 
 ```bash
 npm install
-npm run dev      # geliştirme sunucusu
-npm test         # motor testleri
-npm run build    # tip kontrolü + üretim derlemesi
+npm run dev      # development server
+npm test         # engine tests
+npm run build    # type check + production build
 npm run lint
 ```
 
-## Kimlik ve skorlar — hesapsız
+## Identity and scores — no account
 
-Kayıt, e-posta, şifre yok. Her tarayıcı ilk açılışta kendine bir **jeton** (`crypto.randomUUID`) ve bir **HMAC-SHA256 anahtarı** üretiyor; anahtar cihazdan hiç çıkmıyor. Her koşu `jeton|puan|mesafe|sütun|seviye|zaman|hafta` yükünün imzasıyla birlikte deftere yazılıyor ([`ui/identity.ts`](src/ui/identity.ts), [`ui/scores.ts`](src/ui/scores.ts)). Oyuncu istediği adı verebiliyor; ad değişse de jeton sabit kalıyor.
+No sign-up, no email, no password. On first launch every browser generates its own **token** (`crypto.randomUUID`) and an **HMAC-SHA256 key**; the key never leaves the device. Every run is written to the score book together with the signature of the `token|score|distance|columns|level|time|week` payload ([`ui/identity.ts`](src/ui/identity.ts), [`ui/scores.ts`](src/ui/scores.ts)). Players can choose any name; the token stays the same when the name changes.
 
-> **Dürüst sınır:** anahtar tarayıcıda durduğu için bu imza *kurcalamayı fark ettirir*, kararlı bir hile girişimini durduramaz — depolamayı elle düzenleyen biri kendi anahtarıyla yeniden imzalayabilir. Gerçek koruma ancak sunucuda, tohumlu bir koşunun tekrar oynatılıp doğrulanmasıyla olur. Bu yüzden tohumlu rastgelelik hâlâ listenin başında.
+> **Honest limit:** since the key lives in the browser, this signature *makes tampering detectable*, it can't stop a determined cheat — someone editing storage by hand can re-sign with their own key. Real protection only comes on the server, by replaying and verifying a seeded run. That is why seeded randomness is still at the top of the list.
 
-**Haftalık yarışma** ISO hafta anahtarıyla (`2026-W33`) çalışıyor: haftanın perşembesi hangi yıldaysa hafta o yıla ait, böylece yılbaşına denk gelen hafta ikiye bölünmüyor. Hafta pazartesi 00:00'da dönüyor, biten haftalar arşive düşüyor.
+The **weekly contest** runs on the ISO week key (`2026-W33`): a week belongs to the year its Thursday falls in, so the week around New Year isn't split in two. The week turns over on Monday at 00:00, finished weeks go to the archive.
 
-Sunucu yokken yarışma "kendi rekorunu geç" demek. `VITE_LEADERBOARD_URL` tanımlandığı anda aynı imzalı kayıtlar global tabloya gitmeye başlıyor, arayüzde başka hiçbir şey değişmiyor ([`ui/leaderboard.ts`](src/ui/leaderboard.ts)):
+Without a server the contest means "beat your own record". As soon as `VITE_LEADERBOARD_URL` is set, the same signed records start going to the global table, and nothing else changes in the UI ([`ui/leaderboard.ts`](src/ui/leaderboard.ts)):
 
 ```
-POST {url}/runs      gövde: koşu + jeton + ad + alg   → 204
-GET  {url}/weekly?week=2026-W33                      → { entries: [...] }
+POST {url}/runs      body: run + token + name + alg   → 204
+GET  {url}/weekly?week=2026-W33                       → { entries: [...] }
 ```
 
-## Kurulum ve dağıtım
+## Install and deployment
 
-Uygulama **PWA**: `manifest.webmanifest` + çalışma zamanı önbellekli bir service worker ([`public/sw.js`](public/sw.js)) ile bir kez açıldıktan sonra çevrimdışı çalışıyor ve ana ekrana eklenebiliyor. Service worker yalnızca üretim derlemesinde kaydediliyor; geliştirmede açık olması vite'ın sıcak yenilemesiyle çakışıyor.
+The app is a **PWA**: with `manifest.webmanifest` and a service worker with runtime caching ([`public/sw.js`](public/sw.js)), it works offline once opened and can be added to the home screen. The service worker is registered only in the production build; in development it clashes with Vite's hot reload.
 
-Gezinme isteklerinde **önce ağ** (yeni sürüm kaçmasın), hash'li varlıklarda **önce önbellek** stratejisi var.
+Navigation requests use **network first** (so a new version isn't missed), hashed assets use **cache first**.
 
-> İkonlar SVG. Chrome/Edge/Android bunu sorunsuz kullanıyor; iOS ana ekran ikonu için ayrıca PNG (180×180, 512×512) üretilmeli.
+> The icons are SVG. Chrome/Edge/Android use them without issue; for the iOS home screen icon, PNGs (180×180, 512×512) still need to be generated.
 
-## Oyun ekranı
+## Game screen
 
-Tek işaretleme, iki yerleşim — kırılma noktası `900px`:
+One markup, two layouts — the breakpoint is `900px`:
 
-- **Masaüstü — konsol.** Tahta solda ve kalan yüksekliğin tamamını alıyor (1280×760'ta ~656px); sağda tek bir 384px'lik sütun yukarıdan aşağı **kullanım sıklığına göre** diziliyor: skor → tur durumu → ayarlar → rozetler → bağlantılar → reklam. Yalnızca tek kenar kullanıldığı için diğer üç kenar tahtaya kalıyor.
-- **Mobil — dört köşe.** Skorlar tahtanın dört köşesine dağılıyor (puan · en iyin üstte, mesafe · can altta), ortada tahta, altta tek dokunulacak şey olarak dişli. Başka hiçbir şey yok; tahtanın etrafındaki boşluk bilerek boş.
+- **Desktop — console.** The board sits on the left and takes all the remaining height (~656px at 1280×760); on the right a single 384px column is ordered top to bottom **by frequency of use**: score → turn status → settings → badges → links → ad. Since only one side is used, the other three are left to the board.
+- **Mobile — four corners.** The scores are spread over the four corners of the board (score · your best at the top, distance · lives at the bottom), the board in the middle, and the gear at the bottom as the only thing to tap. Nothing else; the space around the board is empty on purpose.
 
-**Tahta ölçüsü** `--cell` üstünden tek kuraldan geliyor: mobilde kare boyu ekran genişliğinin `1/8`'i ve sabit (8 sütun kenardan kenara oturuyor, dar koridor aynı kare boyuyla ortalanıp kenarları boş bırakıyor); masaüstünde kalan **yükseklik** belirliyor. İki durumda da kaydırma yok.
+The **board size** comes from a single rule via `--cell`: on mobile the square size is `1/8` of the screen width and fixed (8 columns fit edge to edge, a narrow corridor is centred with the same square size and leaves the edges empty); on desktop the remaining **height** decides. No scrolling in either case.
 
-**Oyun içi ayarlar:** hız · ses · taş rengi · dil. Taş rengi görsel bir **deri**: motorun rengi sabit kalıyor, oyuncunun taşları seçilen renge, rakibinkiler karşıt renge boyanıyor — böylece ayar koşu ortasında da anında çalışıyor. Koridor ve sıralama pencerede kalıyor (koşuyu bozar/böler). Mobilde çıkış yolu dişlinin arkasındaki pencerede: oyun sürerken orada **menüye dön** bağlantısı beliriyor.
+**In-game settings:** speed · sound · piece colour · language. Piece colour is a visual **skin**: the engine's colours stay fixed, the player's pieces are painted in the chosen colour and the enemy's in the opposite one — so the setting works instantly even mid-run. Corridor and ranking stay in the window (they would break up the run). On mobile the way out is in the window behind the gear: during a game a **back to menu** link appears there.
 
-**Reklam alanı** yalnızca `VITE_AD_SLOT` tanımlıysa çiziliyor ve çizildiğinde alanı rezerve ediyor — yüklenince tahta zıplamıyor.
+The **ad slot** is drawn only if `VITE_AD_SLOT` is set, and when drawn it reserves its space — the board doesn't jump when it loads.
 
-## Diller
+## Languages
 
-Beş dil var ve **hepsi tam**: TR, EN, DE, ES, FR ([`ui/i18n.ts`](src/ui/i18n.ts)). Sözlük düz — anahtarlar noktalı (`home.streak`) — çünkü eksik çeviri anahtar bazında yedeğe düşüyor: önce EN, sonra TR, en son anahtarın kendisi. Ham anahtar hiçbir koşulda ekrana çıkmıyor ve bilinmeyen bir anahtar arayüzü çökertmiyor; testler bunu beş dil × tüm anahtarlar için doğruluyor.
+There are five languages and **all are complete**: TR, EN, DE, ES, FR ([`ui/i18n.ts`](src/ui/i18n.ts)). The dictionary is flat — keys are dotted (`home.streak`) — because a missing translation falls back per key: first EN, then TR, and finally the key itself. A raw key never reaches the screen, and an unknown key doesn't crash the UI; tests verify this for five languages × all keys.
 
-Kapsam sabit bir listeden değil sözlüğün kendisinden hesaplanıyor ([`missingKeys`](src/ui/i18n.ts)): yeni bir metin bir dilde unutulursa test kırılıyor, ayarlar penceresi de eksiği okuyucuya söylüyor. Yani yedek mekanizması bugün boşta duruyor ama bozulmaya karşı bekçi olarak kalıyor.
+Coverage is computed from the dictionary itself, not from a fixed list ([`missingKeys`](src/ui/i18n.ts)): if a new text is forgotten in one language the test fails, and the settings window tells the reader what's missing. So the fallback mechanism sits idle today but stays on guard against breakage.
 
-## Sıradaki adımlar
+## Next steps
 
-- [x] Haftalık tablonun sunucu ucu — `server/src/lb.ts`, D1 (`lb_*` tabloları), panelde "Adlar" moderasyonu (18 Ağustos 2026)
-- [ ] Koşu tekrarını izleme (tohum + hamle dizisi kaydı; motor zaten deterministik)
-- [ ] Klavye ile oynama
-- [ ] iOS için PNG ikonlar
-- [ ] Yenen taş için ayrı patlama animasyonu
+- [x] Server side of the weekly table — `server/src/lb.ts`, D1 (`lb_*` tables), "Names" moderation in the panel (18 August 2026)
+- [ ] Watching run replays (seed + move sequence record; the engine is already deterministic)
+- [ ] Keyboard controls
+- [ ] PNG icons for iOS
+- [ ] A separate burst animation for captured pieces
 
-## Lisans
+## License
 
-Kod [AGPL-3.0](LICENSE). Oyunu değiştirip bir sunucuda yayımlayan, değiştirdiği kaynak kodu da oyuncularla paylaşmak zorundadır.
-Taş görselleri (chessnut) [Apache-2.0](LICENSES/chessnut-APACHE-2.0.txt).
+Code: [AGPL-3.0](LICENSE). Anyone who modifies the game and runs it on a server must also share their modified source code with the players.
+Piece artwork (chessnut): [Apache-2.0](LICENSES/chessnut-APACHE-2.0.txt).
