@@ -19,7 +19,9 @@
   <img src="docs/ekran/uclu.png" alt="Üçlü modu" width="210">
 </p>
 
-[chessrun.app](https://chessrun.app)
+### ▶ Tarayıcıda hemen oyna: [https://chessrun.app](https://chessrun.app)
+
+Kurulum yok, hesap yok. Telefonda ve bilgisayarda çalışır.
 
 Sonsuz kayan bir satranç tahtasında geçen endless-runner. İki mod, ortak motor:
 
