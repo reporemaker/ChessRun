@@ -1,4 +1,5 @@
 <p>
+  <a href="https://chessrun.app"><img align="right" src="https://img.shields.io/badge/%E2%96%B6%20Hemen%20oyna-chessrun.app-f5c518?style=for-the-badge&amp;labelColor=0b0e14" alt="▶ Hemen oyna: chessrun.app"></a>
   <a href="https://remaker.ch">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://remaker.ch/brand/remaker-logo-beyaz.png">
@@ -19,9 +20,7 @@
   <img src="docs/ekran/uclu.png" alt="Üçlü modu" width="210">
 </p>
 
-### ▶ Tarayıcıda hemen oyna: [https://chessrun.app](https://chessrun.app)
-
-Kurulum yok, hesap yok. Telefonda ve bilgisayarda çalışır.
+Tarayıcıda oynanır: [https://chessrun.app](https://chessrun.app). Kurulum yok, hesap yok; telefonda ve bilgisayarda çalışır.
 
 Sonsuz kayan bir satranç tahtasında geçen endless-runner. İki mod, ortak motor:
 
