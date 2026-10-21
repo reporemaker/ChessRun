@@ -2,7 +2,7 @@
   <a href="https://remaker.ch">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://remaker.ch/brand/remaker-logo-beyaz.png">
-      <img src="https://remaker.ch/brand/remaker-logo.png" alt="RE*maker" height="18">
+      <img src="https://remaker.ch/brand/remaker-logo.png" alt="RE*maker" height="34">
     </picture>
   </a>
   <br>
@@ -12,9 +12,11 @@
 # ChessRun
 
 <p>
-  <img src="docs/ekran/menu.png" alt="ChessRun ana menü" width="250">
-  <img src="docs/ekran/av.png" alt="Av modu" width="250">
-  <img src="docs/ekran/uclu.png" alt="Üçlü modu" width="250">
+  <img src="docs/ekran/menu.png" alt="ChessRun ana menü" width="210">
+  &nbsp;&nbsp;&nbsp;
+  <img src="docs/ekran/av.png" alt="Av modu" width="210">
+  &nbsp;&nbsp;&nbsp;
+  <img src="docs/ekran/uclu.png" alt="Üçlü modu" width="210">
 </p>
 
 [chessrun.app](https://chessrun.app)
