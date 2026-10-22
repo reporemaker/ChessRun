@@ -57,4 +57,4 @@ Code: [AGPL-3.0](LICENSE). Piece artwork (chessnut): [Apache-2.0](LICENSES/chess
 
 ---
 
-SEU // Emekulas // [SmartKraft](https://github.com/smrtkrft)
+[RE\*maker](https://remaker.ch) // SEU // Emekulas // [SmartKraft](https://github.com/smrtkrft)
