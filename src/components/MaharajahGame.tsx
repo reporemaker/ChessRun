@@ -152,12 +152,14 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage }: Props) {
           </button>
         </div>
       ) : (
-        <div className="mh-stage">
+        <>
           <p className={`mh-status ${game.result ? `end ${game.result.outcome}` : ''}`} aria-live="polite">
             {status}
           </p>
 
-          <div className="board-frame mh-frame">
+          {/* Tahta alanı öteki oyunlarla aynı ölçüde: .gv-board kuralları */}
+          <div className="mh-board">
+          <div className="board-frame">
             <div className="board" role="grid">
               {game.board.map((row, r) => (
                 <div className="board-row" key={r} role="row">
@@ -194,21 +196,23 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage }: Props) {
               ))}
             </div>
           </div>
-
-          <p className="mh-meta">
-            {t('mh.moves', { n: game.plies })} · {t('mh.captured', { n: game.captured })}
-          </p>
-
-          <div className="mh-act">
-            <button type="button" className={game.result ? 'go' : ''} onClick={() => start(mode)}>
-              {t('mh.again')}
-            </button>
-            <button type="button" onClick={() => start(mode === 'falcon' ? 'hunter' : 'falcon')}>
-              {t('mh.switch')}
-            </button>
           </div>
-          <p className="mh-rules">{t('mh.rules')}</p>
-        </div>
+
+          <div className="mh-side">
+            <p className="mh-meta">
+              {t('mh.moves', { n: game.plies })} · {t('mh.captured', { n: game.captured })}
+            </p>
+            <div className="mh-act">
+              <button type="button" className={game.result ? 'go' : ''} onClick={() => start(mode)}>
+                {t('mh.again')}
+              </button>
+              <button type="button" onClick={() => start(mode === 'falcon' ? 'hunter' : 'falcon')}>
+                {t('mh.switch')}
+              </button>
+            </div>
+          </div>
+          <p className="mh-rules mh-foot">{t('mh.rules')}</p>
+        </>
       )}
     </div>
   )

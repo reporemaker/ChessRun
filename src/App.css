@@ -4367,27 +4367,26 @@ button.gv-chip {
  * Mihrace (components/MaharajahGame.tsx): rol seçimi + klasik 8×8
  * ---------------------------------------------------------------- */
 
+/* Yerleşim öteki oyunlarla (.gv) aynı: mobilde tek sütun ve kenardan
+   kenara tahta; masaüstünde tahta solda, sağda 384px sütun. */
 .mh {
-  /* Tam pencere: kabuğun (#root) genişlik/zemin ayarlarından bağımsız */
   position: fixed;
   inset: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0 12px 20px;
-  background: var(--bg);
+  background: #0a0d12;
   color: var(--arc-text);
   font-family: var(--mono);
 }
 
 .mh-hd {
-  width: 100%;
-  max-width: 720px;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 4px;
+  padding: max(14px, env(safe-area-inset-top)) 16px 10px;
 }
 
 .mh-back,
@@ -4420,7 +4419,10 @@ button.gv-chip {
 
 /* Rol seçimi */
 .mh-pick {
-  width: 100%;
+  grid-row: 2 / -1;
+  justify-self: center;
+  align-self: start;
+  width: calc(100% - 24px);
   max-width: 520px;
   display: grid;
   gap: 14px;
@@ -4501,18 +4503,13 @@ button.gv-chip {
 }
 
 /* Oyun */
-.mh-stage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-
 .mh-status {
   margin: 0;
+  padding: 4px 16px 12px;
   min-height: 1.4em;
   font-size: 14px;
   letter-spacing: 0.06em;
+  text-align: center;
 }
 
 .mh-status.end {
@@ -4529,10 +4526,82 @@ button.gv-chip {
   color: var(--arc-text);
 }
 
-/* Tahta: genişlik ve yükseklikten hangisi darsa o; 8 sütun sabit */
-.mh-frame {
+/* Tahta alanı: .gv-board ile aynı ölçü. Mobilde kare ekranın 1/8'i */
+.mh-board {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  min-width: 0;
+  container-type: size;
+}
+
+.mh-board .board-frame {
   --cols: 8;
-  --cell: min(calc((100vw - 24px) / 8), calc((100svh - 230px) / 8), 76px);
+  --cell: calc(min(100cqw, 100cqh) / 8);
+  border-radius: 0;
+}
+
+.mh-side {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 14px 16px 0;
+}
+
+.mh-foot {
+  padding: 0 16px max(18px, env(safe-area-inset-bottom));
+}
+
+@media (min-width: 900px) {
+  /* Üst çubuk ve alt satır .gv-bar / .gv-hint yüksekliğinde: tahta aynı boyda */
+  .mh {
+    grid-template-columns: minmax(0, 1fr) 384px;
+    grid-template-rows: 46px minmax(0, 1fr) 28px;
+    overflow: hidden;
+  }
+
+  .mh-hd {
+    grid-area: 1 / 1;
+    padding: 13px 26px;
+  }
+
+  .mh-pick {
+    grid-area: 2 / 1 / 4 / 3;
+  }
+
+  .mh-board {
+    grid-area: 2 / 1;
+    padding: 16px 26px;
+  }
+
+  .mh-board .board-frame {
+    --cell: min(calc(100cqw / 8), calc(100cqh / 8));
+  }
+
+  .mh-foot {
+    grid-area: 3 / 1;
+    margin: 0;
+    padding: 0 26px;
+    text-align: left;
+  }
+
+  /* Sağ sütun: durum üstte, sayaçlar ve düğmeler altında */
+  .mh-status {
+    grid-area: 1 / 2 / 2 / 3;
+    align-self: end;
+    padding: 24px 24px 8px;
+    border-left: 1px solid rgba(255, 255, 255, 0.07);
+    text-align: left;
+  }
+
+  .mh-side {
+    grid-area: 2 / 2 / 4 / 3;
+    align-content: start;
+    justify-items: start;
+    padding: 8px 24px;
+    border-left: 1px solid rgba(255, 255, 255, 0.07);
+  }
 }
 
 /* Son hamlenin iki karesi: hafif altın örtü */
