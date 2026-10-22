@@ -326,7 +326,7 @@ export function Home({ onStart, onStartMaharajah, onOpenSettings, onOpenBadges, 
             <span className="bi-hint">{focus ? t('home.invited') : pulse != null ? t('home.pulse', { n: pulse }) : t(hint)}</span>
           )}
           <span className="bi-ver">
-            CHESSRUN v{APP_VERSION} · <b>SmartKraft</b>
+            CHESSRUN v{APP_VERSION} · <b>SmartKraft</b> · RE*maker
           </span>
         </footer>
       </div>
