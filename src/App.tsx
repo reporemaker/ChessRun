@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { DEFAULT_COLS, minColsOf } from './engine/config'
 import { Game, type GameConfig, type GameHandle } from './components/Game'
 import { DailyGame } from './components/DailyGame'
+import { MaharajahGame } from './components/MaharajahGame'
 import { Home, type HomeFocus } from './components/Home'
 import { Page, type PageId } from './components/Pages'
 import { RankingPopup } from './components/RankingPopup'
@@ -75,6 +76,8 @@ export default function App() {
      günün mücadelesi (kilit/tohum sunucudan - aşağıdaki effect), / ana sayfa.
      Geliştirmede ?dev=game kısayolu öncelikli (ekran görüntüsü için). */
   const [route] = useState<Route>(initialRoute)
+  // Mihrace kendi ekranı: GameConfig'e girmiyor (kayan tahta yok, koşu defteri yok)
+  const [maharajah, setMaharajah] = useState(route.kind === 'maharajah')
   /* Devam fişi (ui/resume): ana sayfada ya da fişin oyununun adresinde
      «devam et / vazgeç» sorulur; karar verilene dek oyun kurulmaz (yeni koşu
      fişi ezerdi). Başka bir oyunun adresinde fiş sessizce atılır. */
@@ -142,6 +145,24 @@ export default function App() {
     } catch {
       // yoksay (dosya:// vb.)
     }
+  }
+
+  function enterMaharajah() {
+    unlockSound()
+    setMaharajah(true)
+    if (window.location.pathname !== '/play/maharajah') {
+      try {
+        window.history.pushState(null, '', '/play/maharajah')
+      } catch {
+        // yoksay
+      }
+    }
+  }
+
+  function exitMaharajah() {
+    setSettingsOpen(false)
+    setMaharajah(false)
+    syncPath(null, 'replace')
   }
 
   function enterGame(next: GameConfig) {
@@ -226,8 +247,16 @@ export default function App() {
     const onPop = () => {
       const next = parseRoute(window.location.pathname) ?? { kind: 'home' as const }
       const current = configRef.current
+      setMaharajah(next.kind === 'maharajah')
       if (next.kind === 'home') {
         if (current) exitGame()
+        return
+      }
+      if (next.kind === 'maharajah') {
+        if (current) {
+          void gameRef.current?.abandon()
+          setConfig(null)
+        }
         return
       }
       void (async () => {
@@ -326,7 +355,9 @@ export default function App() {
 
   return (
     <>
-      {config?.mode === 'daily' ? (
+      {maharajah ? (
+        <MaharajahGame onExit={exitMaharajah} onOpenSettings={() => setSettingsOpen(true)} onOpenPage={setPage} />
+      ) : config?.mode === 'daily' ? (
         <DailyGame
           key={runKey}
           ref={gameRef}
@@ -356,6 +387,7 @@ export default function App() {
       ) : (
         <Home
           onStart={enterGame}
+          onStartMaharajah={enterMaharajah}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenBadges={() => setBadgesOpen(true)}
           focus={focus}
@@ -366,7 +398,7 @@ export default function App() {
         <Settings
           onClose={() => setSettingsOpen(false)}
           rankVersion={rankVersion}
-          onExitGame={config ? exitGame : undefined}
+          onExitGame={maharajah ? exitMaharajah : config ? exitGame : undefined}
           onOpenPage={(next) => {
             setSettingsOpen(false)
             setPage(next)

@@ -572,8 +572,48 @@
 .piece {
   position: relative;
   z-index: 1;
+  display: inline-grid;
+  place-items: center;
   user-select: none;
   pointer-events: none;
+}
+
+/* Figür görseli (figures.tsx): glifin yerine, kapsayıcının font-size'ı kadar.
+   Metin içinde satırla hizalı küçük figür; tahtada biraz daha iri. */
+.fig {
+  display: inline-block;
+  width: 1.15em;
+  height: 1.15em;
+  vertical-align: -0.22em;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+.piece .fig {
+  display: block;
+  width: 1.2em;
+  height: 1.2em;
+}
+
+/* Parlama katmanı: figürün arkasında yuvarlak hale. Görsel text-shadow
+   almıyor, filter de yok (aşağıdaki Safari notu) - hale ayrı bir katman,
+   yalnızca opaklığı canlanıyor. Rengi --glow ile seçiliyor. */
+.piece::before {
+  content: '';
+  position: absolute;
+  inset: -14%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--glow, transparent) 0%, transparent 66%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 1; }
 }
 
 /* Taşlarda `filter` YOK, bilerek. Gölge ve parlama text-shadow ile.
@@ -596,47 +636,10 @@
   text-shadow: 0 1px 1px rgba(255, 255, 255, 0.25);
 }
 
-/* Şah nabzı da text-shadow: filter animasyonu aynı Safari hatasına açık.
-   Animasyon text-shadow'u EZDİĞİ için renk başına ayrı keyframe - beyaz
-   şahın kenar çizgisi nabızla birlikte kalmalı, yoksa açık karede erir. */
-.piece.white.king {
-  animation: king-pulse-w 1.8s ease-in-out infinite;
-}
-
-.piece.black.king {
-  animation: king-pulse-b 1.8s ease-in-out infinite;
-}
-
-@keyframes king-pulse-w {
-  0%, 100% {
-    text-shadow:
-      0 0 2px #0b0d12,
-      0 0 1px #0b0d12,
-      0 0 1px #0b0d12,
-      0 1px 1px rgba(0, 0, 0, 0.55),
-      0 0 0 rgba(251, 191, 36, 0);
-  }
-  50% {
-    text-shadow:
-      0 0 2px #0b0d12,
-      0 0 1px #0b0d12,
-      0 0 1px #0b0d12,
-      0 1px 1px rgba(0, 0, 0, 0.55),
-      0 0 8px rgba(251, 191, 36, 0.95);
-  }
-}
-
-@keyframes king-pulse-b {
-  0%, 100% {
-    text-shadow:
-      0 1px 1px rgba(255, 255, 255, 0.25),
-      0 0 0 rgba(251, 191, 36, 0);
-  }
-  50% {
-    text-shadow:
-      0 1px 1px rgba(255, 255, 255, 0.25),
-      0 0 8px rgba(251, 191, 36, 0.95);
-  }
+/* Şah nabzı: altın hale (text-shadow ya da filter değil - görsel figür) */
+.piece.king::before {
+  --glow: rgba(251, 191, 36, 0.95);
+  animation: glow-pulse 1.8s ease-in-out infinite;
 }
 
 /* Yeme sıçraması. Sınıf adı bilerek `pop` DEĞİL: `.pop` ayarlar penceresinin
@@ -967,6 +970,18 @@
     gap: 16px 28px;
     justify-content: center;
   }
+
+  /* Masaüstü: Mihrace sol üstte (günün mücadelesinin eski yeri),
+     günün mücadelesi altta iki sütun boyunca. Mobilde DOM sırası:
+     günün mücadelesi üstte, Mihrace en altta. */
+  .bi-men .bi-maharajah {
+    order: -1;
+  }
+
+  .bi-men .bi-daily {
+    order: 1;
+    grid-column: 1 / -1;
+  }
 }
 
 /* Kart: saydam ama gövdeli. Arkadaki tahta seçiliyor, metin her zaman
@@ -1037,22 +1052,17 @@
   text-shadow: 0 0 18px rgba(255, 210, 63, 0.45);
 }
 
-/* Cardinal figürleri (ui/pieceArt.ts): gövde beyaz, günün kartında altın */
+/* Figür görselleri (ui/figures.ts): beyaz set */
 .bi-g .piece-art {
   display: grid;
   place-items: center;
-  width: 78%;
-  height: 78%;
+  width: 84%;
+  height: 84%;
 }
 
-.bi-g .piece-art svg {
+.bi-g .piece-art .fig {
   width: 100%;
   height: 100%;
-}
-
-.bi-card.today .bi-g {
-  --pa1: #ffd23f;
-  --pa2: #e0a33a;
 }
 
 /* İkonlar SVG (ui/pieceIcons.tsx): fonttan bağımsız, her cihazda aynı oran */
@@ -1406,15 +1416,16 @@
   line-height: 1;
 }
 
-.pop-pc.white {
-  background: #eef1f6;
-  color: #12151b;
+/* Figür görseli kendi konturunu taşıyor: iki renk de aynı nötr zeminde okunur */
+.pop-pc.white,
+.pop-pc.black {
+  background: #b9c3d0;
 }
 
-.pop-pc.black {
-  background: #12151b;
-  color: #dfe6f2;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+.pop-pc .fig {
+  width: 15px;
+  height: 15px;
+  vertical-align: 0;
 }
 
 /* B · ses */
@@ -3901,13 +3912,9 @@ button.gv-chip {
 }
 
 /* Vezir (mantar): altın hale - bir vuruş dayanacağını hatırlatır */
-.piece.mushroom {
-  animation: mushroom-glow 1.2s ease-in-out infinite;
-}
-
-@keyframes mushroom-glow {
-  0%, 100% { text-shadow: 0 0 2px #0b0d12, 0 0 6px rgba(251, 191, 36, 0.55); }
-  50% { text-shadow: 0 0 2px #0b0d12, 0 0 16px rgba(251, 191, 36, 0.95); }
+.piece.mushroom::before {
+  --glow: rgba(251, 191, 36, 0.95);
+  animation: glow-pulse 1.2s ease-in-out infinite;
 }
 
 /* Alt satır: düşmeye bir kayma kaldı - kırmızı zemin fade'in üstüne biner */
@@ -3994,16 +4001,37 @@ button.gv-chip {
   opacity: 0;
 }
 
-/* text-shadow, filter değil (Safari) */
+/* Ölçek figürde, parlama arkadaki halede (filter değil - Safari) */
 @keyframes morph-glow-up {
-  0% { text-shadow: 0 0 2px #0b0d12, 0 0 0 rgba(251, 191, 36, 0); transform: scale(1); }
-  40% { text-shadow: 0 0 2px #0b0d12, 0 0 22px rgba(251, 191, 36, 1); transform: scale(1.25); }
-  100% { text-shadow: 0 0 2px #0b0d12, 0 0 6px rgba(251, 191, 36, 0.5); transform: scale(1); }
+  0% { transform: scale(1); }
+  40% { transform: scale(1.25); }
+  100% { transform: scale(1); }
 }
 
 @keyframes morph-glow-down {
-  0% { text-shadow: 0 0 2px #0b0d12, 0 0 18px rgba(244, 63, 94, 1); transform: scale(1.2); }
-  100% { text-shadow: 0 0 2px #0b0d12, 0 0 0 rgba(244, 63, 94, 0); transform: scale(1); }
+  0% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.piece.morph.up::before {
+  --glow: rgba(251, 191, 36, 1);
+  animation: morph-halo-up 700ms ease-out forwards;
+}
+
+.piece.morph.down::before {
+  --glow: rgba(244, 63, 94, 1);
+  animation: morph-halo-down 700ms ease-out forwards;
+}
+
+@keyframes morph-halo-up {
+  0% { opacity: 0; }
+  40% { opacity: 1; }
+  100% { opacity: 0.45; }
+}
+
+@keyframes morph-halo-down {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 /* Günlük çarpan rozeti (üst çubuk) ve kapanış satırı */
@@ -4334,3 +4362,234 @@ button.gv-chip {
   50% { box-shadow: 0 0 0 4px rgba(255, 210, 63, 0.7), 0 0 28px rgba(255, 210, 63, 0.35); }
 }
 
+
+/* ---------------------------------------------------------------- *
+ * Mihrace (components/MaharajahGame.tsx): rol seçimi + klasik 8×8
+ * ---------------------------------------------------------------- */
+
+.mh {
+  /* Tam pencere: kabuğun (#root) genişlik/zemin ayarlarından bağımsız */
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 12px 20px;
+  background: var(--bg);
+  color: var(--arc-text);
+  font-family: var(--mono);
+}
+
+.mh-hd {
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 4px;
+}
+
+.mh-back,
+.mh-gear {
+  border: 0;
+  background: none;
+  color: var(--arc-dim);
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.mh-gear {
+  margin-left: auto;
+  font-size: 18px;
+}
+
+.mh-ttl {
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--arc-gold);
+}
+
+.mh-ttl em {
+  font-style: normal;
+  color: var(--arc-text);
+}
+
+/* Rol seçimi */
+.mh-pick {
+  width: 100%;
+  max-width: 520px;
+  display: grid;
+  gap: 14px;
+  margin-top: 6vh;
+}
+
+.mh-pick h2 {
+  margin: 0 0 4px;
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  color: var(--arc-gold);
+  text-align: center;
+}
+
+.mh-role {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px;
+  border: 0;
+  background: rgba(11, 16, 23, 0.9);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mh-role:hover,
+.mh-role:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--arc-gold);
+}
+
+.mh-role-g {
+  flex: 0 0 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+  font-size: 54px;
+}
+
+.mh-role-t {
+  display: grid;
+  gap: 6px;
+}
+
+.mh-role-t b {
+  font-size: 16px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.mh-role-t small {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--arc-dim);
+}
+
+.mh-rules {
+  margin: 4px 0 0;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--arc-dim);
+  text-align: center;
+}
+
+.mh-link {
+  justify-self: center;
+  border: 0;
+  background: none;
+  color: var(--arc-gold);
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Oyun */
+.mh-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.mh-status {
+  margin: 0;
+  min-height: 1.4em;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+}
+
+.mh-status.end {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--arc-gold);
+}
+
+.mh-status.end.loss {
+  color: var(--danger);
+}
+
+.mh-status.end.draw {
+  color: var(--arc-text);
+}
+
+/* Tahta: genişlik ve yükseklikten hangisi darsa o; 8 sütun sabit */
+.mh-frame {
+  --cols: 8;
+  --cell: min(calc((100vw - 24px) / 8), calc((100svh - 230px) / 8), 76px);
+}
+
+/* Son hamlenin iki karesi: hafif altın örtü */
+.square.mh-last::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 210, 63, 0.22);
+  pointer-events: none;
+}
+
+/* Kırmızı nokta: gidilecek kare rakibin tehdidinde */
+.dot.mh-risk {
+  background: rgba(214, 31, 56, 0.85);
+}
+
+/* Yenebilecek taşın karesinde nokta değil halka */
+.dot.mh-cap {
+  position: absolute;
+  inset: 6%;
+  width: auto;
+  height: auto;
+  background: none;
+  box-shadow: inset 0 0 0 3px rgba(16, 20, 28, 0.35);
+}
+
+.dot.mh-cap.mh-risk {
+  background: none;
+  box-shadow: inset 0 0 0 3px rgba(214, 31, 56, 0.85);
+}
+
+.mh-meta {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--arc-dim);
+}
+
+.mh-act {
+  display: flex;
+  gap: 10px;
+}
+
+.mh-act button {
+  padding: 10px 16px;
+  border: 0;
+  background: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  color: var(--arc-text);
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+}
+
+.mh-act button.go {
+  background: var(--arc-gold);
+  box-shadow: none;
+  color: var(--arc-ink);
+}

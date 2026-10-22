@@ -3,7 +3,7 @@ import { ROWS } from '../engine/config'
 import { type DailyState, rowIndexAt } from '../engine/daily'
 import { key } from '../engine/moves'
 import type { PieceType, Pos } from '../engine/types'
-import { GLYPH } from '../ui/pieces'
+import { Fig } from './Fig'
 import { useSettings } from '../ui/settings'
 import { PIECE_SLIDE_MS } from '../ui/timing'
 
@@ -189,18 +189,18 @@ export function DailyBoard({ state, moves, slideRef, dying, strike, morph, hitFl
                       >
                         {isPlayer && morph ? (
                           <span key={morph.id} className="morph-pair" aria-hidden>
-                            <span className="g old">{GLYPH[morph.from]}</span>
-                            <span className="g new">{GLYPH[morph.to]}</span>
+                            <span className="g old"><Fig type={morph.from} color={skinOf(cell.color)} /></span>
+                            <span className="g new"><Fig type={morph.to} color={skinOf(cell.color)} /></span>
                           </span>
                         ) : (
-                          GLYPH[cell.type]
+                          <Fig type={cell.type} color={skinOf(cell.color)} />
                         )}
                       </span>
                     )}
                     {canMove && !cell && <span className="dot" />}
                     {onBoard && strike?.ghost && strike.from.row === r && strike.from.col === c && (
                       <span key={`ghost-${state.spawned}`} className={`piece ghost ${skinOf(state.enemyColor)}`} aria-hidden>
-                        {GLYPH[strike.ghost]}
+                        <Fig type={strike.ghost} color={skinOf(state.enemyColor)} />
                       </span>
                     )}
                   </button>

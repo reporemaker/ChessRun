@@ -3,7 +3,7 @@ import { getIdentity } from '../ui/identity'
 import { useT } from '../ui/text'
 import type { PieceType } from '../engine/types'
 import { type BadgeAward, badgeOf } from '../ui/badges'
-import { GLYPH } from '../ui/pieces'
+import { Fig } from './Fig'
 import { BadgeGlyph } from './BadgeGlyph'
 import type { ShareInput } from '../ui/share'
 import { SharePanel } from './SharePanel'
@@ -147,7 +147,14 @@ export function ArcadeOutro({
             <p className="outro-record week">{t('game.weekRecord')}</p>
           )}
           {chain && chain.length > 1 && (
-            <p className="outro-chain">{chain.map((type) => GLYPH[type]).join(' → ')}</p>
+            <p className="outro-chain">
+              {chain.map((type, i) => (
+                <span key={i}>
+                  {i > 0 ? ' → ' : ''}
+                  <Fig type={type} />
+                </span>
+              ))}
+            </p>
           )}
           {/* Bu koşuda kazanılan rozetler - koşu ortasındaki flash'ın kalıcı özeti */}
           {badges && badges.length > 0 && (

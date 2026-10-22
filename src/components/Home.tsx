@@ -31,6 +31,8 @@ export interface HomeFocus {
 
 interface HomeProps {
   onStart: (config: GameConfig) => void
+  /** Mihrace kendi ekranında (rol seçimi orada) */
+  onStartMaharajah: () => void
   onOpenSettings: () => void
   /** Kurtarma kodu hatırlatması buraya götürür (rozetler penceresinin altı) */
   onOpenBadges?: () => void
@@ -79,7 +81,7 @@ function clockOf(ms: number): string {
  * duruyor, saydam ama gövdeli. Dört kart: bir günün oyunu, üç serbest mod.
  * Masaüstünde iki sütuna açılıyor, mobilde tek sütun kalıyor.
  */
-export function Home({ onStart, onOpenSettings, onOpenBadges, focus = null }: HomeProps) {
+export function Home({ onStart, onStartMaharajah, onOpenSettings, onOpenBadges, focus = null }: HomeProps) {
   const t = useT()
   // Koridor genişliği ayarlar penceresinden geliyor: ana sayfa artık
   // yalnızca "hangi oyunu oynayacağım" sorusunu soruyor
@@ -252,6 +254,7 @@ export function Home({ onStart, onOpenSettings, onOpenBadges, focus = null }: Ho
         <div className="bi-men">
           <Card
             today
+            className="bi-daily"
             glyph="⚡"
             title={t('mode.daily.name')}
             focus={focus?.mode === 'daily'}
@@ -295,6 +298,18 @@ export function Home({ onStart, onOpenSettings, onOpenBadges, focus = null }: Ho
               />
             )
           })}
+
+          {/* Mihrace: serbest oyun (günlük hak yok), kartal figürü. Masaüstünde
+              ilk hücrede (eski günün mücadelesi yeri), mobilde en altta */}
+          <Card
+            className="bi-maharajah"
+            glyph="🦅"
+            title={t('mode.maharajah.name')}
+            sub={`${t('mh.falcon.name')} · ${t('mh.hunter.name')} · ${t('mode.maharajah.line')}`}
+            value={null}
+            valueLabel=""
+            onClick={onStartMaharajah}
+          />
         </div>
 
         <footer className="bi-ft">
@@ -338,14 +353,15 @@ interface CardProps {
   /** Paylaşım bağlantısıyla gelindi: kart vurgulu */
   focus?: boolean
   disabled?: boolean
+  className?: string
   onClick: () => void
 }
 
-function Card({ glyph, title, sub, value, valueLabel, today, focus, disabled, onClick }: CardProps) {
+function Card({ glyph, title, sub, value, valueLabel, today, focus, disabled, className, onClick }: CardProps) {
   return (
     <button
       type="button"
-      className={`bi-card ${today ? 'today' : ''} ${focus ? 'focus' : ''} ${disabled ? 'off' : ''}`}
+      className={`bi-card ${today ? 'today' : ''} ${focus ? 'focus' : ''} ${disabled ? 'off' : ''} ${className ?? ''}`}
       disabled={disabled}
       onClick={onClick}
     >

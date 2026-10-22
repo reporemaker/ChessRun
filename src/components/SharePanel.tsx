@@ -9,7 +9,7 @@ import {
   shareRun,
   shareText,
 } from '../ui/share'
-import { preloadPieceArt } from '../ui/pieceArt'
+import { preloadFigures } from '../ui/figures'
 import { useT } from '../ui/text'
 
 /**
@@ -26,9 +26,9 @@ interface SharePanelProps {
 
 export function SharePanel({ input, className = '' }: SharePanelProps) {
   const t = useT()
-  // Kart figürleri (Chessnut) paylaşım tıklanmadan yüklensin - navigator.share
+  // Kart figürleri paylaşım tıklanmadan yüklensin - navigator.share
   // kullanıcı etkileşimi penceresinde beklemesin
-  useEffect(() => preloadPieceArt(), [])
+  useEffect(() => preloadFigures(), [])
   const [outcome, setOutcome] = useState<ShareOutcome | 'png' | null>(null)
   const [open, setOpen] = useState(false)
   const system = canSystemShare()

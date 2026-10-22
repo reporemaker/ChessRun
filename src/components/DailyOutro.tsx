@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { dailyBonus } from '@shared/leaderboard'
 import type { DailyState } from '../engine/daily'
-import { GLYPH } from '../ui/pieces'
+import { Fig } from './Fig'
 import { dayEnd } from '../ui/scores'
 import { useT } from '../ui/text'
 import type { ShareInput } from '../ui/share'
@@ -114,7 +114,7 @@ export function DailyOutro({
   const chain = state.chain.map((type, i) => (
     <span key={i} className={type === 'q' ? 'q' : undefined}>
       {i > 0 ? ' → ' : ''}
-      {GLYPH[type]}
+      <Fig type={type} />
     </span>
   ))
   const locale = document.documentElement.lang || 'tr'
@@ -169,7 +169,7 @@ export function DailyOutro({
               {t('daily.combo')} <b>×{Math.max(1, Math.min(3, state.bestCombo))}</b>
             </span>
             <span>
-              <b>{state.kings}</b> ♚
+              <b>{state.kings}</b> <Fig type="k" />
             </span>
             <span>
               <b>

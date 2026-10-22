@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from 'react'
 import { type Demo, type Frame, type Mark, parseCell } from '../ui/demos'
-import { GLYPH } from '../ui/pieces'
+import { FIGURE_OF, figureSrc } from '../ui/figures'
+import { Fig } from './Fig'
 
 interface Props {
   demo: Demo
@@ -117,7 +118,7 @@ export function MiniBoard({ demo, idx }: Props) {
               >
                 {cell && (
                   <span className={`piece ${cell.color === 'w' ? 'white' : 'black'}`}>
-                    {GLYPH[cell.type]}
+                    <Fig type={cell.type} color={cell.color === 'w' ? 'white' : 'black'} />
                   </span>
                 )}
                 {kinds?.includes('dot') && <i className="mb-dot" />}
@@ -153,7 +154,11 @@ function ghost(board: HTMLElement, r: number, c: number, token: string, cell: nu
   if (!sq || !piece) return
   const g = document.createElement('span')
   g.className = `piece ${piece.color === 'w' ? 'white' : 'black'} mb-ghost`
-  g.textContent = GLYPH[piece.type]
+  const img = document.createElement('img')
+  img.className = 'fig'
+  img.alt = ''
+  img.src = figureSrc(FIGURE_OF[piece.type], piece.color === 'w' ? 'white' : 'black')
+  g.appendChild(img)
   g.style.fontSize = `${cell * 0.78}px`
   sq.appendChild(g)
   const anim =

@@ -7,7 +7,8 @@
  * kendi çizimimiz, her cihazda aynı oranda. Tahtadaki taşlar hâlâ glif
  * (orada tek fontla, hücreye göre ölçekli çiziliyor). Yollar pieceIconPaths.ts'te.
  */
-import { PIECE_ART } from './pieceArt'
+import { Fig } from '../components/Fig'
+import { FIGURE_OF_GLYPH } from './figures'
 import { type IconGlyph, PIECE_PATHS } from './pieceIconPaths'
 
 interface PieceIconProps {
@@ -16,14 +17,13 @@ interface PieceIconProps {
 }
 
 /**
- * At/Şah/Vezir: Cardinal seti (pieceArt.ts, çok parçalı SVG, satır içi -
- * CSS değişkeniyle renklenir). Diğerleri siluet yolu. Bilinmeyen glif
+ * Satranç figürleri ve kartal/kurt: çizim seti (figures.tsx, PNG). Diğerleri
+ * (⚡ gibi) siluet yolu. Bilinmeyen glif
  * metin olarak düşer (yeni bir mod eklenirse kırılmasın).
  */
 export function PieceIcon({ glyph, className }: PieceIconProps) {
-  const art = PIECE_ART[glyph]
-  // Kendi dosyamızdaki sabit SVG metni - kullanıcı girdisi değil
-  if (art) return <span className={`piece-art ${className ?? ''}`} dangerouslySetInnerHTML={{ __html: art }} />
+  const figure = FIGURE_OF_GLYPH[glyph]
+  if (figure) return <span className={`piece-art ${className ?? ''}`}><Fig type={figure} /></span>
   const d = PIECE_PATHS[glyph as IconGlyph]
   if (!d) return <>{glyph}</>
   return (

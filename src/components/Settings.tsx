@@ -4,7 +4,7 @@ import { FeedbackLink } from './FeedbackLinks'
 import { getIdentity, shortToken } from '../ui/identity'
 import { LANGS, hasFullProse } from '../ui/i18n'
 import { platformOf, promptInstall, useInstallState } from '../ui/install'
-import { GLYPH } from '../ui/pieces'
+import { Fig } from './Fig'
 import { useRanking } from '../ui/useRanking'
 import { BOARD_THEMES, setBoard, setCols, setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
 import { useEscape } from '../ui/escape'
@@ -142,7 +142,7 @@ export function Settings({
                   aria-pressed={settings.pieceColor === color}
                   onClick={() => setPieceColor(color)}
                 >
-                  <span className={`pop-pc ${color === 'w' ? 'white' : 'black'}`}>{GLYPH.p}</span>
+                  <span className={`pop-pc ${color === 'w' ? 'white' : 'black'}`}><Fig type="p" color={color === 'w' ? 'white' : 'black'} /></span>
                   {color === 'w' ? t('settings.white') : t('settings.black')}
                 </button>
               ))}

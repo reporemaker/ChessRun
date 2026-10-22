@@ -2,7 +2,7 @@ import type { GameMode, PieceType } from '../engine/types'
 import type { Lang, StringKey } from './i18n'
 import { localeOf } from './i18n'
 import { GLYPH } from './pieces'
-import { pieceArtImage } from './pieceArt'
+import { FIGURE_OF_GLYPH, figureImage } from './figures'
 import { iconPath } from './pieceIconPaths'
 import type { Translate } from './text'
 
@@ -112,13 +112,13 @@ export function shareText(input: ShareInput, t: Translate): string {
 
 const CARD = 1080
 
-/** Figürlerin rasterlenmiş hâli (Chessnut, `pieceArtImage`); yoksa siluet */
+/** Figürlerin görselleri (figures.tsx); yoksa siluet */
 type PieceImages = ReadonlyMap<string, HTMLImageElement>
 
 function drawIcon(ctx: CanvasRenderingContext2D, glyph: string, x: number, y: number, size: number, art?: PieceImages): void {
   const img = art?.get(glyph)
   if (img) {
-    // Chessnut 800×800 kare; figür kutunun ortasında - olduğu gibi ölçekle
+    // Kare tuval, figür taban hizalı - olduğu gibi ölçekle
     ctx.drawImage(img, x - size / 2, y - size / 2, size, size)
     return
   }
@@ -144,7 +144,7 @@ function cardGlyphs(input: ShareInput): string[] {
 
 /**
  * Kartı çizer; canvas döner (test edilebilir, PNG'ye çevrilebilir).
- * `art` verilirse figürler Chessnut (ana sayfayla aynı set), yoksa siluet -
+ * `art` verilirse figürler çizim setinden (ana sayfayla aynı), yoksa siluet -
  * yükleme `shareCardFile`'da, çizim kendisi eşzamanlı kalıyor.
  */
 export function drawShareCard(input: ShareInput, t: Translate, art?: PieceImages): HTMLCanvasElement {
@@ -185,7 +185,7 @@ export function drawShareCard(input: ShareInput, t: Translate, art?: PieceImages
       : t(MODE_NAME_KEY[input.mode])
   ctx.fillText(sub.toUpperCase(), W / 2, 165)
 
-  // Zincir: figürler ok ile; Kaçış'ta tek şah. Chessnut figürü kutusunun
+  // Zincir: figürler ok ile; Kaçış'ta tek şah. Çizim figürü kutusunun
   // ~%70'ini dolduruyor, siluetten biraz büyük çizilir ki aynı ağırlıkta görünsün
   ctx.fillStyle = '#f2f7ff'
   const glyphs = cardGlyphs(input)
@@ -246,7 +246,8 @@ async function loadCardArt(input: ShareInput): Promise<PieceImages> {
   const art = new Map<string, HTMLImageElement>()
   await Promise.all(
     [...new Set(cardGlyphs(input))].map(async (glyph) => {
-      const img = await pieceArtImage(glyph)
+      const name = FIGURE_OF_GLYPH[glyph]
+      const img = name ? await figureImage(name) : null
       if (img) art.set(glyph, img)
     }),
   )

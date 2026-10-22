@@ -1,7 +1,8 @@
 import type { StringKey } from '../ui/i18n'
 import type { DemoId } from '../ui/demos'
 import { MODES } from '../ui/modes'
-import { GLYPH } from '../ui/pieces'
+import { Fig } from './Fig'
+import type { FigureName } from '../ui/figures'
 import { LessonStage } from './LessonStage'
 import {
   CHECK_SCORE,
@@ -30,7 +31,7 @@ interface PageProps {
 
 interface Section {
   titleKey: StringKey
-  glyph?: string
+  glyph?: PieceType | FigureName
   bodyKeys: StringKey[]
   /** Bölümün başındaki ders sahnesi: her ders bir demo (ui/demos.ts) */
   lessons?: DemoId[]
@@ -49,22 +50,27 @@ const HELP: Section[] = [
   },
   {
     titleKey: 'mode.classic.name',
-    glyph: '♞',
+    glyph: 'n',
     lessons: ['transform', 'chain', 'kingBonus'],
     bodyKeys: ['help.classic.1', 'help.classic.2', 'help.classic.5', 'help.classic.3', 'help.classic.4'],
   },
   {
     titleKey: 'mode.kingRun.name',
-    glyph: '♚',
+    glyph: 'k',
     lessons: ['kingSafe', 'kingClimb', 'kingEnd'],
     bodyKeys: ['help.kingRun.1', 'help.kingRun.2', 'help.kingRun.3', 'help.kingRun.5', 'help.kingRun.4'],
   },
   {
     titleKey: 'mode.trio.name',
-    glyph: '♛',
+    glyph: 'q',
     lessons: ['trioPick', 'trioDrift', 'trioBack'],
     bodyKeys: ['help.trio.1', 'help.trio.2', 'help.trio.5', 'help.trio.3', 'help.trio.4'],
     soon: !MODES.find((entry) => entry.id === 'trio')?.ready,
+  },
+  {
+    titleKey: 'mode.maharajah.name',
+    glyph: 'eagle',
+    bodyKeys: ['help.mh.1', 'help.mh.2', 'help.mh.3', 'help.mh.4', 'help.mh.5', 'help.mh.6', 'help.mh.7'],
   },
 ]
 
@@ -103,7 +109,7 @@ export function Page({ onClose }: PageProps) {
           <section key={section.titleKey} className={`page-sec ${section.lessons ? 'spread' : ''}`}>
             <h2>
               <span className="page-num">{n + 1}</span>
-              {section.glyph && <span className="page-glyph">{section.glyph}</span>}
+              {section.glyph && <span className="page-glyph"><Fig type={section.glyph} /></span>}
               {t(section.titleKey)}
               {section.soon && <em className="page-soon">{t('common.soon')}</em>}
             </h2>
@@ -135,7 +141,7 @@ export function Page({ onClose }: PageProps) {
                   <td>
                     {PIECE_ORDER.map((p) => (
                       <span key={p} className="page-pv">
-                        {GLYPH[p]}
+                        <Fig type={p} />
                         {PIECE_VALUE[p]}
                       </span>
                     ))}

@@ -6,6 +6,7 @@
  *   /play/kingRun    → Kaçış
  *   /play/trio       → Üçlü
  *   /daily           → Günün Mücadelesi
+ *   /play/maharajah  → Mihrace (kendi motoru, rol seçimiyle açılır)
  *
  * Neden yol (hash değil): Cloudflare Pages `404.html` olmadığı için bilinmeyen
  * yola `index.html` veriyor (canlıda doğrulandı: /play/classic → 200), SW
@@ -21,7 +22,7 @@
 import type { GameMode } from '../engine/types'
 
 export type PlayMode = Exclude<GameMode, 'daily'>
-export type Route = { kind: 'home' } | { kind: 'play'; mode: PlayMode } | { kind: 'daily' }
+export type Route = { kind: 'home' } | { kind: 'play'; mode: PlayMode } | { kind: 'daily' } | { kind: 'maharajah' }
 
 const PLAY_MODES: readonly PlayMode[] = ['classic', 'kingRun', 'trio']
 
@@ -34,6 +35,7 @@ export function parseRoute(pathname: string): Route | null {
   if (head === 'play' && parts.length === 2) {
     const want = parts[1].toLowerCase()
     if (want === 'daily') return { kind: 'daily' }
+    if (want === 'maharajah') return { kind: 'maharajah' }
     const mode = PLAY_MODES.find((m) => m.toLowerCase() === want)
     if (mode) return { kind: 'play', mode }
   }
@@ -46,6 +48,8 @@ export function pathOf(route: Route): string {
       return '/'
     case 'daily':
       return '/daily'
+    case 'maharajah':
+      return '/play/maharajah'
     case 'play':
       return `/play/${route.mode}`
   }

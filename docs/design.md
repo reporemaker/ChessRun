@@ -319,3 +319,25 @@ Coverage is computed from the dictionary itself, not from a fixed list ([`missin
 - [ ] Keyboard controls
 - [ ] PNG icons for iOS
 - [ ] A separate burst animation for captured pieces
+
+## Maharajah
+
+A separate game on a classic 8×8 board: no scrolling, no lives. The Maharajah (the eagle figure) is a single piece that moves like a queen and a knight combined. At the start the player picks a role:
+
+| Role | You | Bot | Win | Lose |
+|---|---|---|---|---|
+| **Falcon** | the Maharajah, at the bottom | the full army, at the top | mate the king | the Maharajah is taken |
+| **Hunter** | the full army, at the bottom | the Maharajah, at the top | take the Maharajah | get mated |
+
+Rules ([`engine/maharajah.ts`](../src/engine/maharajah.ts)):
+
+- The Maharajah cannot take the king, but it gives check. Taking the Maharajah is always legal.
+- Pawns do not promote: a pawn that reaches the last rank stays there and cannot move.
+- Castling is allowed, en passant is not.
+- Stalemate is a draw for both sides.
+- Draw after 100 half-moves with no capture and no pawn move (the 50-move rule), and on threefold repetition. No clock: Maharajah is a thinking game, the draw rules only stop endless loops.
+
+Both bots come from the August prototypes. The army bot (Falcon) looks one move ahead: it takes the Maharajah when it can, otherwise it avoids leaving pieces undefended and tries to corner the Maharajah. The Maharajah bot (Hunter) checks for mate in one and forced mate in two, never steps onto a defended square unless it must, and avoids moves after which it gets trapped.
+
+Free play: no daily limit, no weekly league yet. Scoring will be added later.
+

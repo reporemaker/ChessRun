@@ -21,7 +21,7 @@
 
 </div>
 
-An endless runner on an endlessly scrolling chessboard. You move with chess moves, the board scrolls one row every turn, and the enemy answers. Plays in the browser, no install and no account, on phone and desktop.
+An endless runner on an endlessly scrolling chessboard. You move with chess moves, the board scrolls one row every turn, and the enemy answers. Plus Maharajah, a one-piece-against-an-army game on a classic board. Plays in the browser, no install and no account, on phone and desktop.
 
 ## Modes
 
@@ -30,6 +30,7 @@ An endless runner on an endlessly scrolling chessboard. You move with chess move
 | **Hunt** ♞ | You become the piece you capture | Hunt the enemy king |
 | **Escape** ♚ | You are the king | Survive without being mated |
 | **Trio** ♛♜♝ | A squad of three, one move per turn | Keep the squad alive |
+| **Maharajah** 🦅 | Falcon: the Maharajah (queen + knight) against a whole army. Hunter: the army against the Maharajah | Falcon: mate the king. Hunter: take the Maharajah |
 
 ## In short
 
@@ -37,10 +38,11 @@ An endless runner on an endlessly scrolling chessboard. You move with chess move
 - Take the enemy king: +25 points, +1 life and a fresh board.
 - Give check and the enemy must defend; chained checks multiply the score.
 - Fall off the bottom row or get taken and you lose a life.
-- Daily challenge: everyone gets the same board each day. Weekly leaderboard, no sign-up.
+- Daily challenge: everyone gets the same board each day, once a day. Weekly leaderboard, no sign-up.
+- Maharajah: classic 8×8, no scrolling, play as often as you like. Pawns do not promote, stalemate is a draw, 50 moves or threefold repetition is a draw.
 - Works offline once opened (PWA). Five languages: EN, DE, TR, ES, FR.
 
-How it all works (rules, fairness, difficulty, architecture): [design notes](docs/design.md).
+How it all works (rules, fairness, difficulty, architecture): [design notes](docs/design.md). Piece artwork lives in [`public/figures/`](public/figures/): the source sheet `figure.png` and each figure cut out in white and black.
 
 ## Development
 
@@ -53,7 +55,7 @@ npm run build    # type check + production build
 
 ## License
 
-Code: [AGPL-3.0](LICENSE). Piece artwork (chessnut): [Apache-2.0](LICENSES/chessnut-APACHE-2.0.txt).
+Code: [AGPL-3.0](LICENSE).
 
 ---
 

@@ -3,7 +3,7 @@ import { ROWS } from '../engine/config'
 import { colsOf } from '../engine/game'
 import { key } from '../engine/moves'
 import type { GameState, Pos, Row } from '../engine/types'
-import { GLYPH } from '../ui/pieces'
+import { Fig } from './Fig'
 import { useSettings } from '../ui/settings'
 import {
   BOARD_IN_MS,
@@ -204,7 +204,7 @@ export function Board({
                         cell.type === 'k' ? 'king' : '',
                       ].join(' ')}
                     >
-                      {GLYPH[cell.type]}
+                      <Fig type={cell.type} color={skinOf(cell.color)} />
                     </span>
                   )}
                   {/* Nötr hamle işareti - satranç uygulamalarındaki gibi, renk kodu yok */}
@@ -223,7 +223,7 @@ export function Board({
                 className={`square ${(state.distance + ROWS + c) % 2 === 0 ? 'light' : 'dark'}`}
               >
                 {cell && (
-                  <span className={`piece ${skinOf(cell.color)}`}>{GLYPH[cell.type]}</span>
+                  <span className={`piece ${skinOf(cell.color)}`}><Fig type={cell.type} color={skinOf(cell.color)} /></span>
                 )}
               </div>
             ))}

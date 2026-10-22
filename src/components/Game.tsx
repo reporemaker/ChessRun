@@ -29,7 +29,8 @@ import { getIdentity, shortToken } from '../ui/identity'
 import { LANGS } from '../ui/i18n'
 import type { StringKey } from '../ui/i18n'
 import { RANKS_EVENT, submitRun } from '../ui/leaderboard'
-import { GLYPH, PIECE_NAME_KEY } from '../ui/pieces'
+import { PIECE_NAME_KEY } from '../ui/pieces'
+import { Fig } from './Fig'
 import {
   type RunRecord,
   currentStreak,
@@ -598,7 +599,7 @@ export function Game({
               }`}
               title={pos.row >= ROWS - 1 ? t('hud.falling') : undefined}
             >
-              {piece ? GLYPH[piece.type] : '·'}
+              {piece ? <Fig type={piece.type} /> : '·'}
             </span>
           )
         })}
@@ -608,7 +609,7 @@ export function Game({
   const stateLine = (
     <span className="gv-tx gv-state">
       <b>
-        {GLYPH[game.playerType]} {t(PIECE_NAME_KEY[game.playerType])}
+        <Fig type={game.playerType} /> {t(PIECE_NAME_KEY[game.playerType])}
       </b>
       {checkedKing != null && (
         <>
@@ -627,7 +628,8 @@ export function Game({
       )}
       {game.mode !== 'kingRun' && (
         <>
-          {' · ♚ '}
+          {' · '}
+          <Fig type="k" />{' '}
           <b>{kingDistance == null ? '-' : kingDistance}</b> {t('hud.moves')}
         </>
       )}
@@ -644,7 +646,7 @@ export function Game({
           ← {t('game.menu')}
         </ExitButton>
         <span>
-          <span className="gv-glyph">{game.mode === 'kingRun' ? '♚' : game.mode === 'trio' ? '♛' : '♞'}</span>{' '}
+          <span className="gv-glyph"><Fig type={game.mode === 'kingRun' ? 'k' : game.mode === 'trio' ? 'q' : 'n'} /></span>{' '}
           <span className="gv-mode">{t(`mode.${game.mode}.name`)}</span>
         </span>
         {config.daily && <span>{t('game.daily')}</span>}

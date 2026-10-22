@@ -20,7 +20,8 @@ import type { PieceType, Pos } from '../engine/types'
 import { getIdentity, shortToken } from '../ui/identity'
 import { DAILY_REPLAY_ALLOWED, markDailyPlayed } from '../ui/dailyLock'
 import { RANKS_EVENT, leaderboardEnabled, startDaily } from '../ui/leaderboard'
-import { GLYPH, PIECE_NAME_KEY } from '../ui/pieces'
+import { PIECE_NAME_KEY } from '../ui/pieces'
+import { Fig } from './Fig'
 import { type RunRecord, currentStreak, readRuns, readStanding, recordRun } from '../ui/scores'
 import { lifetimeStreak, recordLifetime } from '../ui/lifetime'
 import { emptyTally } from '../ui/badges'
@@ -498,7 +499,7 @@ export function DailyGame({
   const stateLine = (
     <span className="gv-tx gv-state">
       <b>
-        {GLYPH[game.playerType]} {t(PIECE_NAME_KEY[game.playerType])}
+        <Fig type={game.playerType} /> {t(PIECE_NAME_KEY[game.playerType])}
       </b>
       {game.playerType === 'q' && game.base && (
         <>
@@ -506,7 +507,7 @@ export function DailyGame({
           <i>{t('daily.queen')}</i>
           {game.queenLeft > 0 && <> · <b>{t('daily.queenLeft', { n: game.queenLeft })}</b></>}
           {' → '}
-          {GLYPH[game.base]}
+          <Fig type={game.base} />
         </>
       )}
     </span>
