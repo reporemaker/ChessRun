@@ -17,7 +17,13 @@ export interface Settings {
   lang: Lang
   /** Koridor genişliği, sütun olarak (4-8) - yalnızca serbest oyunları etkiliyor */
   cols: number
+  /** Tahta görünümü - yalnızca boya, oyunu etkilemez */
+  board: BoardTheme
 }
+
+/** 'vintage': bakır/kum + kâğıt greni (20 Ekim). 'classic': eski gri-mavi */
+export type BoardTheme = 'vintage' | 'classic'
+export const BOARD_THEMES: readonly BoardTheme[] = ['vintage', 'classic']
 
 const STORAGE_KEY = 'chessrun:settings'
 
@@ -25,6 +31,7 @@ interface Stored {
   pieceColor?: Color
   lang?: Lang
   cols?: number
+  board?: BoardTheme
   /** Eski sürüm: 'narrow' | 'medium' | 'wide' - okunurken sayıya çevriliyor */
   corridor?: string
 }
@@ -54,8 +61,14 @@ function initial(): Settings {
     pieceColor: stored.pieceColor === 'b' ? 'b' : 'w',
     lang: isLang(stored.lang) ? stored.lang : detectLang(),
     cols: readCols(stored),
+    board: stored.board === 'classic' ? 'classic' : 'vintage',
     sound: !isMuted(),
   }
+}
+
+/** Renkler CSS değişkeni; tema kökteki data-board ile seçiliyor (index.css) */
+function applyBoard(board: BoardTheme): void {
+  if (typeof document !== 'undefined') document.documentElement.dataset.board = board
 }
 
 /** Sütun: yeni alan varsa o, yoksa eski adlandırılmış kademe, yoksa varsayılan */
@@ -80,10 +93,12 @@ function detectLang(): Lang {
 
 const listeners = new Set<() => void>()
 let snapshot: Settings = initial()
+applyBoard(snapshot.board)
 
 function commit(next: Settings): void {
   snapshot = next
-  save({ pieceColor: next.pieceColor, lang: next.lang, cols: next.cols })
+  save({ pieceColor: next.pieceColor, lang: next.lang, cols: next.cols, board: next.board })
+  applyBoard(next.board)
   for (const listener of listeners) listener()
 }
 
@@ -104,6 +119,11 @@ export function setPieceColor(pieceColor: Color): void {
 export function setCols(cols: number): void {
   if (!COL_CHOICES.includes(cols) || snapshot.cols === cols) return
   commit({ ...snapshot, cols })
+}
+
+export function setBoard(board: BoardTheme): void {
+  if (snapshot.board === board) return
+  commit({ ...snapshot, board })
 }
 
 export function setLang(lang: Lang): void {

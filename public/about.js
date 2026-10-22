@@ -3,6 +3,14 @@
 // tarayıcı dili > İngilizce. Düğme seçimi adres çubuğuna ?l= yazar ki
 // bağlantı paylaşılabilsin.
 (() => {
+  // Tahta: oyunda seçilen görünüm (varsayılan bakır)
+  try {
+    const s = JSON.parse(localStorage.getItem('chessrun:settings') || '{}')
+    document.documentElement.dataset.board = s && s.board === 'classic' ? 'classic' : 'vintage'
+  } catch {
+    document.documentElement.dataset.board = 'vintage'
+  }
+
   const LANGS = ['de', 'en', 'es', 'fr', 'tr']
   const TITLES = {
     de: 'Über · ChessRun',

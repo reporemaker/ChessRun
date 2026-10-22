@@ -45,7 +45,7 @@ import {
 import { applyDailyBonus, dailyBonus } from '@shared/leaderboard'
 import { weekTotal } from '../ui/ranking'
 import { useRanking } from '../ui/useRanking'
-import { setCols, setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
+import { BOARD_THEMES, setBoard, setCols, setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
 import type { ShareInput } from '../ui/share'
 import { FeedbackLink } from './FeedbackLinks'
 import { endReasonOf, trackRun } from '../ui/stats'
@@ -835,7 +835,7 @@ export function Game({
           </span>
 
           {/* Buradan aşağısı ayarlar penceresiyle aynı sırada:
-              taş rengi → koridor → ses → dil */}
+              taş rengi → tahta → koridor → ses → dil */}
           <span className="gv-field">
             <span className="gv-tx">{t('settings.pieceColor')}</span>
             <span className="gv-seg">
@@ -848,6 +848,23 @@ export function Game({
                   onClick={() => setPieceColor(color)}
                 >
                   {color === 'w' ? t('settings.white') : t('settings.black')}
+                </button>
+              ))}
+            </span>
+          </span>
+
+          <span className="gv-field">
+            <span className="gv-tx">{t('settings.board')}</span>
+            <span className="gv-seg">
+              {BOARD_THEMES.map((board) => (
+                <button
+                  key={board}
+                  type="button"
+                  className={settings.board === board ? 'on' : ''}
+                  aria-pressed={settings.board === board}
+                  onClick={() => setBoard(board)}
+                >
+                  {board === 'vintage' ? t('settings.boardVintage') : t('settings.boardClassic')}
                 </button>
               ))}
             </span>

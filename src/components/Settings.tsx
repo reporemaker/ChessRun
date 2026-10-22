@@ -6,7 +6,7 @@ import { LANGS, hasFullProse } from '../ui/i18n'
 import { platformOf, promptInstall, useInstallState } from '../ui/install'
 import { GLYPH } from '../ui/pieces'
 import { useRanking } from '../ui/useRanking'
-import { setCols, setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
+import { BOARD_THEMES, setBoard, setCols, setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
 import { useEscape } from '../ui/escape'
 import { useT } from '../ui/text'
 import { APP_VERSION } from '../ui/version'
@@ -144,6 +144,27 @@ export function Settings({
                 >
                   <span className={`pop-pc ${color === 'w' ? 'white' : 'black'}`}>{GLYPH.p}</span>
                   {color === 'w' ? t('settings.white') : t('settings.black')}
+                </button>
+              ))}
+            </span>
+          </div>
+
+          {/* A1 · tahta görünümü */}
+          <div className="pop-lin">
+            <span className="pop-k">
+              {t('settings.board')}
+              <small>{t('settings.pieceColorHint')}</small>
+            </span>
+            <span className="pop-sw">
+              {BOARD_THEMES.map((board) => (
+                <button
+                  key={board}
+                  type="button"
+                  className={settings.board === board ? 'on' : ''}
+                  aria-pressed={settings.board === board}
+                  onClick={() => setBoard(board)}
+                >
+                  {board === 'vintage' ? t('settings.boardVintage') : t('settings.boardClassic')}
                 </button>
               ))}
             </span>

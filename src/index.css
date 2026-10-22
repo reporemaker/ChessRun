@@ -17,6 +17,8 @@
   /* Tahta - iki taş rengi de okunsun diye orta tonlar */
   --sq-light: #dfe5ec;
   --sq-dark: #94a3b4;
+  --piece-w: #fdfdfb;
+  --piece-b: #12151b;
 
   --cell: clamp(36px, 11vw, 60px);
   --radius: 16px;
@@ -32,6 +34,17 @@
   font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-synthesis-weight: none;
   color-scheme: dark;
+}
+
+/* Bakır/kum tahta (20 Ekim, z.html'den seçildi). Ayarlardan klasiğe dönülebilir;
+   seçim settings.ts'te köke data-board olarak yazılıyor */
+:root[data-board='vintage'] {
+  --sq-light: #f1dcae;
+  --sq-dark: #b4673d;
+  /* Fildişi: bakır/kum tahtada saf beyaz fazla soğuk kalıyordu */
+  --piece-w: #f7f1e3;
+  /* İs rengi: siyah değil, hafif sıcak koyu */
+  --piece-b: #1b1612;
 }
 
 * {
