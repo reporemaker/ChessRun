@@ -1,6 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import type { GameMode } from '../engine/types'
-import { MODES } from '../ui/modes'
+import { useEffect, useMemo, useRef } from 'react'
 import { type RankingView, demoRanking } from '../ui/ranking'
 import { useRanking } from '../ui/useRanking'
 import { formatRemaining, isoWeekKey, weekEnd } from '../ui/scores'
@@ -11,8 +9,6 @@ import { BadgeGlyph } from './BadgeGlyph'
 
 interface Props {
   onClose: () => void
-  /** Açılışta seçili mod - oyundan açıldıysa oynanan mod */
-  mode?: GameMode
   /** Yalnızca DEV: sunucu gelmeden gerçek görünüm için örnek tablo */
   demo?: boolean
   /** Değişince liste yeniden çekilir (ad/rozet sunucuya işlendi) */
@@ -23,23 +19,22 @@ interface Props {
  * Haftalık sıralama - kendi penceresi.
  *
  * Ayarlar penceresinin içine gömülü liste dar ve kısa kalıyordu; sıralama
- * oyunun sosyal yüzü, kendi sahnesini hak ediyor. Düzen: mod sekmeleri ·
- * hafta sayacı · üç sayı · liste (ilk üç renkli, "sen" satırı vurgulu) ·
+ * oyunun sosyal yüzü, kendi sahnesini hak ediyor. Düzen: hafta sayacı ·
+ * ortak lig notu · üç sayı · liste (ilk üç renkli, "sen" satırı vurgulu) ·
  * listede değilsen altta yapışık kendi satırın. Yalnızca haftalık lig.
  *
  * Sunucu bağlanana kadar liste kendi koşuların (ranking.ts dürüst davranıyor:
  * sıra ve oyuncu sayısı bilinmiyor). Rozet glifi için ad yanında yer var -
  * rozet sistemi gelince dolacak.
  */
-export function RankingPopup({ onClose, mode: initialMode, demo = false, refresh }: Props) {
+export function RankingPopup({ onClose, demo = false, refresh }: Props) {
   const t = useT()
   const { lang } = useSettings()
   const closeRef = useRef<HTMLButtonElement>(null)
-  const [mode, setMode] = useState<GameMode>(initialMode ?? 'classic')
 
   // `refresh`: ad/rozet sunucuya işlenince (PROFILE_EVENT) liste yeniden çekilir
-  const live = useRanking(mode, refresh)
-  const view: RankingView = useMemo(() => (demo ? demoRanking(mode) : live.view), [demo, mode, live.view])
+  const live = useRanking(refresh)
+  const view: RankingView = useMemo(() => (demo ? demoRanking() : live.view), [demo, live.view])
   const status = live.status
 
   useEffect(() => {
@@ -80,22 +75,8 @@ export function RankingPopup({ onClose, mode: initialMode, demo = false, refresh
         </div>
 
         <div className="pop-bd rank-bd">
-          {/* Mod sekmeleri: skorlar modlar arası kıyaslanmaz, tablo mod başına */}
-          <div className="rank-modes" role="tablist" aria-label={t('settings.ranking')}>
-            {MODES.filter((entry) => entry.ready).map((entry) => (
-              <button
-                key={entry.id}
-                type="button"
-                role="tab"
-                aria-selected={mode === entry.id}
-                className={mode === entry.id ? 'on' : ''}
-                onClick={() => setMode(entry.id)}
-              >
-                <span className="rank-glyph">{entry.glyph}</span>
-                {t(entry.nameKey)}
-              </button>
-            ))}
-          </div>
+          {/* Tek tablo: ortak lig - bütün oyunların haftalık toplamı */}
+          <p className="rank-all">{t('rank.all')}</p>
 
           <div className="rank-me">
             <span>

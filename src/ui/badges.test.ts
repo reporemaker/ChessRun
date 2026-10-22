@@ -187,4 +187,18 @@ describe('leagueAwards', () => {
     const run = ['2026-W51', '2026-W52', '2026-W53', '2027-W01'].map((week) => ({ week, mode: 'classic' as const }))
     expect(leagueAwards(run)).toContain('emperor')
   })
+
+  it('ortak lig: birincilik weekFirst, 4 ardışık hafta emperor, weekKing yok', () => {
+    expect(leagueAwards([{ week: '2026-W43', mode: 'all' }])).toEqual(['weekFirst'])
+    const run = ['2026-W43', '2026-W44', '2026-W45', '2026-W46'].map((week) => ({ week, mode: 'all' as const }))
+    expect(leagueAwards(run)).toEqual(['weekFirst', 'emperor'])
+    // geçiş haftasının iki yanı ayrı lig: eski oyun birincilikleri ortak ligle zincirlenmez
+    const across = [
+      { week: '2026-W40', mode: 'classic' as const },
+      { week: '2026-W41', mode: 'classic' as const },
+      { week: '2026-W42', mode: 'classic' as const },
+      { week: '2026-W43', mode: 'all' as const },
+    ]
+    expect(leagueAwards(across)).not.toContain('emperor')
+  })
 })

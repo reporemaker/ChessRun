@@ -1,17 +1,26 @@
-import { MODES, type Mode } from '@shared/events'
-import type { WeeklyEntry } from '@shared/leaderboard'
+import { MODES } from '@shared/events'
+import { ALL_BOARD, type Board, type WeeklyEntry } from '@shared/leaderboard'
 import { isoWeekUtc, nextWeek, previousWeek, weekStartUtc } from '@shared/week'
 import { api } from '../api'
 import { BADGE_LABEL, TIER_LABEL } from '../badges'
 import { useQuery } from '../useQuery'
 
 /**
- * Lig - haftanın üç tablosu, oyuncunun gördüğü hâliyle (aynı SQL, aynı
+ * Lig - önce ortak lig (oyunda görünen tek tablo: bütün oyunların toplamı),
+ * altında oyun bazlı tablolar, oyuncunun gördüğü hâliyle (aynı SQL, aynı
  * sınır). Hafta gezinmesi hash'te (`week=2026-W34`); geçmiş haftalar
  * lb_weekly budanana kadar (~8 hafta) görünür, sonrası yalnızca lb_award
  * (birincilikler) - o da Adlar sayfasındaki "1." sütununda.
  */
-const MODE_LABEL: Record<Mode, string> = { classic: 'Av', kingRun: 'Kaçış', trio: 'Üçlü', daily: 'Günün Mücadelesi' }
+const MODE_LABEL: Record<Board, string> = {
+  all: 'Ortak lig',
+  classic: 'Av',
+  kingRun: 'Kaçış',
+  trio: 'Üçlü',
+  daily: 'Günün Mücadelesi',
+}
+
+const BOARDS: Board[] = [ALL_BOARD, ...MODES]
 
 function fmtWeek(week: string): string {
   const start = new Date(weekStartUtc(week))
@@ -29,7 +38,7 @@ export function League({ week, onWeek }: Props) {
   const current = isoWeekUtc(Date.now())
   const shown = week ?? current
   const q = useQuery(`league ${shown}`, () => api.league(shown))
-  const boards = q.data?.boards ?? MODES.map((mode) => ({ mode, players: 0, entries: [] as WeeklyEntry[] }))
+  const boards = q.data?.boards ?? BOARDS.map((mode) => ({ mode, players: 0, entries: [] as WeeklyEntry[] }))
 
   return (
     <>

@@ -1,4 +1,4 @@
-import { type WeeklyEntry, shortMatches } from '@shared/leaderboard'
+import { ALL_BOARD, type WeeklyEntry, shortMatches } from '@shared/leaderboard'
 import type { GameMode } from '../engine/types'
 import { type BadgeId, badgeOf, isBadgeId, readBadges, readSelectedBadge } from './badges'
 import { getIdentity } from './identity'
@@ -67,9 +67,10 @@ const LIST_LIMIT = 12
  * göremez. Haftalık her Pazartesi herkese aynı şansı veriyor. Kişisel "en
  * iyin" oyun ekranında zaten var - ligin işi değil.
  *
- * Lig puanı = o hafta o modda BİRİKTİRİLEN toplam (her koşu eklenir; 19
- * Ağustos kararı - "kim en çok oynadı, en çok puan topladı"). En iyi tek
- * koşu değil. Sunucu yokken toplam yerel defterden.
+ * Lig puanı = o hafta BİRİKTİRİLEN toplam (her koşu eklenir; 19 Ağustos
+ * kararı - "kim en çok oynadı, en çok puan topladı"). En iyi tek koşu değil.
+ * 22 Ekim'den beri tek ortak lig: bütün oyunlar, günün mücadelesi dahil.
+ * Sunucu yokken toplam yerel defterden.
  */
 export function weekTotal(runs: RunRecord[]): number {
   return runs.reduce((sum, run) => sum + run.score, 0)
@@ -113,22 +114,6 @@ export function readRanking(mode?: GameMode, now: Date = new Date()): RankingVie
   }
 }
 
-/**
- * Mod verilmeden sorulduğunda (ayarlar, ana sayfa) hangi ligin sırası?
- * Bu hafta en çok puan biriktirilen mod - oyuncunun bu hafta "yarıştığı" lig.
- * Hiç koşu yoksa Av.
- */
-export function weekMode(now: Date = new Date()): GameMode {
-  // Günlük mücadele haftalık lig değil - bu haftanın ligi üç serbest moddan biri
-  const runs = runsOfWeek(readRuns(), isoWeekKey(now)).filter((run) => run.mode !== 'daily')
-  const totals = new Map<GameMode, number>()
-  for (const run of runs) totals.set(run.mode, (totals.get(run.mode) ?? 0) + run.score)
-  let pick: GameMode = 'classic'
-  let top = -1
-  for (const [m, total] of totals) if (total > top) { top = total; pick = m }
-  return pick
-}
-
 /* ------------------------------------------------------------------ *
  * Sunucu görünümü
  * ------------------------------------------------------------------ */
@@ -153,17 +138,18 @@ function entryToRow(entry: WeeklyEntry, me: boolean): RankRow {
  * çağıran yerel görünümde kalıyor ve "sunucu bağlanana kadar" notu duruyor.
  *
  * "Sen" satırı kısa jetonla eşleşiyor: ad tekil değil, jeton tekil.
+ * Tablo ortak lig (bütün oyunların toplamı).
  */
-export async function fetchRanking(mode: GameMode, now: Date = new Date()): Promise<RankingView | null> {
+export async function fetchRanking(now: Date = new Date()): Promise<RankingView | null> {
   if (!leaderboardEnabled) return null
   const week = isoWeekKey(now)
-  const data = await fetchWeekly(mode, week)
+  const data = await fetchWeekly(ALL_BOARD, week)
   if (!data) return null
 
   // "ben": tablodaki kısa hâl eski (4+2) ya da yeni (6+2) olabilir - ikisini de tanı
   const token = getIdentity().token
   const rows = data.entries.map((entry) => entryToRow(entry, shortMatches(entry.token, token)))
-  const local = readRanking(mode, now)
+  const local = readRanking(undefined, now)
 
   return {
     rank: data.me?.place ?? null,
@@ -186,8 +172,8 @@ export async function fetchRanking(mode: GameMode, now: Date = new Date()): Prom
  * çağrılmıyor (App yalnızca DEV + ?dev=rank ile açıyor). Adlar beş dilin
  * rastgele ad kalıbından, rozet glifleri yer tutucu.
  */
-export function demoRanking(mode: GameMode): RankingView {
-  const seed = mode === 'classic' ? 3 : mode === 'kingRun' ? 7 : 11
+export function demoRanking(): RankingView {
+  const seed = 3
   const names = [
     'Gölge Vezir 417', 'Shadow Queen 88', 'Schatten-Dame 512', 'Torre Plata 356', 'Roi Glace 516',
     'Fırtına At 831', 'North Bishop 971', 'Sturm-Turm 204', 'Dama Sombra 640', 'Cavalier Fer 150',
@@ -197,8 +183,8 @@ export function demoRanking(mode: GameMode): RankingView {
   const badges: Array<BadgeId | undefined> = ['knight', 'queen', 'chain', 'king', undefined, 'breath', undefined, 'rook', undefined, 'thirtyDays']
   const tiers = ['gold', 'silver', 'gold', 'bronze', undefined, 'gold', undefined, 'black', undefined, 'gold'] as const
   const identity = getIdentity()
-  // Av'da 4. (listede), Kaçış'ta 47. (liste dışı → altta yapışık satır), Üçlü'de 2.
-  const mePlace = mode === 'classic' ? 4 : mode === 'kingRun' ? 47 : 2
+  // Listede 4. (liste dışı görünüm için 47 denenebilir)
+  const mePlace = 4
   const top = 5400
   const rows: RankRow[] = Array.from({ length: 15 }, (_, i) => {
     const place = i + 1
@@ -208,9 +194,9 @@ export function demoRanking(mode: GameMode): RankingView {
       place,
       name: me ? identity.name : names[(i * seed) % names.length],
       score,
-      distance: Math.round(score / (mode === 'kingRun' ? 60 : 24)),
+      distance: Math.round(score / 24),
       me,
-      at: `demo-${mode}-${i}`,
+      at: `demo-${i}`,
       badge: me ? 'oneUp' : badges[(i * seed) % badges.length],
       badgeTier: me ? 'bronze' : tiers[(i * seed) % tiers.length],
     }

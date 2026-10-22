@@ -66,7 +66,7 @@ export function Settings({
   const closeRef = useRef<HTMLButtonElement>(null)
 
   // Sıralama özeti - bu haftanın ligi, sunucu görünümü gelince yerini alıyor
-  const { view: ranking, status: rankStatus } = useRanking(undefined, rankVersion)
+  const { view: ranking, status: rankStatus } = useRanking(rankVersion)
 
   const [identity, setIdentity] = useState(() => getIdentity())
   // Ana ekrana ekle: Chromium'da istem, diğerlerinde düğmeye basınca ipucu

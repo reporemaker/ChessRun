@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { GameMode } from '../engine/types'
 import { leaderboardEnabled } from './leaderboard'
-import { type RankingView, fetchRanking, readRanking, weekMode } from './ranking'
+import { type RankingView, fetchRanking, readRanking } from './ranking'
 
 export type RankingStatus =
   /** Sunucu tanımlı değil - liste kendi koşuların */
@@ -15,15 +14,15 @@ export type RankingStatus =
 
 /**
  * Sıralamanın tek React girişi - ayarlar özeti, oyun sonu kartı, ana sayfa
- * satırı ve sıralama penceresi aynı kancayı kullanıyor.
+ * satırı ve sıralama penceresi aynı kancayı kullanıyor. Tablo tek: ortak
+ * lig (bütün oyunların haftalık toplamı).
  *
  * Yerel görünüm anında (senkron), sunucu görünümü gelince yerini alıyor.
- * `mode` verilmezse bu haftanın ligi (`weekMode`). `refresh` değişince
- * (koşu bitti) ikisi de tazeleniyor. Geç gelen cevap `alive` ile düşüyor.
+ * `refresh` değişince (koşu bitti) ikisi de tazeleniyor. Geç gelen cevap
+ * `alive` ile düşüyor.
  */
-export function useRanking(mode?: GameMode, refresh?: unknown): { view: RankingView; status: RankingStatus } {
-  const resolved = useMemo(() => mode ?? weekMode(), [mode, refresh]) // eslint-disable-line react-hooks/exhaustive-deps
-  const local = useMemo(() => readRanking(mode), [mode, refresh]) // eslint-disable-line react-hooks/exhaustive-deps
+export function useRanking(refresh?: unknown): { view: RankingView; status: RankingStatus } {
+  const local = useMemo(() => readRanking(), [refresh]) // eslint-disable-line react-hooks/exhaustive-deps
   const [remote, setRemote] = useState<RankingView | null>(null)
   const [offline, setOffline] = useState(false)
 
@@ -32,7 +31,7 @@ export function useRanking(mode?: GameMode, refresh?: unknown): { view: RankingV
     setOffline(false)
     if (!leaderboardEnabled) return
     let alive = true
-    void fetchRanking(resolved).then((v) => {
+    void fetchRanking().then((v) => {
       if (!alive) return
       if (v) setRemote(v)
       else setOffline(true)
@@ -40,7 +39,7 @@ export function useRanking(mode?: GameMode, refresh?: unknown): { view: RankingV
     return () => {
       alive = false
     }
-  }, [resolved, refresh])
+  }, [refresh])
 
   const status: RankingStatus = !leaderboardEnabled ? 'local' : remote ? 'live' : offline ? 'offline' : 'loading'
   return { view: remote ?? local, status }

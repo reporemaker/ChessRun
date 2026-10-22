@@ -246,7 +246,7 @@ export function DailyGame({
     window.addEventListener(RANKS_EVENT, onRanks)
     return () => window.removeEventListener(RANKS_EVENT, onRanks)
   }, [])
-  const { view: ranking, status: rankStatus } = useRanking('daily', `${result ? 1 : 0}-${rankTick}`)
+  const { view: ranking, status: rankStatus } = useRanking(`${result ? 1 : 0}-${rankTick}`)
 
   const latest = useRef(game)
   latest.current = game

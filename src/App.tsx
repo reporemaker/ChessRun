@@ -431,8 +431,6 @@ export default function App() {
 
       {rankOpen && (
         <RankingPopup
-          // Günlük ligi sunucuda henüz yok: pencere haftanın ligini açar
-          mode={config?.mode === 'daily' ? undefined : config?.mode}
           demo={demoRank}
           refresh={rankVersion}
           onClose={() => setRankOpen(false)}

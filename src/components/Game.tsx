@@ -40,7 +40,6 @@ import {
   readRuns,
   readStanding,
   recordRun,
-  runsOfMode,
   runsOfWeek,
 } from '../ui/scores'
 import { applyDailyBonus, dailyBonus } from '@shared/leaderboard'
@@ -169,7 +168,7 @@ export function Game({
     window.addEventListener(RANKS_EVENT, onRanks)
     return () => window.removeEventListener(RANKS_EVENT, onRanks)
   }, [])
-  const { view: ranking, status: rankStatus } = useRanking(config.mode, `${result?.run.at ?? ''}-${rankTick}`)
+  const { view: ranking, status: rankStatus } = useRanking(`${result?.run.at ?? ''}-${rankTick}`)
 
   /* Reklam yalnızca gerçek bir slot tanımlıysa çiziliyor - tanımsızken
      yer tutucu kutu göstermiyoruz. */
@@ -395,8 +394,9 @@ export function Game({
       isWeekBest: !tuningActive() && !isBest && run.score > 0 && run.score > (before.thisWeek?.score ?? 0),
       allTime: after.allTime?.score ?? run.score,
       weekBest: after.thisWeek?.score ?? run.score,
-      weekTotal: weekTotal(runsOfWeek(runsOfMode(runs, state.mode), isoWeekKey(new Date()))),
-      weekRuns: runsOfWeek(runsOfMode(runs, state.mode), isoWeekKey(new Date())).length,
+      // Ortak lig: haftanın bütün oyunları (sunucu cevabı gelmezse gösterilen)
+      weekTotal: weekTotal(runsOfWeek(runs, isoWeekKey(new Date()))),
+      weekRuns: runsOfWeek(runs, isoWeekKey(new Date())).length,
       badges: awards.current,
     })
 
@@ -652,7 +652,7 @@ export function Game({
         {config.daily && <span>{t('game.daily')}</span>}
         {bonus > 1 && <span className="gv-bonus">{t('game.bonus', { x: bonus.toFixed(2) })}</span>}
         <span className="gv-sp" />
-        <span>{t('home.rank')} -</span>
+        <span>{t('home.rank')} {rankStatus === 'live' && ranking.rank != null ? `#${ranking.rank}` : '-'}</span>
       </div>
 
       {/* ---- mobil üst köşeler: «←» çıkış (koşu sürüyorsa onaylı) · skor · en iyi ---- */}

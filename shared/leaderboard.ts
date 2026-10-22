@@ -1,4 +1,4 @@
-import type { Mode } from './events'
+import { MODES, type Mode, isMode } from './events'
 
 /**
  * Haftalık sıralama sunucusunun sözleşmesi - oyun, Worker ve panel
@@ -14,6 +14,31 @@ import type { Mode } from './events'
  * hâlini veriyor ve tabloyu haftada bir sıfırlıyor - hilenin ödülü küçük,
  * izi bir hafta.
  */
+
+/**
+ * Ortak lig (22 Ekim 2026): oyunda tek tablo, bütün oyunların (günün
+ * mücadelesi dahil) haftalık toplamı. Ayrı tablo yok - koşular yine
+ * oyun bazında `lb_weekly`ye yazılıyor, ortak tablo okurken toplanıyor.
+ * Oyun bazlı tablolar panelde ve eski istemciler için duruyor.
+ */
+export const ALL_BOARD = 'all'
+export type Board = Mode | typeof ALL_BOARD
+
+export function isBoard(value: unknown): value is Board {
+  return value === ALL_BOARD || isMode(value)
+}
+
+/**
+ * Bu haftadan itibaren birincilikler (lig rozetleri, arşiv) ortak ligden;
+ * öncesinin oyun bazlı birincilikleri olduğu gibi kalıyor. Hafta anahtarı
+ * dizgi olarak karşılaştırılabilir (YYYY-Www).
+ */
+export const ALL_LEAGUE_FROM = '2026-W43'
+
+/** Bir haftanın birincilik verdiği tablolar: geçişten önce oyunlar, sonra ortak lig */
+export function awardBoards(week: string): readonly Board[] {
+  return week >= ALL_LEAGUE_FROM ? [ALL_BOARD] : MODES
+}
 
 export const BADGE_TIERS = ['black', 'bronze', 'silver', 'gold'] as const
 export type BadgeTier = (typeof BADGE_TIERS)[number]
@@ -148,9 +173,9 @@ export interface WeeklyEntry {
 
 export interface WeeklyResponse {
   week: string
-  mode: Mode
+  mode: Board
   entries: WeeklyEntry[]
-  /** Bu hafta bu modda en az bir koşu yollayan oyuncu sayısı */
+  /** Bu hafta bu tabloda (ortak: herhangi bir oyunda) en az bir koşu yollayan oyuncu sayısı */
   players: number
   /** Başlıkta jeton geldiyse ve tabloda varsa: kendi sıran (listede olmasan da) */
   me?: { place: number; score: number; distance: number; runs: number; best: number }
@@ -202,7 +227,8 @@ export interface DailyResponse {
 export const AWARD_MIN_PLAYERS = 2
 
 export interface AwardsResponse {
-  firsts: Array<{ week: string; mode: Mode }>
+  /** ALL_LEAGUE_FROM öncesi: oyun bazlı birincilikler; sonrası: `all` */
+  firsts: Array<{ week: string; mode: Board }>
 }
 
 /* ------------------------------------------------------------------ *
@@ -358,7 +384,7 @@ export type NameAction = (typeof NAME_ACTIONS)[number]
 
 /** GET /api/league?week= - panelde hafta × mod tablosu */
 export interface LeagueBoard {
-  mode: Mode
+  mode: Board
   players: number
   entries: WeeklyEntry[]
 }

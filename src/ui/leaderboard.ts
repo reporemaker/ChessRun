@@ -1,9 +1,8 @@
-import type { AwardsResponse, HelloBody, PulseResponse, SubmitBody, WeeklyResponse,
+import type { AwardsResponse, Board, HelloBody, PulseResponse, SubmitBody, WeeklyResponse,
   DailyResponse,
   DailyStartBody,
 } from '@shared/leaderboard'
 import { tuningActive } from '../engine/tuning'
-import type { GameMode } from '../engine/types'
 import { badgeOf, readBadges, readSelectedBadge } from './badges'
 import { getIdentity } from './identity'
 import type { RunRecord } from './scores'
@@ -232,7 +231,7 @@ async function postRun(run: RunRecord): Promise<boolean> {
  * kendi sıranı hesaplasın. Sunucu ulaşılamazsa `null` - arayüz yerel
  * görünüme düşüyor.
  */
-export async function fetchWeekly(mode: GameMode, week: string): Promise<WeeklyResponse | null> {
+export async function fetchWeekly(mode: Board, week: string): Promise<WeeklyResponse | null> {
   if (!ENDPOINT) return null
 
   try {

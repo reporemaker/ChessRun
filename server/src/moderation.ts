@@ -1,6 +1,8 @@
-import { MODES, isMode } from '../../shared/events'
+import { MODES } from '../../shared/events'
 import {
+  ALL_BOARD,
   type BadgeTier,
+  type Board,
   BURST_MAX_RUNS,
   LB_LIMITS,
   NAME_ACTIONS,
@@ -13,8 +15,9 @@ import {
   type PlayerRow,
   type PlayerStatus,
   type WordsResponse,
+  isBoard,
 } from '../../shared/leaderboard'
-import { RANK_SQL, invalidateWords, isoWeekUtc, placeholderName, toEntry, type WeeklyRow } from './lb'
+import { countStatement, invalidateWords, isoWeekUtc, placeholderName, rankStatement, toEntry, type WeeklyRow } from './lb'
 import { str } from './validate'
 
 /**
@@ -212,27 +215,20 @@ export async function actOnName(db: D1Database, raw: unknown, nowMs: number): Pr
 }
 
 /**
- * GET /api/league?week= - haftanın üç ligi, panelde. Oyundaki tabloyla aynı
- * SQL (RANK_SQL) ve aynı sınır: panel oyuncunun gördüğünü görsün.
+ * GET /api/league?week= - panelde: önce ortak lig (oyunda görünen tek tablo),
+ * altında oyun bazlı tablolar (inceleme için). Oyundaki tabloyla aynı SQL
+ * (rankStatement) ve aynı sınır: panel oyuncunun gördüğünü görsün.
  */
 export async function league(db: D1Database, url: URL, nowMs: number): Promise<Response> {
   const weekParam = url.searchParams.get('week') ?? ''
   const week = /^\d{4}-W\d{2}$/.test(weekParam) ? weekParam : isoWeekUtc(nowMs)
   const modeParam = url.searchParams.get('mode')
-  const modes = isMode(modeParam) ? [modeParam] : MODES
+  const modes: readonly Board[] = isBoard(modeParam) ? [modeParam] : [ALL_BOARD, ...MODES]
   const limit = Math.min(50, Math.max(1, Number(url.searchParams.get('limit') ?? LB_LIMITS.listLimit) || LB_LIMITS.listLimit))
 
   const boards: LeagueBoard[] = []
   for (const mode of modes) {
-    const [top, count] = await db.batch([
-      db.prepare(RANK_SQL).bind(week, mode, limit),
-      db
-        .prepare(
-          `SELECT COUNT(*) AS n FROM lb_weekly w JOIN lb_player p ON p.token_hash = w.token_hash
-           WHERE w.week = ?1 AND w.mode = ?2 AND p.status = 'ok'`,
-        )
-        .bind(week, mode),
-    ])
+    const [top, count] = await db.batch([rankStatement(db, week, mode, limit), countStatement(db, week, mode)])
     boards.push({
       mode,
       players: (count.results[0] as { n: number } | undefined)?.n ?? 0,

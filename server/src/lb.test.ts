@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { hasBannedWord, normalizeName } from '../../shared/names'
-import { plausibleScoreMax } from '../../shared/leaderboard'
+import { ALL_LEAGUE_FROM, awardBoards, isBoard, plausibleScoreMax } from '../../shared/leaderboard'
 import { acceptedWeeks, cleanName, cleanSubmit, isoWeekUtc, playedAtOf, previousWeek, shortOf, weekStartUtc } from './lb'
 
 // 2026-08-18 Salı 02:00 UTC → ISO hafta 34
@@ -253,5 +253,23 @@ describe('playedAtOf - günlük çarpanın zaman eşiği', () => {
     expect(playedAtOf('2026-08-20T00:00:00Z', now)).toBe(now)
     expect(playedAtOf('saçma', now)).toBe(now)
     expect(playedAtOf('', now)).toBe(now)
+  })
+})
+
+describe('ortak lig', () => {
+  it('tablo adı: ortak lig ve oyunlar geçerli, başkası değil', () => {
+    expect(isBoard('all')).toBe(true)
+    expect(isBoard('classic')).toBe(true)
+    expect(isBoard('daily')).toBe(true)
+    expect(isBoard('ALL')).toBe(false)
+    expect(isBoard(undefined)).toBe(false)
+  })
+
+  it('birincilikler geçiş haftasından itibaren ortak ligden, öncesi oyun bazlı', () => {
+    expect(ALL_LEAGUE_FROM).toBe('2026-W43')
+    expect(awardBoards('2026-W42')).toEqual(['classic', 'kingRun', 'trio', 'daily'])
+    expect(awardBoards('2026-W43')).toEqual(['all'])
+    expect(awardBoards('2027-W01')).toEqual(['all'])
+    expect(awardBoards('2025-W52')).toEqual(['classic', 'kingRun', 'trio', 'daily'])
   })
 })

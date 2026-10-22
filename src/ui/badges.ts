@@ -1,3 +1,4 @@
+import type { Board } from '@shared/leaderboard'
 import { nextWeek } from '@shared/week'
 import { COL_CHOICES } from '../engine/config'
 import { tuningActive } from '../engine/tuning'
@@ -601,23 +602,26 @@ export function claimBadges(context: BadgeContext, now = new Date()): BadgeAward
 
 export interface WeekFirst {
   week: string
-  mode: GameMode
+  /** Ortak lig öncesi haftalarda oyun, sonrasında `all` (ortak lig) */
+  mode: Board
 }
 
 /**
  * Sunucudan gelen birinciliklerden hangi lig rozetlerinin kazanıldığı.
  * Saf: depoya dokunmuyor, test edilebilir.
  *
- * - weekFirst: en az bir hafta×modda birinci
- * - weekKing:  aynı hafta üç ligde de birinci
- * - emperor:   aynı ligde 4 ardışık hafta birinci
+ * - weekFirst: en az bir hafta×ligde birinci
+ * - weekKing:  aynı hafta üç ligde de birinci - üç ayrı lig döneminden;
+ *              ortak ligde (22 Ekim 2026'dan beri) hafta başına tek lig
+ *              olduğu için artık kazanılamıyor, kazananlarda duruyor
+ * - emperor:   aynı ligde 4 ardışık hafta birinci (ortak ligde de geçerli)
  */
 export function leagueAwards(firsts: WeekFirst[]): BadgeId[] {
   if (firsts.length === 0) return []
   const out: BadgeId[] = ['weekFirst']
 
-  const byWeek = new Map<string, Set<GameMode>>()
-  const byMode = new Map<GameMode, Set<string>>()
+  const byWeek = new Map<string, Set<Board>>()
+  const byMode = new Map<Board, Set<string>>()
   for (const f of firsts) {
     if (!byWeek.has(f.week)) byWeek.set(f.week, new Set())
     byWeek.get(f.week)!.add(f.mode)

@@ -1,5 +1,7 @@
 import { MODES, type Mode, dayKeyUtc, isMode } from '../../shared/events'
 import {
+  ALL_BOARD,
+  ALL_LEAGUE_FROM,
   AWARD_MIN_PLAYERS,
   BADGE_TIERS,
   LB_LIMITS,
@@ -26,6 +28,9 @@ import {
   type DailyResponse,
   type DailyStartBody,
   applyDailyBonus,
+  awardBoards,
+  isBoard,
+  type Board,
 } from '../../shared/leaderboard'
 import { hasBannedWord } from '../../shared/names'
 import { isoWeekUtc, previousWeek } from '../../shared/week'
@@ -39,8 +44,9 @@ export { isoWeekUtc, previousWeek, weekStartUtc } from '../../shared/week'
  * Üç uç, hepsi apex'te ve herkese açık (Access'in ARKASINDA DEĞİL):
  *   POST /lb/runs      → 204, her durumda (istatistikteki kuralla aynı: şema
  *                        sızdırmamak, istemciyi yeniden denemeye itmemek)
- *   GET  /lb/weekly    → hafta × mod tablosu; `x-chessrun-token` başlığı
- *                        gelirse kendi sıran da (listede olmasan bile)
+ *   GET  /lb/weekly    → hafta × tablo (mode=all: ortak lig, yoksa oyun);
+ *                        `x-chessrun-token` başlığı gelirse kendi sıran da
+ *                        (listede olmasan bile)
  *   GET  /lb/pulse     → günün tahtasını kaç kişi oynadı
  *
  * Kimlik jetonun SHA-256'sı. Ham jeton bu dosyaya girip hash'lenip çıkıyor;
@@ -447,6 +453,7 @@ async function storeRun(db: D1Database, clean: CleanSubmit, hash: string, short:
   // Aynı izoledeki bir sonraki tablo okuması taze olsun (koşu bitince oyuncu
   // hemen bakıyor; başka izolede en çok BOARD_TTL_MS gecikir)
   boardCache.delete(`${clean.week}|${clean.mode}`)
+  boardCache.delete(`${clean.week}|${ALL_BOARD}`)
   return 'stored'
 }
 
@@ -484,6 +491,95 @@ export const RANK_SQL = `
   LIMIT ?3`
 
 /**
+ * Ortak lig: oyuncu başına haftanın bütün oyunlarının toplamı (?1 hafta).
+ * Eşitlik bozucu oyun tablosundakiyle aynı: puan, satır, sonra erken gelen
+ * (oyuncunun o haftaki son koşusunun zamanı).
+ */
+const ALL_TOTALS_SQL = `
+  SELECT w.token_hash, SUM(w.score) AS score, SUM(w.distance) AS distance, SUM(w.runs) AS runs,
+         MAX(w.best) AS best, MAX(w.ts) AS ts
+  FROM lb_weekly w WHERE w.week = ?1 GROUP BY w.token_hash`
+
+const RANK_ALL_SQL = `
+  WITH t AS (${ALL_TOTALS_SQL})
+  SELECT t.token_hash, t.score, t.distance, t.runs, t.best, p.name, p.short, p.badge, p.badge_tier
+  FROM t JOIN lb_player p ON p.token_hash = t.token_hash
+  WHERE p.status = 'ok'
+  ORDER BY t.score DESC, t.distance DESC, t.ts ASC
+  LIMIT ?2`
+
+/** Tablonun ilk `limit` satırı - oyun ya da ortak lig */
+export function rankStatement(db: D1Database, week: string, board: Board, limit: number): D1PreparedStatement {
+  return board === ALL_BOARD ? db.prepare(RANK_ALL_SQL).bind(week, limit) : db.prepare(RANK_SQL).bind(week, board, limit)
+}
+
+/** Tablodaki ('ok') oyuncu sayısı */
+export function countStatement(db: D1Database, week: string, board: Board): D1PreparedStatement {
+  return board === ALL_BOARD
+    ? db
+        .prepare(
+          `SELECT COUNT(DISTINCT w.token_hash) AS n FROM lb_weekly w JOIN lb_player p ON p.token_hash = w.token_hash
+           WHERE w.week = ?1 AND p.status = 'ok'`,
+        )
+        .bind(week)
+    : db
+        .prepare(
+          `SELECT COUNT(*) AS n FROM lb_weekly w JOIN lb_player p ON p.token_hash = w.token_hash
+           WHERE w.week = ?1 AND w.mode = ?2 AND p.status = 'ok'`,
+        )
+        .bind(week, board)
+}
+
+interface MineRow {
+  score: number
+  distance: number
+  runs: number
+  best: number
+  ts: number
+  status: string
+}
+
+/** Oyuncunun kendi satırı (gölgelenmiş de olsa) */
+function mineStatement(db: D1Database, week: string, board: Board, hash: string): D1PreparedStatement {
+  return board === ALL_BOARD
+    ? db
+        .prepare(
+          `WITH t AS (${ALL_TOTALS_SQL})
+           SELECT t.score, t.distance, t.runs, t.best, t.ts, p.status FROM t JOIN lb_player p ON p.token_hash = t.token_hash
+           WHERE t.token_hash = ?2`,
+        )
+        .bind(week, hash)
+    : db
+        .prepare(
+          `SELECT w.score, w.distance, w.runs, w.best, w.ts, p.status FROM lb_weekly w JOIN lb_player p ON p.token_hash = w.token_hash
+           WHERE w.week = ?1 AND w.mode = ?2 AND w.token_hash = ?3`,
+        )
+        .bind(week, board, hash)
+}
+
+/** Oyuncunun önündeki ('ok') oyuncu sayısı */
+function aheadStatement(db: D1Database, week: string, board: Board, hash: string, mine: MineRow): D1PreparedStatement {
+  return board === ALL_BOARD
+    ? db
+        .prepare(
+          `WITH t AS (${ALL_TOTALS_SQL})
+           SELECT COUNT(*) AS n FROM t JOIN lb_player p ON p.token_hash = t.token_hash
+           WHERE p.status = 'ok' AND t.token_hash != ?2
+             AND (t.score > ?3 OR (t.score = ?3 AND t.distance > ?4)
+                  OR (t.score = ?3 AND t.distance = ?4 AND t.ts < ?5))`,
+        )
+        .bind(week, hash, mine.score, mine.distance, mine.ts)
+    : db
+        .prepare(
+          `SELECT COUNT(*) AS n FROM lb_weekly w JOIN lb_player p ON p.token_hash = w.token_hash
+           WHERE w.week = ?1 AND w.mode = ?2 AND p.status = 'ok' AND w.token_hash != ?5
+             AND (w.score > ?3 OR (w.score = ?3 AND w.distance > ?4)
+                  OR (w.score = ?3 AND w.distance = ?4 AND w.ts < ?6))`,
+        )
+        .bind(week, board, mine.score, mine.distance, hash, mine.ts)
+}
+
+/**
  * Hafta tablosu. `token` (başlıktan) verilirse ve oyuncu tabloda varsa
  * `me` dolu - listede olmasa bile sırası hesaplanıyor. Gölgelenmiş
  * oyuncu (`shadow`) listede yok ama kendi `me`sini görüyor: kendisine
@@ -497,20 +593,15 @@ export const RANK_SQL = `
 const boardCache = new Map<string, { at: number; body: WeeklyResponse }>()
 const BOARD_TTL_MS = 10_000
 
-async function boardOf(db: D1Database, week: string, mode: Mode, nowMs: number): Promise<WeeklyResponse> {
+async function boardOf(db: D1Database, week: string, mode: Board, nowMs: number): Promise<WeeklyResponse> {
   const key = `${week}|${mode}`
   const hit = boardCache.get(key)
   if (hit && nowMs - hit.at < BOARD_TTL_MS) return hit.body
   const limit = LB_LIMITS.listLimit
   const [top, count, last] = await db.batch([
-    db.prepare(RANK_SQL).bind(week, mode, limit),
-    db
-      .prepare(
-        `SELECT COUNT(*) AS n FROM lb_weekly w JOIN lb_player p ON p.token_hash = w.token_hash
-         WHERE w.week = ?1 AND w.mode = ?2 AND p.status = 'ok'`,
-      )
-      .bind(week, mode),
-    db.prepare(RANK_SQL).bind(previousWeek(week), mode, 3),
+    rankStatement(db, week, mode, limit),
+    countStatement(db, week, mode),
+    rankStatement(db, previousWeek(week), mode, 3),
   ])
   const entries = (top.results as WeeklyRow[]).map((row, i) => toEntry(row, i + 1))
   const players = (count.results[0] as { n: number } | undefined)?.n ?? 0
@@ -524,7 +615,7 @@ async function boardOf(db: D1Database, week: string, mode: Mode, nowMs: number):
 
 export async function weekly(db: D1Database, url: URL, token: string | null, nowMs: number): Promise<Response> {
   const modeParam = url.searchParams.get('mode')
-  const mode: Mode = isMode(modeParam) ? modeParam : MODES[0]
+  const mode: Board = isBoard(modeParam) ? modeParam : MODES[0]
   const weekParam = url.searchParams.get('week') ?? ''
   const week = WEEK_RE.test(weekParam) ? weekParam : isoWeekUtc(nowMs)
 
@@ -533,23 +624,9 @@ export async function weekly(db: D1Database, url: URL, token: string | null, now
 
   if (token && token.length >= 16 && token.length <= 64) {
     const hash = await hashToken(token)
-    const mine = await db
-      .prepare(
-        `SELECT w.score, w.distance, w.runs, w.best, w.ts, p.status FROM lb_weekly w JOIN lb_player p ON p.token_hash = w.token_hash
-         WHERE w.week = ?1 AND w.mode = ?2 AND w.token_hash = ?3`,
-      )
-      .bind(week, mode, hash)
-      .first<{ score: number; distance: number; runs: number; best: number; ts: number; status: string }>()
+    const mine = await mineStatement(db, week, mode, hash).first<MineRow>()
     if (mine && mine.status !== 'banned') {
-      const ahead = await db
-        .prepare(
-          `SELECT COUNT(*) AS n FROM lb_weekly w JOIN lb_player p ON p.token_hash = w.token_hash
-           WHERE w.week = ?1 AND w.mode = ?2 AND p.status = 'ok' AND w.token_hash != ?5
-             AND (w.score > ?3 OR (w.score = ?3 AND w.distance > ?4)
-                  OR (w.score = ?3 AND w.distance = ?4 AND w.ts < ?6))`,
-        )
-        .bind(week, mode, mine.score, mine.distance, hash, mine.ts)
-        .first<{ n: number }>()
+      const ahead = await aheadStatement(db, week, mode, hash, mine).first<{ n: number }>()
       body.me = { place: (ahead?.n ?? 0) + 1, score: mine.score, distance: mine.distance, runs: mine.runs, best: mine.best }
     }
   }
@@ -655,8 +732,9 @@ export async function awards(db: D1Database, token: string | null, nowMs: number
 
   // İki kaynak: canlı tablo (son ~8 hafta) + arşiv (cron'un yazdığı ilk üçler,
   // budanmış haftalar dahil). Aynı hafta×mod ikisinde de olabilir - tekilleştir.
-  const [live, archived] = await db.batch([
-    db.prepare(FIRSTS_SQL).bind(hash, currentWeek, AWARD_MIN_PLAYERS),
+  const [live, liveAll, archived] = await db.batch([
+    db.prepare(FIRSTS_SQL).bind(hash, currentWeek, AWARD_MIN_PLAYERS, ALL_LEAGUE_FROM),
+    db.prepare(FIRSTS_ALL_SQL).bind(hash, currentWeek, AWARD_MIN_PLAYERS, ALL_LEAGUE_FROM),
     db
       .prepare(
         `SELECT a.week, a.mode FROM lb_award a JOIN lb_player p ON p.token_hash = a.token_hash AND p.status = 'ok'
@@ -665,7 +743,8 @@ export async function awards(db: D1Database, token: string | null, nowMs: number
       .bind(hash, currentWeek),
   ])
   const seen = new Set<string>()
-  for (const row of [...(live.results as Array<{ week: string; mode: Mode }>), ...(archived.results as Array<{ week: string; mode: Mode }>)]) {
+  type FirstRow = { week: string; mode: Board }
+  for (const row of [...(live.results as FirstRow[]), ...(liveAll.results as FirstRow[]), ...(archived.results as FirstRow[])]) {
     const key = `${row.week}|${row.mode}`
     if (seen.has(key)) continue
     seen.add(key)
@@ -675,11 +754,14 @@ export async function awards(db: D1Database, token: string | null, nowMs: number
   return Response.json(body, { headers: { 'cache-control': 'private, max-age=300' } })
 }
 
-/** Oyuncunun canlı tablodaki birincilikleri (?1 hash, ?2 bu hafta, ?3 en az oyuncu) */
+/**
+ * Oyuncunun canlı tablodaki oyun bazlı birincilikleri - yalnızca ortak lig
+ * öncesi haftalar (?1 hash, ?2 bu hafta, ?3 en az oyuncu, ?4 ALL_LEAGUE_FROM)
+ */
 const FIRSTS_SQL = `
   SELECT w.week, w.mode FROM lb_weekly w
   JOIN lb_player me ON me.token_hash = w.token_hash AND me.status = 'ok'
-  WHERE w.token_hash = ?1 AND w.week < ?2
+  WHERE w.token_hash = ?1 AND w.week < ?2 AND w.week < ?4
     AND NOT EXISTS (
       SELECT 1 FROM lb_weekly o JOIN lb_player p ON p.token_hash = o.token_hash
       WHERE o.week = w.week AND o.mode = w.mode AND o.token_hash != w.token_hash AND p.status = 'ok'
@@ -689,6 +771,24 @@ const FIRSTS_SQL = `
     AND (SELECT COUNT(*) FROM lb_weekly c JOIN lb_player q ON q.token_hash = c.token_hash
          WHERE c.week = w.week AND c.mode = w.mode AND q.status = 'ok') >= ?3
   ORDER BY w.week, w.mode`
+
+/** Ortak lig birincilikleri: ALL_LEAGUE_FROM ve sonrası, bitmiş haftalar (bağlar FIRSTS_SQL ile aynı) */
+const FIRSTS_ALL_SQL = `
+  WITH t AS (
+    SELECT w.week, w.token_hash, SUM(w.score) AS score, SUM(w.distance) AS distance, MAX(w.ts) AS ts
+    FROM lb_weekly w JOIN lb_player p ON p.token_hash = w.token_hash AND p.status = 'ok'
+    WHERE w.week >= ?4 AND w.week < ?2
+    GROUP BY w.week, w.token_hash)
+  SELECT me.week, '${ALL_BOARD}' AS mode FROM t me
+  WHERE me.token_hash = ?1
+    AND NOT EXISTS (
+      SELECT 1 FROM t o
+      WHERE o.week = me.week AND o.token_hash != me.token_hash
+        AND (o.score > me.score
+             OR (o.score = me.score AND o.distance > me.distance)
+             OR (o.score = me.score AND o.distance = me.distance AND o.ts < me.ts)))
+    AND (SELECT COUNT(*) FROM t c WHERE c.week = me.week) >= ?3
+  ORDER BY me.week`
 
 /* ------------------------------------------------------------------ *
  * Kalıcılık - kurtarma kodu + sunucu profili (sözleşme: shared/leaderboard)
@@ -888,19 +988,14 @@ export async function profilePut(db: D1Database, raw: unknown, nowMs: number, ex
 export const WEEKLY_KEEP_WEEKS = 8
 export const DAILY_KEEP_DAYS = 35
 
-/** Bir haftanın her modundaki ilk üçünü arşive yazar (varsa üstüne) */
+/**
+ * Bir haftanın ilk üçlerini arşive yazar (varsa üstüne). Ortak lig öncesi
+ * haftalarda her oyunun ilk üçü, sonrasında ortak ligin ilk üçü.
+ */
 export async function recordAwards(db: D1Database, week: string): Promise<void> {
   const statements: D1PreparedStatement[] = [db.prepare(`DELETE FROM lb_award WHERE week = ?1`).bind(week)]
-  for (const mode of MODES) {
-    const [top, count] = await db.batch([
-      db.prepare(RANK_SQL).bind(week, mode, 3),
-      db
-        .prepare(
-          `SELECT COUNT(*) AS n FROM lb_weekly w JOIN lb_player p ON p.token_hash = w.token_hash
-           WHERE w.week = ?1 AND w.mode = ?2 AND p.status = 'ok'`,
-        )
-        .bind(week, mode),
-    ])
+  for (const mode of awardBoards(week)) {
+    const [top, count] = await db.batch([rankStatement(db, week, mode, 3), countStatement(db, week, mode)])
     const players = (count.results[0] as { n: number } | undefined)?.n ?? 0
     if (players < AWARD_MIN_PLAYERS) continue
     ;(top.results as WeeklyRow[]).forEach((row, i) => {
