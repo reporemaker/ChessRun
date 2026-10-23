@@ -9,7 +9,8 @@ import type { BadgeId } from './badges'
  * kademede CSS ile 1px kontur (`paint-order: stroke fill`).
  *
  * Taş rozetleri (♜♞♝♟♛♚) tahtadaki gliflerle aynı kalsın diye burada yok.
- * Seçimler 17 Ağustos 2026'da rozet.html üstünde tıklamalı yapıldı.
+ * Seçimler 17 Ağustos 2026'da rozet.html üstünde tıklamalı yapıldı;
+ * Mihrace'nin beş rozeti 24 Ekim 2026'da aynı yolla eklendi.
  *
  * `.st` sınıfı: dolgusuz, konturlu parça (halka, ok gövdesi).
  */
@@ -69,4 +70,16 @@ export const BADGE_ICONS: Partial<Record<BadgeId, string>> = {
   oneUp: pixelHeart,
   // Güneş tacı: taç, arkasında ışın halesi - en önemli ödül
   emperor: `${rays(12, 8.4, 11.4, 1.5)}<circle cx="12" cy="12.5" r="7.6" class="ink"/><path d="M6.8 16V10l3 2.3 2.2-4 2.2 4 3-2.3v6z"/><rect x="6.8" y="16.8" width="10.4" height="1.8" rx=".4"/>`,
+
+  /* --- Mihrace --- */
+  // Tek sivri kanat, koyu kesikle iki tüy sırası - Şahin
+  mhFalcon: `<path d="M3 21.5C4 13 9.5 6.5 21 3.5c-1.6 2.2-3.2 3.6-5 4.6 1.4.2 2.6.1 3.6-.3-1.6 2.4-3.6 3.8-6 4.6 1.2.4 2.4.5 3.4.3-2.6 2.6-6 4-10 4.2-1 1.4-1.8 3-2.4 4.6z"/><path class="ink" d="M6.6 17.6c2.6-4.4 6.4-7.6 11.4-10.2-4.4 3.2-7.6 6.6-9.8 10.6z"/>`,
+  // Gergin yay, çekili ok sağ üste - Avcı (nişangâh `hunter` rozetinde)
+  mhHunter: `<g transform="rotate(-45 12 12)"><path class="st" d="M10 2.5C17 7 17 17 10 21.5"/><path class="st" style="stroke-width:1" d="M10 2.5L4.2 12 10 21.5"/><rect x="4.2" y="11.15" width="15" height="1.7" rx=".5"/><polygon points="22.5,12 17.5,8.8 18.6,12 17.5,15.2"/><polygon points="3,9.6 6.6,11.2 6.6,12.8 3,14.4 4.2,12"/></g>`,
+  // Kronometre, içinde şimşek - Yıldırım
+  mhSwift: `<circle class="st" cx="12" cy="13.5" r="8"/><rect x="10" y="1.6" width="4" height="2.2" rx=".6"/><rect x="11.1" y="3.4" width="1.8" height="2.4"/><rect x="18" y="4.6" width="2" height="3" rx=".6" transform="rotate(45 19 6)"/><polygon points="13.2,7.6 8.6,14.4 11.6,14.4 10.6,19.4 15.4,12.4 12.4,12.4"/>`,
+  // Noktaları yutan ağız (arcade) - Temiz Tahta
+  mhSweep: `<path d="M10 3a9 9 0 1 0 7.8 13.5L10 12l7.8-4.5A9 9 0 0 0 10 3z"/><circle class="ink" cx="10" cy="7.3" r="1.3"/><circle cx="20" cy="12" r="1.5" class="dim"/><circle cx="23" cy="12" r="1" class="dim"/>`,
+  // Mazgallı sur, kemerli kapı - Tam Kadro
+  mhGuard: `<path d="M3 21V7h3.2v2.6h2.2V7h3.2v2.6h.8V7h3.2v2.6h2.2V7H21v14z"/><path class="ink" d="M10 21v-4.2a2 2 0 0 1 4 0V21z"/>`,
 }
