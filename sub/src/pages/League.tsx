@@ -18,6 +18,7 @@ const MODE_LABEL: Record<Board, string> = {
   kingRun: 'Kaçış',
   trio: 'Üçlü',
   daily: 'Günün Mücadelesi',
+  maharajah: 'Mihrace',
 }
 
 const BOARDS: Board[] = [ALL_BOARD, ...MODES]

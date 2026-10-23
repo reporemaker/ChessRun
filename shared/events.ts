@@ -17,7 +17,8 @@
  * Sabit listeler - hem tip hem doğrulama kaynağı
  * ------------------------------------------------------------------ */
 
-export const MODES = ['classic', 'kingRun', 'trio', 'daily'] as const
+// maharajah: Mihrace (klasik 8×8, iki rol); 23 Ekim 2026'dan beri lige sayılıyor
+export const MODES = ['classic', 'kingRun', 'trio', 'daily', 'maharajah'] as const
 export type Mode = (typeof MODES)[number]
 
 export const UI_LANGS = ['tr', 'en', 'de', 'es', 'fr'] as const

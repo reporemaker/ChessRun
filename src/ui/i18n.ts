@@ -302,7 +302,7 @@ const tr = {
   'mh.outro.material': 'TAŞ PUANI',
   'mh.outro.result': 'SONUÇ',
   'mh.outro.speed': 'HIZ',
-  'mh.outro.note': 'Bu rolde en iyin {n} · Mihrace puanı haftalık lige sayılmaz',
+  'mh.outro.note': '+{n} puan haftalık lige eklendi · bu rolde en iyin {best}',
   'help.mh.1': 'Klasik 8×8 tahta, kayma yok. Başlarken rolünü seçersin: Şahin ya da Avcı.',
   'help.mh.2': 'Mihrace tek taştır: vezir gibi kayar, at gibi sıçrar. Şahı yiyemez ama şah çeker.',
   'help.mh.3': 'Şahin: mihrace sensin, karşında bütün ordu. Şahı mat edersen kazanırsın, mihracen yenirse kaybedersin.',
@@ -310,6 +310,7 @@ const tr = {
   'help.mh.5': 'Piyon son kareye varınca dönüşmez, orada kalır. Rok var, geçerken alma yok.',
   'help.mh.6': 'Pat iki taraf için de beraberliktir. 50 hamle boyunca taş yenmez ve piyon oynanmazsa ya da aynı pozisyon üç kez oluşursa oyun berabere biter.',
   'help.mh.7': 'Kırmızı nokta: gideceğin kare rakibin tehdidinde. İstediğin kadar oynayabilirsin, günlük hak sınırı yok.',
+  'help.mh.8': 'Puan: Şahin\'de yediğin taşlar (piyon 1 · at/fil 3 · kale 5 · vezir 9), Avcı\'da kazanırsan ayakta kalan taşların; kazanç +50, pat +10, 50 hamleden önce kazanırsan her erken hamle +1. Puan haftalık lige eklenir.',
 
   // Kılavuz: ders adımları (ekranın yanındaki liste - açıklamanın kendisi)
   'demo.yourMove': 'Sıra sende. Yeşil halka senin taşın; noktalı kareler bu taşın gidebileceği yerler.',
@@ -825,7 +826,7 @@ const en: Partial7 = {
   'mh.outro.material': 'MATERIAL',
   'mh.outro.result': 'RESULT',
   'mh.outro.speed': 'SPEED',
-  'mh.outro.note': 'Your best in this role: {n} · Maharajah points do not count in the weekly league',
+  'mh.outro.note': '+{n} points added to the weekly league · your best in this role: {best}',
   'help.mh.1': 'Classic 8×8 board, no scrolling. At the start you pick your role: Falcon or Hunter.',
   'help.mh.2': 'The Maharajah is a single piece: it slides like a queen and jumps like a knight. It cannot take the king, but it can give check.',
   'help.mh.3': 'Falcon: you are the Maharajah against the whole army. Mate the king to win; lose the Maharajah and you lose.',
@@ -833,6 +834,7 @@ const en: Partial7 = {
   'help.mh.5': 'Pawns do not promote on the last rank, they stay there. Castling is allowed, en passant is not.',
   'help.mh.6': 'Stalemate is a draw for both sides. The game is also drawn after 50 moves with no capture and no pawn move, or when the same position appears three times.',
   'help.mh.7': 'Red dot: the square you would move to is under attack. Play as often as you like, there is no daily limit.',
+  'help.mh.8': 'Points: in Falcon the pieces you take (pawn 1 · knight/bishop 3 · rook 5 · queen 9), in Hunter the pieces still standing if you win; a win +50, stalemate +10, and +1 for every move under 50 when you win. Points go to the weekly league.',
 
   // Kılavuz: ders adımları (ekranın yanındaki liste - açıklamanın kendisi)
   'demo.yourMove': 'Your move. The green ring is your piece; dotted squares are where it can go.',
@@ -1340,7 +1342,7 @@ const de: Partial7 = {
   'mh.outro.material': 'MATERIAL',
   'mh.outro.result': 'ERGEBNIS',
   'mh.outro.speed': 'TEMPO',
-  'mh.outro.note': 'Dein Bestes in dieser Rolle: {n} · Maharadscha-Punkte zählen nicht in der Wochenliga',
+  'mh.outro.note': '+{n} Punkte für die Wochenliga · dein Bestes in dieser Rolle: {best}',
   'help.mh.1': 'Klassisches 8×8-Brett, ohne Scrollen. Zu Beginn wählst du deine Rolle: Falke oder Jäger.',
   'help.mh.2': 'Der Maharadscha ist eine einzige Figur: Er zieht wie eine Dame und springt wie ein Springer. Den König kann er nicht schlagen, aber Schach geben.',
   'help.mh.3': 'Falke: Du bist der Maharadscha gegen die ganze Armee. Setz den König matt, um zu gewinnen; wird der Maharadscha geschlagen, verlierst du.',
@@ -1348,6 +1350,7 @@ const de: Partial7 = {
   'help.mh.5': 'Bauern verwandeln sich auf der letzten Reihe nicht, sie bleiben dort stehen. Rochade ist erlaubt, en passant nicht.',
   'help.mh.6': 'Patt ist für beide Seiten remis. Remis ist es auch nach 50 Zügen ohne Schlagen und ohne Bauernzug oder wenn dieselbe Stellung dreimal entsteht.',
   'help.mh.7': 'Roter Punkt: Das Zielfeld wird angegriffen. Spiel so oft du willst, es gibt kein Tageslimit.',
+  'help.mh.8': 'Punkte: als Falke die geschlagenen Figuren (Bauer 1 · Springer/Läufer 3 · Turm 5 · Dame 9), als Jäger bei einem Sieg die verbliebenen Figuren; Sieg +50, Patt +10, bei einem Sieg +1 für jeden Zug unter 50. Die Punkte zählen in der Wochenliga.',
 
   // Kılavuz: ders adımları (ekranın yanındaki liste - açıklamanın kendisi)
   'demo.yourMove': 'Du bist dran. Der grüne Ring ist deine Figur; gepunktete Felder sind ihre Ziele.',
@@ -1843,7 +1846,7 @@ const es: Partial7 = {
   'mh.outro.material': 'MATERIAL',
   'mh.outro.result': 'RESULTADO',
   'mh.outro.speed': 'RAPIDEZ',
-  'mh.outro.note': 'Tu mejor en este papel: {n} · los puntos de Marajá no cuentan en la liga semanal',
+  'mh.outro.note': '+{n} puntos para la liga semanal · tu mejor en este papel: {best}',
   'help.mh.1': 'Tablero clásico de 8×8, sin desplazamiento. Al empezar eliges tu papel: Halcón o Cazador.',
   'help.mh.2': 'El Marajá es una sola pieza: se desliza como una dama y salta como un caballo. No puede capturar al rey, pero sí darle jaque.',
   'help.mh.3': 'Halcón: eres el Marajá contra todo el ejército. Da mate al rey para ganar; si capturan al Marajá, pierdes.',
@@ -1851,6 +1854,7 @@ const es: Partial7 = {
   'help.mh.5': 'Los peones no coronan en la última fila, se quedan allí. Se permite el enroque, la captura al paso no.',
   'help.mh.6': 'El ahogado es tablas para ambos bandos. También son tablas tras 50 jugadas sin capturas ni movimientos de peón, o si la misma posición se repite tres veces.',
   'help.mh.7': 'Punto rojo: la casilla de destino está amenazada. Juega cuantas veces quieras, no hay límite diario.',
+  'help.mh.8': 'Puntos: como Halcón, las piezas que capturas (peón 1 · caballo/alfil 3 · torre 5 · dama 9); como Cazador, si ganas, las piezas que siguen en pie; victoria +50, ahogado +10 y +1 por cada jugada por debajo de 50 al ganar. Los puntos van a la liga semanal.',
 
   // Kılavuz: ders adımları (ekranın yanındaki liste - açıklamanın kendisi)
   'demo.yourMove': 'Te toca. El anillo verde es tu pieza; las casillas con punto son adonde puede ir.',
@@ -2346,7 +2350,7 @@ const fr: Partial7 = {
   'mh.outro.material': 'MATÉRIEL',
   'mh.outro.result': 'RÉSULTAT',
   'mh.outro.speed': 'VITESSE',
-  'mh.outro.note': 'Ton record dans ce rôle : {n} · les points du Maharadjah ne comptent pas dans la ligue de la semaine',
+  'mh.outro.note': '+{n} points ajoutés à la ligue de la semaine · ton record dans ce rôle : {best}',
   'help.mh.1': 'Échiquier classique 8×8, sans défilement. Au départ, tu choisis ton rôle: Faucon ou Chasseur.',
   'help.mh.2': 'Le Maharadjah est une seule pièce: il glisse comme une dame et saute comme un cavalier. Il ne peut pas prendre le roi, mais il peut faire échec.',
   'help.mh.3': 'Faucon: tu es le Maharadjah face à toute l\'armée. Mate le roi pour gagner; si le Maharadjah est pris, tu perds.',
@@ -2354,6 +2358,7 @@ const fr: Partial7 = {
   'help.mh.5': 'Les pions ne se transforment pas sur la dernière rangée, ils y restent. Le roque est permis, la prise en passant non.',
   'help.mh.6': 'Le pat est nul pour les deux camps. La partie est aussi nulle après 50 coups sans prise ni coup de pion, ou si la même position revient trois fois.',
   'help.mh.7': 'Point rouge: la case visée est menacée. Joue autant que tu veux, il n\'y a pas de limite quotidienne.',
+  'help.mh.8': 'Points : en Faucon, les pièces prises (pion 1 · cavalier/fou 3 · tour 5 · dame 9) ; en Chasseur, si tu gagnes, les pièces encore debout ; victoire +50, pat +10, et +1 par coup sous 50 quand tu gagnes. Les points vont à la ligue de la semaine.',
 
   // Kılavuz: ders adımları (ekranın yanındaki liste - açıklamanın kendisi)
   'demo.yourMove': "À toi. L'anneau vert est ta pièce ; les cases pointées sont ses destinations.",

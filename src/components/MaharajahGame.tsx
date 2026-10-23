@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { applyDailyBonus, dailyBonus } from '@shared/leaderboard'
 import {
   type MhGrid,
   type MhMode,
@@ -21,7 +22,9 @@ import {
 } from '../engine/maharajah'
 import type { StringKey } from '../ui/i18n'
 import { getIdentity } from '../ui/identity'
+import { RANKS_EVENT, submitRun } from '../ui/leaderboard'
 import { readMhBest, recordMhScore } from '../ui/mhScores'
+import { dailyScoreOf, dayKey, readRuns, recordRun } from '../ui/scores'
 import { useSettings } from '../ui/settings'
 import { playSound } from '../ui/sound'
 import { useT } from '../ui/text'
@@ -58,24 +61,42 @@ const RESULT_KEY: Record<string, StringKey> = {
 /**
  * Mihrace: önce rol seçimi (Şahin / Avcı), sonra klasik 8×8 tahta.
  * Kurallar ve botlar engine/maharajah.ts'te. Serbest oyun: günlük hak yok,
- * istendiği kadar oynanır. Bitince puan (mhScore) ve kapanış perdesi; en iyi
- * puan cihazda (ui/mhScores), koşu defterine ve lige yazılmıyor.
+ * istendiği kadar oynanır. Bitince puan (mhScore) ve kapanış perdesi. Oyun
+ * öteki oyunlar gibi koşu defterine yazılır ve haftalık lige gider (mod
+ * `maharajah`, mesafe = oyuncunun hamle sayısı); günlük çarpan da uygulanır.
+ * Rol başına en iyi puan ayrıca cihazda (ui/mhScores).
  */
 export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRanking, onOpenBadges, badgeVersion }: Props) {
   const t = useT()
   const { pieceColor } = useSettings()
   const [identity, setIdentity] = useState(() => getIdentity())
-  const { view: ranking, status: rankStatus } = useRanking()
+  // Koşu sunucuya işlenince (RANKS_EVENT) sıralama kutusu tazelensin - Game.tsx ile aynı
+  const [rankTick, setRankTick] = useState(0)
+  useEffect(() => {
+    const onRanks = () => setRankTick((n) => n + 1)
+    window.addEventListener(RANKS_EVENT, onRanks)
+    return () => window.removeEventListener(RANKS_EVENT, onRanks)
+  }, [])
+  const { view: ranking, status: rankStatus } = useRanking(rankTick)
   const [mode, setMode] = useState<MhMode | null>(null)
   const [game, setGame] = useState<MhState | null>(null)
   const [selected, setSelected] = useState<MhPos | null>(null)
-  /** Bitmiş oyunun rekor durumu - puan yazılırken bir kez hesaplanır */
-  const [record, setRecord] = useState<{ isRecord: boolean; best: number } | null>(null)
+  /** Bitmiş oyunun kaydı - puan yazılırken bir kez hesaplanır */
+  const [record, setRecord] = useState<{ isRecord: boolean; best: number; earned: number; bonus: number } | null>(null)
+  /* Günlük çarpan oyun BAŞINDA sabitlenir (Game.tsx ile aynı kural): bugün
+     günün mücadelesi oynandıysa onun puanı → ×(1 + puan/1000). Sunucu aynı
+     çarpanı kendi kaydından uygular; buradaki gösterim ve yerel defter için. */
+  const runDay = useRef(dayKey())
+  const dailyToday = useRef<number | null>(null)
+  /** Aynı oyun iki kez yazılmasın (StrictMode efekti iki kez çalıştırır) */
+  const recorded = useRef<MhState | null>(null)
 
   const side = mode ? playerSide(mode) : null
   const myTurn = Boolean(game && !game.result && game.toMove === side)
 
   function start(next: MhMode) {
+    runDay.current = dayKey()
+    dailyToday.current = dailyScoreOf(readRuns(), runDay.current)
     setMode(next)
     setGame(newMaharajah(next))
     setSelected(null)
@@ -105,13 +126,28 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRankin
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game, side])
 
-  // Oyun bitti: puan bir kez yazılır, rekorsa kapanış söyler
+  // Oyun bitti: puan bir kez yazılır (defter + lig), rekorsa kapanış söyler
   const score = game ? mhScore(game) : null
   useEffect(() => {
-    if (!mode || !score || record) return
+    if (!mode || !game || !score || recorded.current === game) return
+    recorded.current = game
     const isRecord = score.total > 0 && recordMhScore(mode, score.total)
-    setRecord({ isRecord, best: readMhBest()[mode] })
-  }, [mode, score, record])
+    const earned = applyDailyBonus(score.total, dailyToday.current)
+    setRecord({ isRecord, best: readMhBest()[mode], earned, bonus: dailyBonus(dailyToday.current) })
+    // Hiç hamle yapılmadan biten oyun yok; yine de boş koşu lige gitmesin
+    if (game.plies === 0) return
+    void recordRun({
+      mode: 'maharajah',
+      score: earned,
+      distance: game.plies,
+      cols: 8,
+      level: 1,
+      day: runDay.current,
+      rawScore: earned !== score.total ? score.total : undefined,
+      bonus: earned !== score.total ? dailyBonus(dailyToday.current) : undefined,
+      mated: game.result?.reason === 'mate' && game.result.outcome === 'win',
+    }).then((run) => submitRun(run))
+  }, [mode, game, score])
 
   // Şahin'de oyuncunun tek taşı var: sırası gelince kendiliğinden seçili
   const active: MhPos | null = myTurn && game ? (mode === 'falcon' ? game.amazon : selected) : null
@@ -234,6 +270,8 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRankin
               result={game.result}
               score={score}
               best={record.best}
+              earned={record.earned}
+              bonus={record.bonus}
               isRecord={record.isRecord}
               onRestart={() => start(mode)}
               onSwitch={() => start(mode === 'falcon' ? 'hunter' : 'falcon')}

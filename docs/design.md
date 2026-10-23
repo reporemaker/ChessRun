@@ -339,5 +339,15 @@ Rules ([`engine/maharajah.ts`](../src/engine/maharajah.ts)):
 
 Both bots come from the August prototypes. The army bot (Falcon) looks one move ahead: it takes the Maharajah when it can, otherwise it avoids leaving pieces undefended and tries to corner the Maharajah. The Maharajah bot (Hunter) checks for mate in one and forced mate in two, never steps onto a defended square unless it must, and avoids moves after which it gets trapped.
 
-Free play: no daily limit, no weekly league yet. Scoring will be added later.
+Free play: no daily limit. Since 23 October 2026 every finished game counts in the **weekly league** (mode `maharajah`; "distance" is the player's move count) and the daily multiplier applies like in the other games.
+
+**Scoring** ([`mhScore`](../src/engine/maharajah.ts)):
+
+| Part | Falcon | Hunter |
+|---|---|---|
+| Material | pieces you took (pawn 1 · knight/bishop 3 · rook 5 · queen 9; the army is 39) | pieces still standing — only if you win |
+| Result | win +50 · stalemate +10 · loss and other draws 0 | same |
+| Speed | on a win, +1 for every move under 50 | same |
+
+No free points: Hunter's 39 is on the board from the start, and threefold repetition or the 50-move rule can be forced in a few moves, so neither pays without a real result. One game is capped at 138 on the server (`SCORE_CAP` in [`shared/leaderboard.ts`](../shared/leaderboard.ts)); a test in the engine keeps the two in step.
 

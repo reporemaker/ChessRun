@@ -6,7 +6,8 @@ import { useT } from '../ui/text'
 
 /**
  * Mihrace'nin kapanışı: öteki oyunların ArcadeOutro'suyla aynı üç perde
- * ve aynı sınıflar (.outro-*), lig özeti yerine puanın dökümü.
+ * ve aynı sınıflar (.outro-*); tabloda puanın dökümü, altında lige giden
+ * puan.
  *
  *   1. bekleme - son hamle tahtada görünsün (kayan tahtadaki silme yok)
  *   2. başlık  - KAZANDIN / KAYBETTİN / BERABERE yanıp söner, puan tırmanır
@@ -31,18 +32,22 @@ interface Props {
   result: NonNullable<MhState['result']>
   score: MhScore
   best: number
+  /** Lige giden puan: günlük çarpan uygulanmış toplam */
+  earned: number
+  /** Günlük çarpan (>1 ise gösterilir) */
+  bonus: number
   isRecord: boolean
   onRestart: () => void
   onSwitch: () => void
   onExit: () => void
 }
 
-export function MaharajahOutro({ mode, result, score, best, isRecord, onRestart, onSwitch, onExit }: Props) {
+export function MaharajahOutro({ mode, result, score, best, earned, bonus, isRecord, onRestart, onSwitch, onExit }: Props) {
   const [phase, setPhase] = useState<Phase>('dying')
   const [shown, setShown] = useState(0)
   const name = getIdentity().name
   const t = useT()
-  const total = score.total
+  const total = earned
 
   useEffect(() => {
     if (phase === 'table') return
@@ -92,6 +97,7 @@ export function MaharajahOutro({ mode, result, score, best, isRecord, onRestart,
           <p className="outro-score">
             <strong>{shown}</strong>
             <span>{t(`mh.reason.${result.reason}`)}</span>
+            {bonus > 1 && <em className="outro-bonus">{t('game.bonus', { x: bonus.toFixed(2) })}</em>}
           </p>
           {isRecord && <p className="outro-record">{t('outro.record')}</p>}
         </div>
@@ -113,7 +119,7 @@ export function MaharajahOutro({ mode, result, score, best, isRecord, onRestart,
               </div>
             ))}
           </div>
-          <p className="outro-week-note">{t('mh.outro.note', { n: best })}</p>
+          <p className="outro-week-note">{t('mh.outro.note', { n: earned, best })}</p>
 
           <div className="outro-actions">
             <button type="button" className="outro-btn primary" onClick={onRestart}>

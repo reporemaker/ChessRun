@@ -403,14 +403,20 @@ function judge(s: MhState, repeats: number): MhState['result'] {
 /* ------------------------------------------------------------------ *
  * Puan (oyun bitince)
  *
- *   taş    Şahin: yediğin ordu malzemesi · Avcı: ayakta tuttuğun malzeme
- *          (piyon 1 · at/fil 3 · kale 5 · vezir 9; ordunun tamamı 39)
- *   sonuç  kazanç 50 · beraberlik 10 · kayıp 0
+ *   taş    Şahin: yediğin ordu malzemesi · Avcı: kazanırsan ayakta
+ *          tuttuğun malzeme (piyon 1 · at/fil 3 · kale 5 · vezir 9; ordu 39)
+ *   sonuç  kazanç 50 · pat 10 · kayıp ve öteki beraberlikler 0
  *   hız    yalnızca kazançta: 50 hamleden önce biten her hamle +1
+ *
+ * Puan haftalık lige giriyor (shared/leaderboard SCORE_CAP = 138), bu yüzden
+ * bedava puan yok: Avcı'nın 39'u oyun başında hazır olduğu ve üç tekrar ya
+ * da 50 hamle beraberliği birkaç hamlede zorlanabildiği için ikisi de
+ * yalnızca gerçek bir sonuçla (kazanç / pat) puan getiriyor.
  * ------------------------------------------------------------------ */
 
 export const MH_ARMY_VALUE = 39
-export const MH_RESULT_POINTS: Record<MhOutcome, number> = { win: 50, draw: 10, loss: 0 }
+export const MH_WIN_POINTS = 50
+export const MH_STALEMATE_POINTS = 10
 export const MH_SPEED_PAR = 50
 
 export interface MhScore {
@@ -430,10 +436,11 @@ export function armyMaterial(b: MhGrid): number {
 /** Bitmiş oyunun puanı; oyun sürüyorsa null */
 export function mhScore(s: MhState): MhScore | null {
   if (!s.result) return null
+  const { outcome, reason } = s.result
   const left = armyMaterial(s.board)
-  const material = s.mode === 'falcon' ? MH_ARMY_VALUE - left : left
-  const result = MH_RESULT_POINTS[s.result.outcome]
-  const speed = s.result.outcome === 'win' ? Math.max(0, MH_SPEED_PAR - s.plies) : 0
+  const material = s.mode === 'falcon' ? MH_ARMY_VALUE - left : outcome === 'win' ? left : 0
+  const result = outcome === 'win' ? MH_WIN_POINTS : reason === 'stalemate' ? MH_STALEMATE_POINTS : 0
+  const speed = outcome === 'win' ? Math.max(0, MH_SPEED_PAR - s.plies) : 0
   return { material, result, speed, total: material + result + speed }
 }
 

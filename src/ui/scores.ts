@@ -1,3 +1,4 @@
+import { MODES } from '@shared/events'
 import { hashSeed } from '../engine/random'
 import { tuningActive } from '../engine/tuning'
 import type { GameMode, PieceType } from '../engine/types'
@@ -11,8 +12,14 @@ import { getIdentity, runPayload, signPayload } from './identity'
  * "kendi rekorunu geç" demek - sunucu bağlandığı an aynı kayıtlar global
  * tabloya gidiyor (bkz. leaderboard.ts).
  */
+/**
+ * Defterdeki oyun: motorun kayan tahta oyunları + Mihrace (kendi motoru,
+ * engine/maharajah.ts). Sunucunun tanıdığı listeyle aynı (shared MODES).
+ */
+export type RunMode = GameMode | 'maharajah'
+
 export interface RunRecord {
-  mode: GameMode
+  mode: RunMode
   score: number
   distance: number
   /** Koridor genişliği - rekorlar genişliğe göre de tutuluyor */
@@ -133,12 +140,12 @@ export function runsOfWeek(runs: RunRecord[], week: string): RunRecord[] {
   return runs.filter((run) => run.week === week)
 }
 
-export function runsOfMode(runs: RunRecord[], mode: GameMode): RunRecord[] {
+export function runsOfMode(runs: RunRecord[], mode: RunMode): RunRecord[] {
   return runs.filter((run) => run.mode === mode)
 }
 
 /** Arcade skor tablosu: en iyiler, yüksekten alçağa */
-export function topRuns(runs: RunRecord[], mode: GameMode, limit = 8): RunRecord[] {
+export function topRuns(runs: RunRecord[], mode: RunMode, limit = 8): RunRecord[] {
   return runsOfMode(runs, mode)
     .slice()
     .sort((a, b) => b.score - a.score || b.distance - a.distance)
@@ -237,7 +244,7 @@ export function mergeRuns(a: RunRecord[], b: RunRecord[]): RunRecord[] {
 export function mergeIntoRuns(remote: unknown): boolean {
   if (!Array.isArray(remote)) return false
   const num = (v: unknown) => typeof v === 'number' && Number.isFinite(v) && v >= 0
-  const modes = new Set(['classic', 'kingRun', 'trio', 'daily'])
+  const modes = new Set<string>(MODES)
   // Sunucu verisi istemci yazımı: bozuk kayıt defteri (ve onu okuyan
   // ekranları) çökertmesin - alan alan doğrula, tanınmayanı at
   const incoming = (remote as RunRecord[]).filter(
@@ -278,7 +285,7 @@ export function wipeRuns(): void {
 }
 
 export interface RunInput {
-  mode: GameMode
+  mode: RunMode
   score: number
   distance: number
   cols: number

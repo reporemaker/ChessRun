@@ -1,4 +1,4 @@
-import { MODES, type Mode, isMode } from './events'
+import { type Mode, isMode } from './events'
 
 /**
  * Haftalık sıralama sunucusunun sözleşmesi - oyun, Worker ve panel
@@ -35,9 +35,12 @@ export function isBoard(value: unknown): value is Board {
  */
 export const ALL_LEAGUE_FROM = '2026-W43'
 
+/** Geçişten önceki haftaların oyun bazlı tabloları - o günün oyunları, sabit */
+const LEGACY_AWARD_BOARDS: readonly Mode[] = ['classic', 'kingRun', 'trio', 'daily']
+
 /** Bir haftanın birincilik verdiği tablolar: geçişten önce oyunlar, sonra ortak lig */
 export function awardBoards(week: string): readonly Board[] {
-  return week >= ALL_LEAGUE_FROM ? [ALL_BOARD] : MODES
+  return week >= ALL_LEAGUE_FROM ? [ALL_BOARD] : LEGACY_AWARD_BOARDS
 }
 
 export const BADGE_TIERS = ['black', 'bronze', 'silver', 'gold'] as const
@@ -71,16 +74,25 @@ export const LB_LIMITS = {
  *   - panel işareti: puan/satır "şüpheli" eşiğini aşan ya da dakikalık
  *     sınıra dayanan oyuncu ⚠ ile listelenir → tek tıkla Gizle.
  * ------------------------------------------------------------------ */
-/** Satır başına kabul edilen en yüksek puan (üstü: koşu atılır) */
-export const PLAUSIBLE_PER_ROW: Record<Mode, number> = { classic: 80, kingRun: 80, trio: 100, daily: 1000 }
+/**
+ * Satır başına kabul edilen en yüksek puan (üstü: koşu atılır). Mihrace'de
+ * "satır" oyuncunun hamle sayısı; tek oyunun puanı da tavanlı (aşağıda).
+ */
+export const PLAUSIBLE_PER_ROW: Record<Mode, number> = { classic: 80, kingRun: 80, trio: 100, daily: 1000, maharajah: 140 }
 /** Panel işareti için "olağan dışı" puan/satır eşiği (gerçek oyunda görülenin ~2 katı) */
-export const SUSPECT_PER_ROW: Record<Mode, number> = { classic: 8, kingRun: 8, trio: 12, daily: 60 }
+export const SUSPECT_PER_ROW: Record<Mode, number> = { classic: 8, kingRun: 8, trio: 12, daily: 60, maharajah: 20 }
+/**
+ * Tek koşunun mutlak tavanı - yalnızca puanı sınırlı oyunlarda. Mihrace:
+ * taş 39 + kazanç 50 + hız en çok 49 = 138 (engine/maharajah.ts mhScore;
+ * motor testi bu tavanı bekçi olarak kullanıyor).
+ */
+export const SCORE_CAP: Partial<Record<Mode, number>> = { maharajah: 138 }
 export const BURST_WINDOW_MS = 60_000
 /** Pencere içinde kabul edilen koşu sayısı; üstü düşer */
 export const BURST_MAX_RUNS = 8
 
 export function plausibleScoreMax(mode: Mode, distance: number): number {
-  return PLAUSIBLE_PER_ROW[mode] * (Math.max(0, distance) + 1)
+  return Math.min(SCORE_CAP[mode] ?? Infinity, PLAUSIBLE_PER_ROW[mode] * (Math.max(0, distance) + 1))
 }
 
 /* ------------------------------------------------------------------ *

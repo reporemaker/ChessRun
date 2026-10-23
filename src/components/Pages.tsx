@@ -70,7 +70,7 @@ const HELP: Section[] = [
   {
     titleKey: 'mode.maharajah.name',
     glyph: 'eagle',
-    bodyKeys: ['help.mh.1', 'help.mh.2', 'help.mh.3', 'help.mh.4', 'help.mh.5', 'help.mh.6', 'help.mh.7'],
+    bodyKeys: ['help.mh.1', 'help.mh.2', 'help.mh.3', 'help.mh.4', 'help.mh.5', 'help.mh.6', 'help.mh.7', 'help.mh.8'],
   },
 ]
 

@@ -53,6 +53,7 @@ export const MODE_LABEL: Record<Mode, string> = {
   kingRun: 'Kaçış',
   trio: 'Üçlü',
   daily: 'Günün Mücadelesi',
+  maharajah: 'Mihrace',
 }
 
 export const DIM_LABEL: Record<Dimension, string> = {

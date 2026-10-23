@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { SCORE_CAP } from '@shared/leaderboard'
 import {
   type MhKind,
   type MhMode,
@@ -178,12 +179,26 @@ describe('Mihrace: puan', () => {
     expect(mhScore(next)).toEqual({ material: 6, result: 50, speed: 0, total: 56 })
   })
 
-  it('beraberlik 10, kayıpta hız payı yok', () => {
+  it('pat 10; kayıpta hız payı yok', () => {
     const f = setup('falcon', { '0,0': 'k', '3,2': 'A' }, 'amazon')
     const stale = legalMoves(f).map((m) => applyMove(f, m)).find((n) => n.result?.reason === 'stalemate')!
     expect(mhScore(stale)).toEqual({ material: 39, result: 10, speed: 0, total: 49 })
     const lost: MhState = { ...newMaharajah('falcon'), result: { outcome: 'loss', reason: 'captured' } }
     expect(mhScore(lost)).toEqual({ material: 0, result: 0, speed: 0, total: 0 })
+  })
+
+  it('bedava puan yok: tekrar/50 hamle beraberliği sonuç vermez, Avcı kazanmadan taş sayılmaz', () => {
+    const rep: MhState = { ...newMaharajah('hunter'), plies: 3, result: { outcome: 'draw', reason: 'repetition' } }
+    expect(mhScore(rep)).toEqual({ material: 0, result: 0, speed: 0, total: 0 })
+    const fifty: MhState = { ...newMaharajah('falcon'), result: { outcome: 'draw', reason: 'fifty' } }
+    expect(mhScore(fifty)?.result).toBe(0)
+  })
+
+  it('tek oyunun puanı sunucu tavanını aşamaz', () => {
+    // En iyi durum: ordudan yalnızca şah kalmış, ilk hamlede mat
+    const s = setup('falcon', { '0,0': 'k', '2,2': 'A' }, 'amazon')
+    const best = mhScore(applyMove(s, find(s, 2, 2, 1, 2)))!
+    expect(best.total).toBe(SCORE_CAP.maharajah)
   })
 })
 
