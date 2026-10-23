@@ -17,9 +17,6 @@ dist-ssr
 .dev.vars
 .dev.vars.bak
 
-# Tasarım seçimleri (rozet.html tıklamaları) — geçici
-rozet-secim.json
-
 # Vite env dosyaları: uç adresleri depoya girmesin
 .env
 .env.*
@@ -37,12 +34,8 @@ rozet-secim.json
 *.sln
 *.sw?
 
-# Taslaklar ve iç notlar — depoya girmez
-g.html
-m.html
-n.html
-z.html
+# İç notlar — depoya girmez
 yapilacaklar.md
-sonra_planlar.md
-rozetler.md
-hakkinda.md
+
+# Araştırma, ön çalışmalar ve taslaklar — GitHub'a gitmez
+nogit/

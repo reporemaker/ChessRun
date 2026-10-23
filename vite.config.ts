@@ -4,7 +4,7 @@ import { type Plugin, defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 /**
- * Yalnızca geliştirme: rozet.html'deki tıklamalı seçimleri kökteki
+ * Yalnızca geliştirme: rozet.html'deki tıklamalı seçimleri nogit/ altındaki
  * rozet-secim.json'a yazar. Üretim derlemesine girmez (configureServer
  * sadece dev sunucusunda çalışır). Tasarım kararlarını tarayıcıdan
  * dosyaya taşımanın en kısa yolu.
@@ -23,7 +23,7 @@ function devPickSink(): Plugin {
         req.on('data', (chunk: Buffer) => (body += chunk))
         req.on('end', () => {
           try {
-            const file = fileURLToPath(new URL('./rozet-secim.json', import.meta.url))
+            const file = fileURLToPath(new URL('./nogit/rozet-secim.json', import.meta.url))
             // Birleştir, ezme: başka bir sekmeden ya da elle yapılan bir istek
             // önceki seçimleri silmesin. Bir rozeti kaldırmak için istemci
             // değerini null gönderir.
