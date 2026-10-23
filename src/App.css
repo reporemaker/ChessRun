@@ -1000,6 +1000,14 @@
   }
 }
 
+/* «EN İYİN» iki kelime: geniş kartta alt alta kırılmasın. Mobilde kırılabilir -
+   yoksa uzun etiket (YOUR BEST, DEIN BESTES) kart başlığını kesiyordu */
+@media (min-width: 760px) {
+  .bi-hi em {
+    white-space: nowrap;
+  }
+}
+
 /* Geniş masaüstü: kartlar ve yazılar bir kademe büyük - 340px'lik kartlar
    1440px ekranda küçük ve 10px metin okunmuyordu */
 @media (min-width: 1200px) {
@@ -1150,9 +1158,11 @@
   font-size: 14px;
   letter-spacing: 0.11em;
   font-weight: 400;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* Uzun tek kelime (TAGESHERAUSFORDERUNG) dar kartta kesilmesin: dilin
+     kuralıyla tirelenip alt satıra iner (html lang App.tsx'te ayarlı) */
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  overflow-wrap: break-word;
 }
 
 .bi-t small {
@@ -1178,8 +1188,6 @@
 .bi-hi em {
   display: block;
   font-style: normal;
-  /* «EN İYİN» iki kelime: dar kartta alt alta kırılmasın */
-  white-space: nowrap;
   font-size: 8.5px;
   letter-spacing: 0.2em;
   color: #8496ad;
