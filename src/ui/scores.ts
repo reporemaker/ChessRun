@@ -3,6 +3,7 @@ import { hashSeed } from '../engine/random'
 import { tuningActive } from '../engine/tuning'
 import type { GameMode, PieceType } from '../engine/types'
 import { getIdentity, runPayload, signPayload } from './identity'
+import type { Translate } from './text'
 
 /**
  * Cihazın skor defteri.
@@ -118,15 +119,16 @@ export function dayEnd(date: Date): Date {
   return end
 }
 
-export function formatRemaining(ms: number): string {
-  if (ms <= 0) return 'bitti'
+/** Kalan süre, arayüz dilinde (eskiden her dilde Türkçe «2 gün 10 saat» yazıyordu) */
+export function formatRemaining(ms: number, t: Translate): string {
+  if (ms <= 0) return t('time.over')
 
   const hours = Math.floor(ms / 3_600_000)
   const days = Math.floor(hours / 24)
 
-  if (days > 0) return `${days} gün ${hours % 24} saat`
-  if (hours > 0) return `${hours} saat ${Math.floor((ms % 3_600_000) / 60_000)} dk`
-  return `${Math.max(1, Math.floor(ms / 60_000))} dk`
+  if (days > 0) return t('time.dh', { d: days, h: hours % 24 })
+  if (hours > 0) return t('time.hm', { h: hours, m: Math.floor((ms % 3_600_000) / 60_000) })
+  return t('time.m', { m: Math.max(1, Math.floor(ms / 60_000)) })
 }
 
 export function bestOf(runs: RunRecord[]): RunRecord | null {

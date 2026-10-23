@@ -15,6 +15,8 @@ import {
   weekEnd,
   weeklyHistory,
 } from './scores'
+import { translate } from './i18n'
+import type { Translate } from './text'
 
 function run(score: number, week: string, at = '2026-08-16T10:00:00.000Z'): RunRecord {
   return { mode: 'classic' as const, score, distance: score * 2, cols: 8, level: 1, at, week }
@@ -61,9 +63,14 @@ describe('hafta sonu', () => {
   })
 
   it('kalan süre insan diliyle yazılır', () => {
-    expect(formatRemaining(0)).toBe('bitti')
-    expect(formatRemaining(90 * 60_000)).toBe('1 saat 30 dk')
-    expect(formatRemaining(50 * 3_600_000)).toBe('2 gün 2 saat')
+    const tr: Translate = (key, vars) => translate('tr', key, vars)
+    const en: Translate = (key, vars) => translate('en', key, vars)
+    expect(formatRemaining(0, tr)).toBe('bitti')
+    expect(formatRemaining(90 * 60_000, tr)).toBe('1 saat 30 dk')
+    expect(formatRemaining(50 * 3_600_000, tr)).toBe('2 gün 2 saat')
+    // Her dil kendi birimleriyle - İngilizcede Türkçe kelime kalmasın
+    expect(formatRemaining(50 * 3_600_000, en)).toBe('2 d 2 h')
+    expect(formatRemaining(90 * 60_000, en)).toBe('1 h 30 min')
   })
 })
 

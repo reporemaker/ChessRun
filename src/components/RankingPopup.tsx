@@ -45,7 +45,7 @@ export function RankingPopup({ onClose, demo = false, refresh }: Props) {
 
   const now = new Date()
   const week = isoWeekKey(now)
-  const endsIn = formatRemaining(weekEnd(now).getTime() - now.getTime())
+  const endsIn = formatRemaining(weekEnd(now).getTime() - now.getTime(), t)
   const meRow = view.rows.find((row) => row.me)
   const meOutside = !view.pending && view.rank != null && !meRow
 
