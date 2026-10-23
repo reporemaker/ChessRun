@@ -1219,6 +1219,51 @@
   white-space: nowrap;
 }
 
+/* İmzanın üstündeki iki marka karesi: yapışık, yatayda ortalı, tam satır */
+.bi-brands {
+  flex: 0 0 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.bi-brand {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  transition: opacity 0.15s ease;
+}
+
+.bi-brand.sk {
+  background: #000;
+}
+
+.bi-brand.rm {
+  background: #fff;
+}
+
+.bi-brand img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* SmartKraft logosu kendi tuvalinde geniş boşluklu: karede biraz büyütülür */
+.bi-brand.sk img {
+  transform: scale(1.15);
+}
+
+.bi-brand:hover {
+  opacity: 0.85;
+}
+
+.bi-brand:focus-visible {
+  outline: 2px solid var(--arc-gold);
+  outline-offset: 2px;
+}
+
 /* Kurtarma kodu hatırlatması: ipucu satırında altın, tıklanır; × bir daha göstermez */
 .bi-remind {
   display: flex;

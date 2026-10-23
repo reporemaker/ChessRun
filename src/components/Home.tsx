@@ -315,6 +315,16 @@ export function Home({ onStart, onStartMaharajah, onOpenSettings, onOpenBadges, 
         </div>
 
         <footer className="bi-ft">
+          {/* İmzanın hemen üstünde, ortada: iki yapışık kare - SmartKraft (siyah) ve
+              RE*maker (beyaz). Kendi sitelerine yeni sekmede açılır. */}
+          <nav className="bi-brands" aria-label="SmartKraft · RE*maker">
+            <a className="bi-brand sk" href="https://smartkraft.ch" target="_blank" rel="noopener" title="SmartKraft">
+              <img src="/brand/smartkraft.png" alt="SmartKraft" width="40" height="40" />
+            </a>
+            <a className="bi-brand rm" href="https://remaker.ch" target="_blank" rel="noopener" title="RE*maker">
+              <img src="/brand/remaker.svg" alt="RE*maker" width="40" height="40" />
+            </a>
+          </nav>
           {remind && !focus ? (
             <span className="bi-hint bi-remind">
               <button type="button" className="bi-remind-go" onClick={() => dismissRemind(true)}>
@@ -328,7 +338,7 @@ export function Home({ onStart, onStartMaharajah, onOpenSettings, onOpenBadges, 
             <span className="bi-hint">{focus ? t('home.invited') : pulse != null ? t(pulse === 1 ? 'home.pulse1' : 'home.pulse', { n: pulse }) : t(hint)}</span>
           )}
           <span className="bi-ver">
-            CHESSRUN v{APP_VERSION} · <b>SmartKraft</b> · RE*maker
+            CHESSRUN v{APP_VERSION} · <b>SmartKraft</b> · <b>RE*maker</b>
           </span>
         </footer>
       </div>
