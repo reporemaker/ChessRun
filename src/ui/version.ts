@@ -1,5 +1,13 @@
-/** Künyede ve paylaşım kartında görünen sürüm - tek kaynak */
-export const APP_VERSION = '1.0'
+import { version } from '../../package.json'
+
+/**
+ * Sürüm - TEK KAYNAK package.json. Künye, ana sayfa imzası, istatistik ve
+ * öneri maili buradan okur. Hakkında sayfası (public/about.html) ve README
+ * elle yazılı; version.test.ts üçünün aynı olduğunu denetler. Yeni sürüm:
+ * `npm version x.y.z --no-git-tag-version` (kök, server, sub), about.html,
+ * README, remaker.ch'deki ChessRun kartı (rev), git etiketi vX.Y.Z.
+ */
+export const APP_VERSION: string = version
 
 /**
  * İletişim adresi - tek kaynak. Hakkında sayfasında ve ileride hata
