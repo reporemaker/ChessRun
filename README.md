@@ -7,11 +7,11 @@
   </picture>
 </a>
 
-# ChessRun
-
-<p><a href="https://chessrun.app"><img src="https://img.shields.io/badge/%E2%96%B6%20Play%20now-chessrun.app-f5c518?style=for-the-badge&amp;labelColor=0b0e14" alt="▶ Play now: chessrun.app" height="68"></a></p>
-
-<p><b>Version 1.1.0</b></p>
+<!-- Düğme ve sürüm başlığın içinde: GitHub'ın h1 alt çizgisi böylece sürümün altına düşüyor -->
+<h1>ChessRun<br><br>
+<a href="https://chessrun.app"><img src="https://img.shields.io/badge/%E2%96%B6%20Play%20now-chessrun.app-f5c518?style=for-the-badge&amp;labelColor=0b0e14" alt="▶ Play now: chessrun.app" height="68"></a><br>
+<sub><sub>Version 1.1.0</sub></sub>
+</h1>
 
 <p>
   <img src="docs/screenshots/menu.png" alt="ChessRun main menu" width="180">
