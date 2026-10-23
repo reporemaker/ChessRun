@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from 'react'
-import { type Demo, type Frame, type Mark, parseCell } from '../ui/demos'
-import { FIGURE_OF, figureSrc } from '../ui/figures'
+import { type Cell, type Demo, type Frame, type Mark, parseCell } from '../ui/demos'
+import { FIGURE_OF, type FigureName, figureSrc } from '../ui/figures'
 import { Fig } from './Fig'
 
 interface Props {
@@ -25,18 +25,28 @@ const reduced = () =>
  * oyunun hareket diliyle oynatır: yer değiştiren taş kayar (FLIP), yenen
  * taş büyüyüp söner, kaymada bütün tahta bir satır iner, yenilenmede
  * soluk geçiş. Vurgular oyundakiyle aynı: yeşil halka sıradaki taş, altın
- * hedef, kırmızı × tehlike, altın parıltı şah.
+ * hedef, kırmızı × tehlike, altın parıltı şah; Mihrace derslerinde ayrıca
+ * sıçrayış halkası, kırmızı tehdit noktası, yeme halkası ve yanlış kare.
  */
 export function MiniBoard({ demo, idx }: Props) {
   const boardRef = useRef<HTMLDivElement>(null)
-  const prevRef = useRef<Frame | null>(null)
+  const prevRef = useRef<{ frame: Frame; demo: Demo; idx: number } | null>(null)
   const frame = demo.frames[idx]
 
   useLayoutEffect(() => {
-    const prev = prevRef.current
-    prevRef.current = frame
+    const last = prevRef.current
+    prevRef.current = { frame, demo, idx }
+    const prev = last?.frame
     const el = boardRef.current
     if (!el || !prev || prev === frame || reduced()) return
+
+    // Hareket yalnızca aynı dersin BİR SONRAKİ adımında oynar (gerçek hamle).
+    // Geri adım, döngünün başa dönmesi ve ders değişimi bir hamle değil:
+    // kaydırmak taşı "geri geri" yürütüp olmamış bir hamle gösterirdi.
+    if (last.demo !== demo || idx !== last.idx + 1) {
+      el.animate([{ opacity: 0.25 }, { opacity: 1 }], { duration: FADE_MS, easing: 'ease-out' })
+      return
+    }
     const cell = el.querySelector<HTMLElement>('.mb-sq')?.offsetWidth ?? 0
     const pieceAt = (r: number, c: number) =>
       el.querySelector<HTMLElement>(`[data-rc="${r}:${c}"] .piece`)
@@ -118,10 +128,14 @@ export function MiniBoard({ demo, idx }: Props) {
               >
                 {cell && (
                   <span className={`piece ${cell.color === 'w' ? 'white' : 'black'}`}>
-                    <Fig type={cell.type} color={cell.color === 'w' ? 'white' : 'black'} />
+                    <Fig type={figOf(cell)} color={cell.color === 'w' ? 'white' : 'black'} />
                   </span>
                 )}
                 {kinds?.includes('dot') && <i className="mb-dot" />}
+                {kinds?.includes('jump') && <i className="mb-dot mb-jump" />}
+                {kinds?.includes('risk') && <i className="mb-dot mb-risk" />}
+                {kinds?.includes('cap') && <i className="mb-cap" />}
+                {kinds?.includes('caprisk') && <i className="mb-cap mb-risk" />}
               </span>
             )
           }),
@@ -129,6 +143,11 @@ export function MiniBoard({ demo, idx }: Props) {
       </div>
     </div>
   )
+}
+
+/** Ders taşının figürü: 'A' mihrace (kartal) */
+function figOf(cell: Cell): FigureName {
+  return cell.type === 'A' ? 'eagle' : FIGURE_OF[cell.type]
 }
 
 /** Kayma karesi gerçekten bir önceki karenin bir satır inmiş hâli mi?
@@ -157,7 +176,7 @@ function ghost(board: HTMLElement, r: number, c: number, token: string, cell: nu
   const img = document.createElement('img')
   img.className = 'fig'
   img.alt = ''
-  img.src = figureSrc(FIGURE_OF[piece.type], piece.color === 'w' ? 'white' : 'black')
+  img.src = figureSrc(figOf(piece), piece.color === 'w' ? 'white' : 'black')
   g.appendChild(img)
   g.style.fontSize = `${cell * 0.78}px`
   sq.appendChild(g)

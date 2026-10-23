@@ -19,6 +19,11 @@ import type { StringKey } from './i18n'
  *   target - yenecek taş / hedef kare (altın halka)
  *   danger - vurulan kare ya da ölüm satırı (kırmızı ×)
  *   glow   - şah çekilen kral (altın parıltı, oyundaki .checked-king)
+ *
+ * Mihrace dersleri (mh*) ayrıca: jump (at gibi sıçrayış, içi boş halka),
+ * risk (kırmızı nokta: gidilen kare tehditte), cap / caprisk (yenebilecek
+ * taşın karesi - oyundaki gibi nokta değil halka; tehditteyse kırmızı),
+ * wrong (yanlış seçim, kırmızı çerçeve). Taş 'wA'/'bA' = mihrace (kartal).
  */
 
 export type DemoId =
@@ -34,12 +39,19 @@ export type DemoId =
   | 'trioPick'
   | 'trioDrift'
   | 'trioBack'
+  | 'mhMove'
+  | 'mhFalcon'
+  | 'mhHunter'
+  | 'mhRisk'
+  | 'mhStalemate'
+  | 'mhPawn'
 
-export type Mark = 'ring' | 'dot' | 'target' | 'danger' | 'glow' | 'select'
+export type Mark = 'ring' | 'dot' | 'target' | 'danger' | 'glow' | 'select' | 'jump' | 'risk' | 'cap' | 'caprisk' | 'wrong'
 
 export interface Cell {
   color: Color
-  type: PieceType
+  /** 'A' = mihrace (yalnızca Mihrace derslerinde) */
+  type: PieceType | 'A'
 }
 
 export interface Frame {
@@ -60,12 +72,21 @@ export interface Frame {
 export interface Demo {
   id: DemoId
   cols: number
+  /**
+   * Mihrace dersi: 5×5 tahta gerçek 8×8 tahtanın bu köşeden başlayan
+   * penceresi. Ders verisi engine/maharajah.ts ile üretildi; demos.test.ts
+   * her dersi bu pencereyle motorda yeniden kurup denetliyor (her adım tek
+   * yasal hamle, şah varsa parlıyor, bitişten sonra adım yok).
+   */
+  mh?: { r0: number; c0: number }
   frames: Frame[]
 }
 
 export function parseCell(token: string): Cell | null {
   if (token === '.' || token.length !== 2) return null
-  return { color: token[0] === 'w' ? 'w' : 'b', type: token[1].toLowerCase() as PieceType }
+  const color = token[0] === 'w' ? 'w' : 'b'
+  if (token[1] === 'A') return { color, type: 'A' }
+  return { color, type: token[1].toLowerCase() as PieceType }
 }
 
 /** Kısa yazım: 5 satır, her satır 'wN . bR . .' */
@@ -467,6 +488,167 @@ const trioBackDemo: Demo = {
   ],
 }
 
+/* ------------------------------------------------------------------ *
+ * Mihrace - klasik 8×8'in 5×5 penceresi (bkz. Demo.mh). Kareler gerçek
+ * motordan üretildi; mantık denetimi demos.test.ts'te.
+ * ------------------------------------------------------------------ */
+
+const mhMoveDemo: Demo = {
+  id: 'mhMove',
+  cols: 5,
+  mh: { r0: 2, c0: 1 },
+  frames: [
+    F(B('. . . . .', '. bP bP . .', '. . wA . .', '. . . bP .', '. . . . bK'), {
+      marks: [...M('ring', [2, 2])],
+      captionKey: 'demo.mhMove.1',
+      hold: 1.5,
+    }),
+    F(B('. . . . .', '. bP bP . .', '. . wA . .', '. . . bP .', '. . . . bK'), {
+      marks: [...M('ring', [2, 2]), ...M('dot', [3, 2], [4, 2], [2, 3], [2, 4], [2, 1], [2, 0], [3, 1], [4, 0], [1, 3], [0, 4]), ...M('cap', [1, 2], [3, 3], [1, 1])],
+      captionKey: 'demo.mhMove.2',
+      hold: 2.1,
+    }),
+    F(B('. . . . .', '. bP bP . .', '. . wA . .', '. . . bP .', '. . . . bK'), {
+      marks: [...M('ring', [2, 2]), ...M('jump', [3, 4], [4, 3], [1, 4], [0, 3], [3, 0], [4, 1], [1, 0], [0, 1])],
+      captionKey: 'demo.mhMove.3',
+      hold: 2.1,
+    }),
+    F(B('. . . . .', '. bP bP . .', '. . wA . .', '. . . bP .', '. . . . bK'), {
+      marks: [...M('ring', [2, 2]), ...M('jump', [0, 1])],
+      captionKey: 'demo.mhMove.4',
+      hold: 1.5,
+    }),
+    F(B('. wA . . .', '. bP bP . .', '. . . . .', '. . . bP .', '. . . . bK'), {
+      marks: [...M('ring', [0, 1])],
+      captionKey: 'demo.mhMove.5',
+      hold: 1.5,
+    }),
+  ],
+}
+
+const mhFalconDemo: Demo = {
+  id: 'mhFalcon',
+  cols: 5,
+  mh: { r0: 0, c0: 0 },
+  frames: [
+    F(B('bK . . . .', '. . . . .', '. . . . .', '. . . . .', '. wA . . .'), {
+      marks: [...M('ring', [4, 1])],
+      captionKey: 'demo.mhFalcon.1',
+      hold: 1.5,
+    }),
+    F(B('bK . . . .', '. . . . .', '. . . . .', '. . . . .', '. wA . . .'), {
+      marks: [...M('ring', [4, 1]), ...M('target', [2, 1])],
+      captionKey: 'demo.mhFalcon.2',
+      hold: 1.5,
+    }),
+    F(B('bK . . . .', '. . . . .', '. wA . . .', '. . . . .', '. . . . .'), {
+      marks: [...M('ring', [2, 1]), ...M('glow', [0, 0]), ...M('danger', [0, 1], [1, 0], [1, 1])],
+      tag: '+50',
+      captionKey: 'demo.mhFalcon.3',
+      hold: 2.7,
+    }),
+  ],
+}
+
+const mhHunterDemo: Demo = {
+  id: 'mhHunter',
+  cols: 5,
+  mh: { r0: 3, c0: 2 },
+  frames: [
+    F(B('. . . . .', '. . . . bA', '. . . . .', '. wP . wP .', '. wR wK . .'), {
+      captionKey: 'demo.mhHunter.1',
+      hold: 1.5,
+    }),
+    F(B('. . . . .', '. . . . .', '. . bA . .', '. wP . wP .', '. wR wK . .'), {
+      marks: [...M('glow', [4, 2]), ...M('target', [2, 2])],
+      captionKey: 'demo.mhHunter.2',
+      hold: 1.5,
+    }),
+    F(B('. . . . .', '. . . . .', '. . bA . .', '. wP . wP .', '. wR wK . .'), {
+      marks: [...M('glow', [4, 2]), ...M('ring', [3, 1]), ...M('target', [2, 2])],
+      captionKey: 'demo.mhHunter.3',
+      hold: 1.5,
+    }),
+    F(B('. . . . .', '. . . . .', '. . wP . .', '. . . wP .', '. wR wK . .'), {
+      marks: [...M('ring', [2, 2])],
+      tag: '+50',
+      captionKey: 'demo.mhHunter.4',
+      hold: 2.7,
+    }),
+  ],
+}
+
+const mhRiskDemo: Demo = {
+  id: 'mhRisk',
+  cols: 5,
+  mh: { r0: 0, c0: 1 },
+  frames: [
+    F(B('bR . bK . bN', '. bP bP bP .', '. . . . .', '. . . . .', '. . wA . .'), {
+      marks: [...M('ring', [4, 2])],
+      captionKey: 'demo.mhRisk.1',
+      hold: 1.5,
+    }),
+    F(B('bR . bK . bN', '. bP bP bP .', '. . . . .', '. . . . .', '. . wA . .'), {
+      marks: [...M('ring', [4, 2]), ...M('dot', [3, 2], [4, 3], [4, 4], [4, 1], [3, 3], [3, 1], [3, 4]), ...M('risk', [2, 2], [4, 0], [2, 4], [2, 0], [2, 3], [3, 0], [2, 1]), ...M('caprisk', [1, 2])],
+      captionKey: 'demo.mhRisk.2',
+      hold: 2.7,
+    }),
+    F(B('bR . bK . bN', '. bP bP bP .', '. . . . .', '. . . . .', '. . wA . .'), {
+      marks: [...M('ring', [4, 2]), ...M('target', [3, 2])],
+      captionKey: 'demo.mhRisk.3',
+      hold: 1.5,
+    }),
+    F(B('bR . bK . bN', '. bP bP bP .', '. . . . .', '. . wA . .', '. . . . .'), {
+      marks: [...M('ring', [3, 2])],
+      captionKey: 'demo.mhRisk.4',
+      hold: 1.5,
+    }),
+  ],
+}
+
+const mhStalemateDemo: Demo = {
+  id: 'mhStalemate',
+  cols: 5,
+  mh: { r0: 0, c0: 0 },
+  frames: [
+    F(B('bK . . . .', '. . . . .', '. . . . .', '. . . . .', '. wA . . .'), {
+      marks: [...M('ring', [4, 1])],
+      captionKey: 'demo.mhStalemate.1',
+      hold: 1.5,
+    }),
+    F(B('bK . . . .', '. . . . .', '. . . . .', '. . . . .', '. wA . . .'), {
+      marks: [...M('ring', [4, 1]), ...M('target', [2, 1]), ...M('wrong', [3, 1])],
+      captionKey: 'demo.mhStalemate.2',
+      hold: 2.4,
+    }),
+    F(B('bK . . . .', '. . . . .', '. . . . .', '. wA . . .', '. . . . .'), {
+      marks: [...M('ring', [3, 1]), ...M('danger', [0, 1], [1, 0], [1, 1])],
+      tag: '+10',
+      captionKey: 'demo.mhStalemate.3',
+      hold: 3.0,
+    }),
+  ],
+}
+
+const mhPawnDemo: Demo = {
+  id: 'mhPawn',
+  cols: 5,
+  mh: { r0: 0, c0: 1 },
+  frames: [
+    F(B('. . . . .', '. . wP . .', '. . . . .', 'bA . . . .', '. . . . wK'), {
+      marks: [...M('ring', [1, 2]), ...M('dot', [0, 2])],
+      captionKey: 'demo.mhPawn.1',
+      hold: 1.5,
+    }),
+    F(B('. . wP . .', '. . . . .', '. . . . .', 'bA . . . .', '. . . . wK'), {
+      marks: [...M('select', [0, 2])],
+      captionKey: 'demo.mhPawn.2',
+      hold: 2.4,
+    }),
+  ],
+}
+
+
 export const DEMOS: Record<DemoId, Demo> = {
   scroll: scrollDemo,
   stuck: stuckDemo,
@@ -480,4 +662,10 @@ export const DEMOS: Record<DemoId, Demo> = {
   trioPick: trioPickDemo,
   trioDrift: trioDriftDemo,
   trioBack: trioBackDemo,
+  mhMove: mhMoveDemo,
+  mhFalcon: mhFalconDemo,
+  mhHunter: mhHunterDemo,
+  mhRisk: mhRiskDemo,
+  mhStalemate: mhStalemateDemo,
+  mhPawn: mhPawnDemo,
 }

@@ -3043,6 +3043,42 @@ button.pop-chip {
   animation: mb-mark-in 220ms ease-out both;
 }
 
+/* Mihrace dersleri - oyundaki .dot.mh-risk / .dot.mh-cap ile aynı dil */
+.mb-dot.mb-jump {
+  width: 30%;
+  height: 30%;
+  background: none;
+  box-shadow: inset 0 0 0 3px rgba(16, 20, 28, 0.4);
+}
+
+.mb-dot.mb-risk {
+  background: rgba(214, 31, 56, 0.85);
+}
+
+.mb-cap {
+  position: absolute;
+  inset: 6%;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 3px rgba(16, 20, 28, 0.35);
+  pointer-events: none;
+  animation: mb-mark-in 220ms ease-out both;
+}
+
+.mb-cap.mb-risk {
+  box-shadow: inset 0 0 0 3px rgba(214, 31, 56, 0.85);
+}
+
+/* Yanlış seçim (pat karesi): kırmızı çerçeve - tehdit noktasıyla karışmasın */
+.mb-sq.m-wrong::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 9px;
+  box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.9);
+  pointer-events: none;
+  animation: mb-mark-in 220ms ease-out both;
+}
+
 /* ---- Puan tablosu ---- */
 
 .page-score {
@@ -3093,7 +3129,9 @@ button.pop-chip {
   .mb-sq.m-target::after,
   .mb-sq.m-danger::before,
   .mb-sq.m-glow::before,
+  .mb-sq.m-wrong::after,
   .mb-dot,
+  .mb-cap,
   .ls-tag.on {
     animation: none;
   }
