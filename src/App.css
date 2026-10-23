@@ -1219,7 +1219,8 @@
   white-space: nowrap;
 }
 
-/* İmzanın üstündeki iki marka karesi: yapışık, yatayda ortalı, tam satır */
+/* İmzanın üstündeki iki marka karesi: yapışık, yatayda ortalı, tam satır.
+   Boy arkadaki kayan tahtanın karesiyle aynı (.bi-bg: 144px desen = 72px kare). */
 .bi-brands {
   flex: 0 0 100%;
   display: flex;
@@ -1230,8 +1231,8 @@
 .bi-brand {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 72px;
+  height: 72px;
   overflow: hidden;
   transition: opacity 0.15s ease;
 }
@@ -1295,9 +1296,21 @@
   color: #8ea0b8;
 }
 
-.bi-ver b {
+.bi-ver b,
+.bi-ver a {
   font-weight: 400;
   color: var(--arc-gold);
+}
+
+/* İmzadaki SmartKraft ve RE*maker: kendi sitelerine yeni sekmede */
+.bi-ver a {
+  text-decoration: none;
+}
+
+.bi-ver a:hover,
+.bi-ver a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* Dar ekranda ipucu tam satır, sürüm altında sağda */

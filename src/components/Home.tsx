@@ -319,10 +319,10 @@ export function Home({ onStart, onStartMaharajah, onOpenSettings, onOpenBadges, 
               RE*maker (beyaz). Kendi sitelerine yeni sekmede açılır. */}
           <nav className="bi-brands" aria-label="SmartKraft · RE*maker">
             <a className="bi-brand sk" href="https://smartkraft.ch" target="_blank" rel="noopener" title="SmartKraft">
-              <img src="/brand/smartkraft.png" alt="SmartKraft" width="40" height="40" />
+              <img src="/brand/smartkraft.png" alt="SmartKraft" width="72" height="72" />
             </a>
             <a className="bi-brand rm" href="https://remaker.ch" target="_blank" rel="noopener" title="RE*maker">
-              <img src="/brand/remaker.svg" alt="RE*maker" width="40" height="40" />
+              <img src="/brand/remaker.svg" alt="RE*maker" width="72" height="72" />
             </a>
           </nav>
           {remind && !focus ? (
@@ -338,7 +338,9 @@ export function Home({ onStart, onStartMaharajah, onOpenSettings, onOpenBadges, 
             <span className="bi-hint">{focus ? t('home.invited') : pulse != null ? t(pulse === 1 ? 'home.pulse1' : 'home.pulse', { n: pulse }) : t(hint)}</span>
           )}
           <span className="bi-ver">
-            CHESSRUN v{APP_VERSION} · <b>SmartKraft</b> · <b>RE*maker</b>
+            CHESSRUN v{APP_VERSION} ·{' '}
+            <a href="https://smartkraft.ch" target="_blank" rel="noopener">SmartKraft</a> ·{' '}
+            <a href="https://remaker.ch" target="_blank" rel="noopener">RE*maker</a>
           </span>
         </footer>
       </div>
