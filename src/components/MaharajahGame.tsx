@@ -23,7 +23,10 @@ import {
 import type { StringKey } from '../ui/i18n'
 import { getIdentity } from '../ui/identity'
 import { RANKS_EVENT, submitRun } from '../ui/leaderboard'
-import { readMhBest, recordMhScore } from '../ui/mhScores'
+import { type BadgeAward, claimMhBadges } from '../ui/badges'
+import { readMhBest, recordMhResult, recordMhScore } from '../ui/mhScores'
+import { type MhTicket, clearMhResume, saveMhResume } from '../ui/mhResume'
+import { trackRun } from '../ui/stats'
 import { dailyScoreOf, dayKey, readRuns, recordRun } from '../ui/scores'
 import { useSettings } from '../ui/settings'
 import { playSound } from '../ui/sound'
@@ -46,7 +49,12 @@ interface Props {
   onOpenRanking: () => void
   onOpenBadges: () => void
   badgeVersion: number
+  /** Devam fişi (ui/mhResume): kabul edildiyse oyun bu durumdan sürer */
+  resume?: MhTicket
 }
+
+/** İstatistikte bitiş sebebi: Mihrace'nin sonucu kayan tahtanınkine uymuyor */
+const END_OF = { win: 'won', loss: 'lost', draw: 'drawn' } as const
 
 const RESULT_KEY: Record<string, StringKey> = {
   'win:mate': 'mh.win.mate',
@@ -66,7 +74,7 @@ const RESULT_KEY: Record<string, StringKey> = {
  * `maharajah`, mesafe = oyuncunun hamle sayısı); günlük çarpan da uygulanır.
  * Rol başına en iyi puan ayrıca cihazda (ui/mhScores).
  */
-export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRanking, onOpenBadges, badgeVersion }: Props) {
+export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRanking, onOpenBadges, badgeVersion, resume }: Props) {
   const t = useT()
   const { pieceColor } = useSettings()
   const [identity, setIdentity] = useState(() => getIdentity())
@@ -78,16 +86,18 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRankin
     return () => window.removeEventListener(RANKS_EVENT, onRanks)
   }, [])
   const { view: ranking, status: rankStatus } = useRanking(rankTick)
-  const [mode, setMode] = useState<MhMode | null>(null)
-  const [game, setGame] = useState<MhState | null>(null)
+  const [mode, setMode] = useState<MhMode | null>(resume?.game.mode ?? null)
+  const [game, setGame] = useState<MhState | null>(resume?.game ?? null)
   const [selected, setSelected] = useState<MhPos | null>(null)
   /** Bitmiş oyunun kaydı - puan yazılırken bir kez hesaplanır */
-  const [record, setRecord] = useState<{ isRecord: boolean; best: number; earned: number; bonus: number } | null>(null)
+  const [record, setRecord] = useState<{ isRecord: boolean; best: number; earned: number; bonus: number; badges: BadgeAward[] } | null>(null)
   /* Günlük çarpan oyun BAŞINDA sabitlenir (Game.tsx ile aynı kural): bugün
      günün mücadelesi oynandıysa onun puanı → ×(1 + puan/1000). Sunucu aynı
      çarpanı kendi kaydından uygular; buradaki gösterim ve yerel defter için. */
-  const runDay = useRef(dayKey())
-  const dailyToday = useRef<number | null>(null)
+  const runDay = useRef(resume?.runDay ?? dayKey())
+  const dailyToday = useRef<number | null>(resume?.dailyToday ?? null)
+  /** Oyun süresi (istatistik): fişten devamda önceki süre üstüne */
+  const startedAt = useRef(performance.now() - (resume?.elapsedMs ?? 0))
   /** Aynı oyun iki kez yazılmasın (StrictMode efekti iki kez çalıştırır) */
   const recorded = useRef<MhState | null>(null)
 
@@ -95,6 +105,8 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRankin
   const myTurn = Boolean(game && !game.result && game.toMove === side)
 
   function start(next: MhMode) {
+    clearMhResume()
+    startedAt.current = performance.now()
     runDay.current = dayKey()
     dailyToday.current = dailyScoreOf(readRuns(), runDay.current)
     setMode(next)
@@ -126,6 +138,40 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRankin
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game, side])
 
+  /* Devam fişi: oyun sürerken her hamlede yazılır, bitince silinir (kayan
+     tahta oyunlarıyla aynı - yenileme ya da kapanan uygulama oyunu silmesin) */
+  useEffect(() => {
+    if (!game) return
+    if (game.result) clearMhResume()
+    else if (game.plies > 0)
+      saveMhResume({ game, runDay: runDay.current, dailyToday: dailyToday.current, elapsedMs: performance.now() - startedAt.current })
+  }, [game])
+
+  /** Çıkış: süren oyun istatistikte «yarıda bırakıldı» sayılır, fiş silinir */
+  function exit() {
+    if (game && !game.result && game.plies > 0) report(game, 'abandoned', 0)
+    clearMhResume()
+    onExit()
+  }
+
+  function report(g: MhState, endReason: 'won' | 'lost' | 'drawn' | 'abandoned', score: number) {
+    trackRun({
+      mode: 'maharajah',
+      daily: false,
+      score,
+      distance: g.plies,
+      cols: 8,
+      level: 1,
+      durationMs: performance.now() - startedAt.current,
+      endReason,
+      speed: 'normal',
+      kings: 0,
+      bestStreak: 0,
+      stuckUsed: 0,
+      mated: g.result?.reason === 'mate' && g.result.outcome === 'win',
+    })
+  }
+
   // Oyun bitti: puan bir kez yazılır (defter + lig), rekorsa kapanış söyler
   const score = game ? mhScore(game) : null
   useEffect(() => {
@@ -133,9 +179,12 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRankin
     recorded.current = game
     const isRecord = score.total > 0 && recordMhScore(mode, score.total)
     const earned = applyDailyBonus(score.total, dailyToday.current)
-    setRecord({ isRecord, best: readMhBest()[mode], earned, bonus: dailyBonus(dailyToday.current) })
+    // Rozet sayaçları ve yeni kazanılan Mihrace rozetleri (bitiş ekranında listelenir)
+    const badges = claimMhBadges(recordMhResult(game))
+    setRecord({ isRecord, best: readMhBest()[mode], earned, bonus: dailyBonus(dailyToday.current), badges })
     // Hiç hamle yapılmadan biten oyun yok; yine de boş koşu lige gitmesin
     if (game.plies === 0) return
+    if (game.result) report(game, END_OF[game.result.outcome], earned)
     void recordRun({
       mode: 'maharajah',
       score: earned,
@@ -186,7 +235,7 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRankin
   return (
     <div className={`mh ${game ? 'playing' : ''}`}>
       <header className="mh-hd">
-        <ExitButton active={Boolean(game && !game.result && game.plies > 0)} onExit={onExit} className="mh-back">
+        <ExitButton active={Boolean(game && !game.result && game.plies > 0)} onExit={exit} className="mh-back">
           ← {t('game.menu')}
         </ExitButton>
         <span className="mh-ttl">
@@ -273,6 +322,7 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRankin
               earned={record.earned}
               bonus={record.bonus}
               isRecord={record.isRecord}
+              badges={record.badges}
               onRestart={() => start(mode)}
               onSwitch={() => start(mode === 'falcon' ? 'hunter' : 'falcon')}
               onExit={onExit}

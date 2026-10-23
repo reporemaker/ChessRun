@@ -181,7 +181,7 @@ export function Dashboard({ period, at }: Props) {
             <h2>Oyunlar</h2>
             <span className="muted">
               {s
-                ? `${MODE_LABEL.classic} ${fmtInt(s.runsByMode.classic)} · ${MODE_LABEL.kingRun} ${fmtInt(s.runsByMode.kingRun)} · ${MODE_LABEL.trio} ${fmtInt(s.runsByMode.trio)} · Günlük ${fmtInt(s.runsByMode.daily)}`
+                ? `${MODE_LABEL.classic} ${fmtInt(s.runsByMode.classic)} · ${MODE_LABEL.kingRun} ${fmtInt(s.runsByMode.kingRun)} · ${MODE_LABEL.trio} ${fmtInt(s.runsByMode.trio)} · Günlük ${fmtInt(s.runsByMode.daily)} · ${MODE_LABEL.maharajah} ${fmtInt(s.runsByMode.maharajah ?? 0)}`
                 : ''}
             </span>
           </header>

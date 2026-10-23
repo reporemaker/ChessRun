@@ -44,6 +44,7 @@ const EMPTY_TOTALS = (day: string): DailyTotals => ({
   runs_kingrun: 0,
   runs_trio: 0,
   runs_daily: 0,
+  runs_maharajah: 0,
   dur_sum_ms: 0,
   dur_count: 0,
   dur_p50_ms: null,
@@ -288,8 +289,8 @@ export async function rollupDay(db: DB, day: string): Promise<void> {
         `INSERT OR REPLACE INTO daily_totals
            (day, visitors, sessions, players, runs, runs_classic, runs_kingrun, runs_trio,
             runs_daily, dur_sum_ms, dur_count, dur_p50_ms, dur_p90_ms, score_sum, updated_at,
-            sess_dur_sum_ms, sess_dur_count, sess_dur_p50_ms, dist_sum)
-         VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19)`,
+            sess_dur_sum_ms, sess_dur_count, sess_dur_p50_ms, dist_sum, runs_maharajah)
+         VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20)`,
       )
       .bind(
         totals.day,
@@ -311,6 +312,7 @@ export async function rollupDay(db: DB, day: string): Promise<void> {
         totals.sess_dur_count,
         totals.sess_dur_p50_ms,
         totals.dist_sum,
+        totals.runs_maharajah,
       ),
     db.prepare(`DELETE FROM daily_dim WHERE day = ?1`).bind(day),
     ...dims.map((r) =>

@@ -23,6 +23,8 @@ const TuningPanel = import.meta.env.DEV
   : null
 import { type ResumeTicket, clearResume, readResume, resumeMatches } from './ui/resume'
 import { ResumePrompt } from './components/ResumePrompt'
+import { MhResumeOffer } from './components/MhResumeOffer'
+import { type MhTicket, clearMhResume, readMhResume } from './ui/mhResume'
 import { setBeforeReload } from './ui/reload'
 import { unlockSound } from './ui/sound'
 import { trackSessionEnd, trackVisit } from './ui/stats'
@@ -92,6 +94,17 @@ export default function App() {
     clearResume()
     return null
   })
+  /* Mihrace'nin devam fişi (ui/mhResume): ana sayfada (kayan tahta fişi yoksa)
+     ya da /play/maharajah'ta sorulur; başka bir oyunun adresinde sessizce atılır */
+  const [mhOffer, setMhOffer] = useState<MhTicket | null>(() => {
+    if (import.meta.env.DEV && window.location.search.includes('dev=')) return null
+    const ticket = readMhResume()
+    if (!ticket) return null
+    if (route.kind === 'maharajah' || (route.kind === 'home' && !readResume())) return ticket
+    if (route.kind !== 'home') clearMhResume()
+    return null
+  })
+  const [mhResume, setMhResume] = useState<MhTicket | null>(null)
   // Tüketilen fiş: yalnızca aynı runKey'li ilk kuruluma verilir (koridor
   // değişimi / çıkış-giriş yeni runKey = yeni koşu, fiş uygulanmaz)
   const [resume, setResume] = useState<{ key: string; data: ResumeTicket['data'] } | null>(null)
@@ -161,6 +174,7 @@ export default function App() {
 
   function exitMaharajah() {
     setSettingsOpen(false)
+    setMhResume(null)
     setMaharajah(false)
     syncPath(null, 'replace')
   }
@@ -357,6 +371,8 @@ export default function App() {
     <>
       {maharajah ? (
         <MaharajahGame
+          key={mhResume?.savedAt ?? 'mh'}
+          resume={mhResume ?? undefined}
           onExit={exitMaharajah}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPage={setPage}
@@ -447,6 +463,20 @@ export default function App() {
       {page && <Page onClose={() => setPage(null)} />}
 
       {offer && <ResumePrompt ticket={offer} onResume={() => resumeFromTicket(offer)} onSkip={skipTicket} />}
+      {!offer && mhOffer && (
+        <MhResumeOffer
+          ticket={mhOffer}
+          onResume={() => {
+            setMhOffer(null)
+            setMhResume(mhOffer)
+            enterMaharajah()
+          }}
+          onSkip={() => {
+            setMhOffer(null)
+            clearMhResume()
+          }}
+        />
+      )}
 
       {TuningPanel && (
         <Suspense fallback={null}>

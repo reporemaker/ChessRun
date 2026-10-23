@@ -34,7 +34,8 @@ export type Speed = (typeof SPEEDS)[number]
  */
 // `abandoned`: oyuncu koridor genişliğini değiştirip koşuyu yeniden başlattı;
 // koşu deftere yazıldı ama motor bitirmedi. Panelde "yarıda bırakıldı".
-export const END_REASONS = ['checkmated', 'stuckOut', 'lifeLost', 'fellOff', 'abandoned', 'other'] as const
+// `won` / `lost` / `drawn`: Mihrace (klasik 8×8) - kayan tahtadaki sebepler ona uymuyor.
+export const END_REASONS = ['checkmated', 'stuckOut', 'lifeLost', 'fellOff', 'abandoned', 'won', 'lost', 'drawn', 'other'] as const
 export type EndReason = (typeof END_REASONS)[number]
 
 /** Kesin piksel değil kova: tam genişlik parmak izi entropisi, kova değil */

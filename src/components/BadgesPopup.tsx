@@ -12,6 +12,7 @@ import {
 } from '../ui/badges'
 import { getIdentity } from '../ui/identity'
 import { readLifetime } from '../ui/lifetime'
+import { readMhStats } from '../ui/mhScores'
 import { leaderboardEnabled } from '../ui/leaderboard'
 import { syncEnabled } from '../ui/sync'
 import { useEscape } from '../ui/escape'
@@ -25,10 +26,11 @@ interface Props {
   onSelect?: (id: BadgeId | null) => void
 }
 
-const SECTIONS: Array<{ id: BadgeSection; key: 'badges.pieces' | 'badges.skill' | 'badges.loyal' | 'badges.league' }> = [
+const SECTIONS: Array<{ id: BadgeSection; key: 'badges.pieces' | 'badges.skill' | 'badges.loyal' | 'badges.maharajah' | 'badges.league' }> = [
   { id: 'pieces', key: 'badges.pieces' },
   { id: 'skill', key: 'badges.skill' },
   { id: 'loyal', key: 'badges.loyal' },
+  { id: 'maharajah', key: 'badges.maharajah' },
   { id: 'league', key: 'badges.league' },
 ]
 
@@ -57,6 +59,7 @@ export function BadgesPopup({ onClose, onSelect }: Props) {
   const [earned, setEarned] = useState<EarnedBadges>(() => readBadges())
   const [selected, setSelected] = useState<BadgeId | null>(() => readSelectedBadge())
   const life = useMemo(() => readLifetime(), [])
+  const mhStats = useMemo(() => readMhStats(), [])
 
   useEffect(() => {
     closeRef.current?.focus()
@@ -67,6 +70,7 @@ export function BadgesPopup({ onClose, onSelect }: Props) {
   /** Depodaki değer: koşu dışında bağlam olmadığı için ömür boyu depodan */
   function valueOf(badge: Badge): number | null {
     if (badge.server) return null
+    if (badge.mh) return badge.mh(mhStats)
     switch (badge.id) {
       case 'rook': return life.total.captured.r
       case 'knight': return life.total.captured.n

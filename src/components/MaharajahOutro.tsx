@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import type { MhMode, MhScore, MhState } from '../engine/maharajah'
 import type { StringKey } from '../ui/i18n'
+import { type BadgeAward, badgeOf } from '../ui/badges'
 import { getIdentity } from '../ui/identity'
+import { BadgeGlyph } from './BadgeGlyph'
 import { useT } from '../ui/text'
 
 /**
@@ -37,12 +39,14 @@ interface Props {
   /** Günlük çarpan (>1 ise gösterilir) */
   bonus: number
   isRecord: boolean
+  /** Bu oyunda kazanılan rozet kademeleri - ArcadeOutro'daki listenin aynısı */
+  badges?: BadgeAward[]
   onRestart: () => void
   onSwitch: () => void
   onExit: () => void
 }
 
-export function MaharajahOutro({ mode, result, score, best, earned, bonus, isRecord, onRestart, onSwitch, onExit }: Props) {
+export function MaharajahOutro({ mode, result, score, best, earned, bonus, isRecord, badges, onRestart, onSwitch, onExit }: Props) {
   const [phase, setPhase] = useState<Phase>('dying')
   const [shown, setShown] = useState(0)
   const name = getIdentity().name
@@ -100,6 +104,20 @@ export function MaharajahOutro({ mode, result, score, best, earned, bonus, isRec
             {bonus > 1 && <em className="outro-bonus">{t('game.bonus', { x: bonus.toFixed(2) })}</em>}
           </p>
           {isRecord && <p className="outro-record">{t('outro.record')}</p>}
+          {badges && badges.length > 0 && (
+            <ul className="outro-badges" aria-label={t('badges.inRun')}>
+              {badges.map((award) => {
+                const badge = badgeOf(award.id)
+                const tier = badge.tiers[Math.min(award.tier, badge.tiers.length - 1)]
+                return (
+                  <li key={`${award.id}-${award.tier}`} title={badge.tiers.length > 1 ? t(`tier.${tier}`) : undefined}>
+                    <BadgeGlyph id={award.id} className={`bdg-glyph t-${tier}`} />
+                    <b>{t(badge.nameKey)}</b>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
         </div>
       )}
 

@@ -6,6 +6,7 @@ import { colsOf } from '../engine/game'
 import type { GameEvent, GameMode, GameState, PieceType } from '../engine/types'
 import type { StringKey } from './i18n'
 import type { Lifetime } from './lifetime'
+import type { MhStats } from './mhScores'
 
 /**
  * Rozetler - görev listesi değil, **keşif haritası**.
@@ -43,12 +44,18 @@ export type BadgeId =
   | 'sevenDays'
   | 'thirtyDays'
   | 'narrow'
+  // Mihrace (kendi sayaçları: mhScores.ts)
+  | 'mhFalcon'
+  | 'mhHunter'
+  | 'mhSwift'
+  | 'mhSweep'
+  | 'mhGuard'
   // haftalık lig - sunucu (Faz 9)
   | 'weekFirst'
   | 'weekKing'
   | 'emperor'
 
-export type BadgeSection = 'pieces' | 'skill' | 'loyal' | 'league'
+export type BadgeSection = 'pieces' | 'skill' | 'loyal' | 'maharajah' | 'league'
 
 /** Kademe: kümülatif ailelerde 4 (siyah ilk kez), tek-koşuda 3, kademesizde 1 */
 export type Tier = 'black' | 'bronze' | 'silver' | 'gold'
@@ -203,7 +210,15 @@ export interface Badge {
   value: (context: BadgeContext) => number | null
   /** Sunucu gerektiriyor - Faz 9'a kadar kilitli */
   server?: boolean
+  /**
+   * Mihrace rozeti: değeri kayan tahta koşusundan değil Mihrace sayaçlarından
+   * (`value` bu rozetlerde hep null - claimBadges dokunmaz, claimMhBadges işler)
+   */
+  mh?: (stats: MhStats) => number
 }
+
+/** Mihrace'de «hızlı galibiyet» eşiği: oyuncunun en çok bu kadar hamlesi */
+export const MH_SWIFT_PLIES = 20
 
 const CUMULATIVE: Tier[] = ['black', 'bronze', 'silver', 'gold']
 const SINGLE: Tier[] = ['bronze', 'silver', 'gold']
@@ -412,6 +427,68 @@ export const BADGES: Badge[] = [
     value: (c) => (colsOf(c.state.board) <= NARROW_COLS ? c.state.distance : 0),
   },
 
+  /* --- Mihrace - hepsi açık: oyunun yapabildiklerini gösteren harita --- */
+  {
+    id: 'mhFalcon',
+    glyph: '✦',
+    section: 'maharajah',
+    reveal: 'open',
+    nameKey: 'badge.mhFalcon',
+    howKey: 'badge.mhFalcon.how',
+    thresholds: [1, 5, 25, 50],
+    tiers: CUMULATIVE,
+    value: () => null,
+    mh: (s) => s.falconWins,
+  },
+  {
+    id: 'mhHunter',
+    glyph: '✣',
+    section: 'maharajah',
+    reveal: 'open',
+    nameKey: 'badge.mhHunter',
+    howKey: 'badge.mhHunter.how',
+    thresholds: [1, 5, 25, 50],
+    tiers: CUMULATIVE,
+    value: () => null,
+    mh: (s) => s.hunterWins,
+  },
+  {
+    id: 'mhSwift',
+    glyph: '»',
+    section: 'maharajah',
+    reveal: 'open',
+    nameKey: 'badge.mhSwift',
+    howKey: 'badge.mhSwift.how',
+    thresholds: [1],
+    tiers: ONCE,
+    value: () => null,
+    mh: (s) => (s.fastestWin != null && s.fastestWin <= MH_SWIFT_PLIES ? 1 : 0),
+  },
+  {
+    id: 'mhSweep',
+    glyph: '∅',
+    section: 'maharajah',
+    reveal: 'open',
+    nameKey: 'badge.mhSweep',
+    howKey: 'badge.mhSweep.how',
+    thresholds: [1],
+    tiers: ONCE,
+    value: () => null,
+    mh: (s) => (s.sweep ? 1 : 0),
+  },
+  {
+    id: 'mhGuard',
+    glyph: '▣',
+    section: 'maharajah',
+    reveal: 'open',
+    nameKey: 'badge.mhGuard',
+    howKey: 'badge.mhGuard.how',
+    thresholds: [1],
+    tiers: ONCE,
+    value: () => null,
+    mh: (s) => (s.guard ? 1 : 0),
+  },
+
   /* --- Haftalık lig - sunucu (Faz 9) --- */
   {
     id: 'weekFirst',
@@ -592,6 +669,23 @@ export function claimBadges(context: BadgeContext, now = new Date()): BadgeAward
     fresh.push({ id: badge.id, tier: reached })
   }
 
+  if (fresh.length > 0) writeBadges(earned)
+  return fresh
+}
+
+/** Mihrace sayaçlarından yeni kazanılan kademeler (oyun bitince) */
+export function claimMhBadges(stats: MhStats, now = new Date()): BadgeAward[] {
+  if (tuningActive()) return []
+  const earned = readBadges()
+  const fresh: BadgeAward[] = []
+  for (const badge of BADGES) {
+    if (!badge.mh) continue
+    const reached = tierIndex(badge, badge.mh(stats))
+    const have = earned[badge.id]?.tier ?? -1
+    if (reached <= have) continue
+    earned[badge.id] = { tier: reached, at: now.toISOString() }
+    fresh.push({ id: badge.id, tier: reached })
+  }
   if (fresh.length > 0) writeBadges(earned)
   return fresh
 }

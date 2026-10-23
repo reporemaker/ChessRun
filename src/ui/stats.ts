@@ -1,3 +1,4 @@
+import type { RunMode } from './scores'
 import type {
   EndReason,
   RunPayload,
@@ -112,7 +113,7 @@ export function endReasonOf(events: GameEvent[]): EndReason {
 
 /** Koşu yükünün oyun tarafındaki ham girdisi */
 export interface RunFacts {
-  mode: GameMode
+  mode: RunMode
   daily: boolean
   score: number
   distance: number
