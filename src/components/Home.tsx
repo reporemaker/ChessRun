@@ -16,6 +16,7 @@ import { type DailyInfo, fetchDaily, fetchPulse, leaderboardEnabled } from '../u
 import { readRecoveryCode, syncEnabled } from '../ui/sync'
 import { useRanking } from '../ui/useRanking'
 import { lifetimeStreak } from '../ui/lifetime'
+import { mhBestOverall } from '../ui/mhScores'
 import { useSettings } from '../ui/settings'
 import { useT } from '../ui/text'
 import { APP_VERSION } from '../ui/version'
@@ -38,6 +39,8 @@ interface HomeProps {
   onOpenBadges?: () => void
   focus?: HomeFocus | null
 }
+
+const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 
 const RECOVERY_HINT_KEY = 'chessrun:recovery-hint'
 /** Kaç koşudan sonra bir kez hatırlatılsın */
@@ -174,6 +177,7 @@ export function Home({ onStart, onStartMaharajah, onOpenSettings, onOpenBadges, 
     () => runs.reduce((best, run) => Math.max(best, run.score), 0),
     [runs],
   )
+  const mhBest = useMemo(() => mhBestOverall(), [])
 
   function start(id: ModeId) {
     if (!isPlayable(id)) return
@@ -218,11 +222,10 @@ export function Home({ onStart, onStartMaharajah, onOpenSettings, onOpenBadges, 
     <div className="bi">
       <div className="bi-bg" aria-hidden />
       <div className="bi-veil" aria-hidden />
-      <span className="bi-coord left" aria-hidden>
-        8 7 6 5 4 3 2 1
-      </span>
-      <span className="bi-coord bottom" aria-hidden>
-        a b c d e f g h
+      <span className="bi-coord" aria-hidden>
+        {FILES.map((file) => (
+          <span key={file}>{file}</span>
+        ))}
       </span>
 
       <div className="bi-ui">
@@ -232,7 +235,7 @@ export function Home({ onStart, onStartMaharajah, onOpenSettings, onOpenBadges, 
             {hi > 0 && (
               <>
                 {' · '}
-                {t('home.hi')} <b>{hi}</b>
+                {t('home.best')} <b>{hi}</b>
               </>
             )}
           </span>
@@ -292,22 +295,21 @@ export function Home({ onStart, onStartMaharajah, onOpenSettings, onOpenBadges, 
                 title={t(mode.nameKey)}
                 sub={mode.mottoKey ? `${t(mode.mottoKey)} · ${base}` : base}
                 value={mode.ready ? bestScore(runs, mode.id) : null}
-                valueLabel={mode.ready ? t('home.hi') : t('common.soon')}
+                valueLabel={mode.ready ? t('home.best') : t('common.soon')}
                 disabled={!mode.ready}
                 onClick={() => start(mode.id)}
               />
             )
           })}
 
-          {/* Mihrace: serbest oyun (günlük hak yok), kartal figürü. Masaüstünde
-              ilk hücrede (eski günün mücadelesi yeri), mobilde en altta */}
+          {/* Mihrace: serbest oyun (günlük hak yok), kartal figürü; en altta */}
           <Card
             className="bi-maharajah"
             glyph="🦅"
             title={t('mode.maharajah.name')}
             sub={`${t('mh.falcon.name')} · ${t('mh.hunter.name')} · ${t('mode.maharajah.line')}`}
-            value={null}
-            valueLabel=""
+            value={mhBest}
+            valueLabel={t('home.best')}
             onClick={onStartMaharajah}
           />
         </div>

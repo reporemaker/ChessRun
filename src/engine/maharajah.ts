@@ -401,6 +401,43 @@ function judge(s: MhState, repeats: number): MhState['result'] {
 }
 
 /* ------------------------------------------------------------------ *
+ * Puan (oyun bitince)
+ *
+ *   taş    Şahin: yediğin ordu malzemesi · Avcı: ayakta tuttuğun malzeme
+ *          (piyon 1 · at/fil 3 · kale 5 · vezir 9; ordunun tamamı 39)
+ *   sonuç  kazanç 50 · beraberlik 10 · kayıp 0
+ *   hız    yalnızca kazançta: 50 hamleden önce biten her hamle +1
+ * ------------------------------------------------------------------ */
+
+export const MH_ARMY_VALUE = 39
+export const MH_RESULT_POINTS: Record<MhOutcome, number> = { win: 50, draw: 10, loss: 0 }
+export const MH_SPEED_PAR = 50
+
+export interface MhScore {
+  material: number
+  result: number
+  speed: number
+  total: number
+}
+
+/** Ordunun tahtada kalan malzemesi (şah sayılmaz) */
+export function armyMaterial(b: MhGrid): number {
+  let sum = 0
+  for (const row of b) for (const p of row) if (p && p.t !== 'A') sum += MH_VALUE[p.t]
+  return sum
+}
+
+/** Bitmiş oyunun puanı; oyun sürüyorsa null */
+export function mhScore(s: MhState): MhScore | null {
+  if (!s.result) return null
+  const left = armyMaterial(s.board)
+  const material = s.mode === 'falcon' ? MH_ARMY_VALUE - left : left
+  const result = MH_RESULT_POINTS[s.result.outcome]
+  const speed = s.result.outcome === 'win' ? Math.max(0, MH_SPEED_PAR - s.plies) : 0
+  return { material, result, speed, total: material + result + speed }
+}
+
+/* ------------------------------------------------------------------ *
  * Botlar (prototiplerden)
  * ------------------------------------------------------------------ */
 

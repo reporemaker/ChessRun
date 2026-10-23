@@ -17,7 +17,7 @@ import {
 } from '../engine/daily'
 import { tuningActive } from '../engine/tuning'
 import type { PieceType, Pos } from '../engine/types'
-import { getIdentity, shortToken } from '../ui/identity'
+import { getIdentity } from '../ui/identity'
 import { DAILY_REPLAY_ALLOWED, markDailyPlayed } from '../ui/dailyLock'
 import { RANKS_EVENT, leaderboardEnabled, startDaily } from '../ui/leaderboard'
 import { PIECE_NAME_KEY } from '../ui/pieces'
@@ -27,20 +27,16 @@ import { lifetimeStreak, recordLifetime } from '../ui/lifetime'
 import { emptyTally } from '../ui/badges'
 import { useRanking } from '../ui/useRanking'
 import { trackRun } from '../ui/stats'
-import { setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
-import { LANGS } from '../ui/i18n'
+import { useSettings } from '../ui/settings'
 import type { ShareInput } from '../ui/share'
 import { dailyBonus } from '@shared/leaderboard'
-import { FeedbackLink } from './FeedbackLinks'
 import { type Translate, useT } from '../ui/text'
 import { type SoundName, playSound, unlockSound } from '../ui/sound'
-import { APP_VERSION } from '../ui/version'
 import { type DailyResume, clearResume, saveResume } from '../ui/resume'
 import { DailyOutro } from './DailyOutro'
 import { ExitButton } from './ExitButton'
-import { BadgeChip } from './BadgeChip'
 import { DailyBoard, STRIKE_DELAY_MS, STRIKE_MOVE_MS } from './DailyBoard'
-import { NameChip } from './NameChip'
+import { SidePanel } from './SidePanel'
 import type { GameConfig, GameHandle } from './Game'
 
 /**
@@ -679,112 +675,17 @@ export function DailyGame({
           </div>
         )}
 
-        <div className="gv-hr" />
-
-        <div className="gv-set">
-          <span className="gv-lb">{t('settings.title')}</span>
-          <span className="gv-field">
-            <span className="gv-tx">{t('settings.pieceColor')}</span>
-            <span className="gv-seg">
-              {(['w', 'b'] as const).map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  className={settings.pieceColor === color ? 'on' : ''}
-                  aria-pressed={settings.pieceColor === color}
-                  onClick={() => setPieceColor(color)}
-                >
-                  {color === 'w' ? t('settings.white') : t('settings.black')}
-                </button>
-              ))}
-            </span>
-          </span>
-          <span className="gv-field">
-            <span className="gv-tx">{t('hud.sound')}</span>
-            <span className="gv-seg">
-              {[true, false].map((on) => (
-                <button
-                  key={String(on)}
-                  type="button"
-                  className={settings.sound === on ? 'on' : ''}
-                  aria-pressed={settings.sound === on}
-                  onClick={() => setSound(on)}
-                >
-                  {on ? t('settings.soundOn') : t('settings.soundOff')}
-                </button>
-              ))}
-            </span>
-          </span>
-          <span className="gv-field">
-            <span className="gv-tx">{t('settings.lang')}</span>
-            <span className="gv-seg">
-              {LANGS.map((entry) => (
-                <button
-                  key={entry.code}
-                  type="button"
-                  className={settings.lang === entry.code ? 'on' : ''}
-                  aria-pressed={settings.lang === entry.code}
-                  onClick={() => setLang(entry.code)}
-                >
-                  {entry.label}
-                </button>
-              ))}
-            </span>
-          </span>
-        </div>
-
-        <div className="gv-hr" />
-
-        <div className="gv-meta">
-          <span className="gv-chip">
-            v<b>{APP_VERSION}</b>
-          </span>
-          <span className="gv-chip">
-            #<b>{shortToken(identity.token)}</b>
-          </span>
-          <NameChip identity={identity} onChange={setIdentity} skin="gv" />
-        </div>
-
-        <div className="gv-hr" />
-        <BadgeChip version={badgeVersion} onOpen={onOpenBadges} skin="gv" />
-        <div className="gv-hr" />
-
-        <button type="button" className="gv-rank" onClick={onOpenRanking}>
-          <span className="gv-lb">{t('settings.ranking')}</span>
-          <span className="gv-rank-row">
-            <span className="gv-cell">
-              <span className="gv-n md gold">{ranking.rank == null ? '-' : `#${ranking.rank}`}</span>
-              <span className="gv-lb">{t('settings.rankMine')}</span>
-            </span>
-            <span className="gv-cell">
-              <span className="gv-n md">{ranking.score}</span>
-              <span className="gv-lb">{t('settings.scoreMine')}</span>
-            </span>
-            <span className="gv-cell">
-              <span className="gv-n md">{ranking.players ?? '-'}</span>
-              <span className="gv-lb">{t('settings.players')}</span>
-            </span>
-          </span>
-          <span className="gv-rank-ft">
-            <span>{t('settings.openFull')}</span>
-            {rankStatus === 'local' && <i>{t('settings.serverPending')}</i>}
-            {rankStatus === 'offline' && <i>{t('rank.offline')}</i>}
-          </span>
-        </button>
-
-        <div className="gv-btns one">
-          <button type="button" onClick={() => onOpenPage('help')}>
-            {t('settings.howTo')}
-          </button>
-        </div>
-        <div className="gv-btns">
-          {/* Hakkında: pencere değil /about statik sayfası; koşu devam
-              fişiyle (ui/resume) geri çağrılır */}
-          <button type="button" onClick={() => window.location.assign('/about')}>
-            {t('settings.about')}
-          </button>
-          <FeedbackLink lang={settings.lang} mode="daily" />
-        </div>
+        <SidePanel
+          identity={identity}
+          onIdentityChange={setIdentity}
+          ranking={ranking}
+          rankStatus={rankStatus}
+          badgeVersion={badgeVersion}
+          mode="daily"
+          onOpenBadges={onOpenBadges}
+          onOpenRanking={onOpenRanking}
+          onOpenHelp={() => onOpenPage('help')}
+        />
       </aside>
     </div>
   )

@@ -25,8 +25,7 @@ import type { Color, GameEvent, GameMode, GameState, PieceType, Pos, Row } from 
 import { type BadgeAward, badgeOf, claimBadges, emptyTally, tallyEvents, tallyStep } from '../ui/badges'
 import { type Lifetime, lifetimeStreak, readLifetime, recordLifetime } from '../ui/lifetime'
 import { type TipId, TIP_KEY, readSeenTips, storeSeenTips } from '../ui/coach'
-import { getIdentity, shortToken } from '../ui/identity'
-import { LANGS } from '../ui/i18n'
+import { getIdentity } from '../ui/identity'
 import type { StringKey } from '../ui/i18n'
 import { RANKS_EVENT, submitRun } from '../ui/leaderboard'
 import { PIECE_NAME_KEY } from '../ui/pieces'
@@ -45,13 +44,11 @@ import {
 import { applyDailyBonus, dailyBonus } from '@shared/leaderboard'
 import { weekTotal } from '../ui/ranking'
 import { useRanking } from '../ui/useRanking'
-import { BOARD_THEMES, setBoard, setCols, setLang, setPieceColor, setSound, useSettings } from '../ui/settings'
+import { setCols, useSettings } from '../ui/settings'
 import type { ShareInput } from '../ui/share'
-import { FeedbackLink } from './FeedbackLinks'
 import { endReasonOf, trackRun } from '../ui/stats'
 import { type Translate, useT } from '../ui/text'
 import { playEvents, playSound, unlockSound } from '../ui/sound'
-import { APP_VERSION } from '../ui/version'
 import {
   PHASE_MS,
   type Phase,
@@ -65,8 +62,8 @@ import {
 import { type GameResume, clearResume, reviveGame, saveResume, serializeGame } from '../ui/resume'
 import { ArcadeOutro } from './ArcadeOutro'
 import { ExitButton } from './ExitButton'
-import { BadgeChip } from './BadgeChip'
-import { NameChip } from './NameChip'
+import { GearIcon } from './GearIcon'
+import { SidePanel } from './SidePanel'
 import { Board } from './Board'
 
 export interface GameConfig {
@@ -169,10 +166,6 @@ export function Game({
     return () => window.removeEventListener(RANKS_EVENT, onRanks)
   }, [])
   const { view: ranking, status: rankStatus } = useRanking(`${result?.run.at ?? ''}-${rankTick}`)
-
-  /* Reklam yalnızca gerçek bir slot tanımlıysa çiziliyor - tanımsızken
-     yer tutucu kutu göstermiyoruz. */
-  const AD_SLOT = import.meta.env.VITE_AD_SLOT as string | undefined
 
   const seenTips = useRef(readSeenTips())
   const factor = SPEEDS[speed].factor
@@ -698,16 +691,6 @@ export function Game({
           </div>
         )}
 
-        {/* İpucu tahtanın üstünde: mobilde ayrı bir satıra yer yok */}
-        {tip && (
-          <p className="gv-tip">
-            {t(TIP_KEY[tip])}
-            <button type="button" onClick={() => setTip(null)} aria-label={t('game.tipClose')}>
-              ×
-            </button>
-          </p>
-        )}
-
         {arcadeOutro && (
           <ArcadeOutro
             score={applyDailyBonus(game.score, dailyToday.current)}
@@ -757,23 +740,24 @@ export function Game({
           onClick={onOpenSettings}
           aria-label={t('settings.title')}
         >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-          </svg>
+          <GearIcon />
         </button>
       </div>
 
+      {/* Koçun ipucu tahta alanının dışında: mobilde tahta alanının dibinde
+          (boş şeritte), masaüstünde alt ipucu satırının yerinde - tahtanın
+          son satırını (ölüm satırı) örtmesin */}
+      {tip && (
+        <p className="gv-tip">
+          {t(TIP_KEY[tip])}
+          <button type="button" onClick={() => setTip(null)} aria-label={t('game.tipClose')}>
+            ×
+          </button>
+        </p>
+      )}
+
       {/* ---- masaüstü ipucu satırı ---- */}
-      <p className="gv-hint gv-tx">
+      <p className={`gv-hint gv-tx ${tip ? 'under-tip' : ''}`}>
         {canAct ? statusHint(game, checkedKing != null, underThreat, t) : phaseLabel(phase, t)}
       </p>
 
@@ -813,209 +797,85 @@ export function Game({
         {squadStrip}
         {stateLine}
 
-        <div className="gv-hr" />
-
-        <div className="gv-set">
-          <span className="gv-lb">{t('settings.title')}</span>
-
-          {/* Hız yalnızca oyunda var - o yüzden pencerede yok, burada ilk */}
-          <span className="gv-field">
-            <span className="gv-tx">{t('hud.speed')}</span>
-            <span className="gv-seg">
-              {SPEED_ORDER.map((key) => (
-                <button
-                  key={key}
-                  type="button"
-                  className={speed === key ? 'on' : ''}
-                  aria-pressed={speed === key}
-                  onClick={() => pickSpeed(key)}
-                >
-                  {t(SPEEDS[key].labelKey)}
-                </button>
-              ))}
-            </span>
-          </span>
-
-          {/* Buradan aşağısı ayarlar penceresiyle aynı sırada:
-              taş rengi → tahta → koridor → ses → dil */}
-          <span className="gv-field">
-            <span className="gv-tx">{t('settings.pieceColor')}</span>
-            <span className="gv-seg">
-              {(['w', 'b'] as const).map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  className={settings.pieceColor === color ? 'on' : ''}
-                  aria-pressed={settings.pieceColor === color}
-                  onClick={() => setPieceColor(color)}
-                >
-                  {color === 'w' ? t('settings.white') : t('settings.black')}
-                </button>
-              ))}
-            </span>
-          </span>
-
-          <span className="gv-field">
-            <span className="gv-tx">{t('settings.board')}</span>
-            <span className="gv-seg">
-              {BOARD_THEMES.map((board) => (
-                <button
-                  key={board}
-                  type="button"
-                  className={settings.board === board ? 'on' : ''}
-                  aria-pressed={settings.board === board}
-                  onClick={() => setBoard(board)}
-                >
-                  {board === 'vintage' ? t('settings.boardVintage') : t('settings.boardClassic')}
-                </button>
-              ))}
-            </span>
-          </span>
-
-          <span className="gv-field">
-            <span className="gv-tx">
-              {t('settings.corridor')} <b>· {t('corridor.cols', { n: settings.cols })}</b>
-            </span>
-            <span className="gv-seg" role="radiogroup" aria-label={t('settings.corridor')}>
-              {COL_CHOICES.map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  role="radio"
-                  className={(pendingCols ?? settings.cols) === n ? 'on' : ''}
-                  aria-checked={(pendingCols ?? settings.cols) === n}
-                  onClick={() => {
-                    if (n === settings.cols) return
-                    // Günlük meydan okumada genişlik sabit: sorulmaz, ayar sonrakine kalır
-                    if (config.daily) setCols(n)
-                    else setPendingCols(n)
-                  }}
-                >
-                  {n}
-                </button>
-              ))}
-            </span>
-            {pendingCols != null && (
-              <span className="gv-warn" role="alertdialog" aria-live="polite" aria-labelledby="gv-corridor-ttl">
-                <b id="gv-corridor-ttl">{t('corridor.restart.title')}</b>
-                <span>{t('corridor.restart.body', { score: game.score, n: pendingCols })}</span>
-                <span className="gv-warn-act">
-                  <button type="button" onClick={() => setPendingCols(null)}>
-                    {t('corridor.restart.cancel')}
-                  </button>
+        <SidePanel
+          identity={identity}
+          onIdentityChange={setIdentity}
+          ranking={ranking}
+          rankStatus={rankStatus}
+          badgeVersion={badgeVersion}
+          mode={config.mode}
+          onOpenBadges={onOpenBadges}
+          onOpenRanking={onOpenRanking}
+          onOpenHelp={() => onOpenPage('help')}
+          // Hız yalnızca oyunda var - o yüzden pencerede yok, burada ilk
+          speed={
+            <span className="gv-field">
+              <span className="gv-tx">{t('hud.speed')}</span>
+              <span className="gv-seg">
+                {SPEED_ORDER.map((key) => (
                   <button
+                    key={key}
                     type="button"
-                    className="go"
+                    className={speed === key ? 'on' : ''}
+                    aria-pressed={speed === key}
+                    onClick={() => pickSpeed(key)}
+                  >
+                    {t(SPEEDS[key].labelKey)}
+                  </button>
+                ))}
+              </span>
+            </span>
+          }
+          corridor={
+            <span className="gv-field">
+              <span className="gv-tx">
+                {t('settings.corridor')} <b>· {t('corridor.cols', { n: settings.cols })}</b>
+              </span>
+              <span className="gv-seg" role="radiogroup" aria-label={t('settings.corridor')}>
+                {COL_CHOICES.map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    role="radio"
+                    className={(pendingCols ?? settings.cols) === n ? 'on' : ''}
+                    aria-checked={(pendingCols ?? settings.cols) === n}
                     onClick={() => {
-                      const cols = pendingCols
-                      setPendingCols(null)
-                      setCols(cols)
-                      onRestartWithCols(cols)
+                      if (n === settings.cols) return
+                      // Günlük meydan okumada genişlik sabit: sorulmaz, ayar sonrakine kalır
+                      if (config.daily) setCols(n)
+                      else setPendingCols(n)
                     }}
                   >
-                    {t('corridor.restart.ok')}
+                    {n}
                   </button>
-                </span>
+                ))}
               </span>
-            )}
-          </span>
-
-          <span className="gv-field">
-            <span className="gv-tx">{t('hud.sound')}</span>
-            <span className="gv-seg">
-              {[true, false].map((on) => (
-                <button
-                  key={String(on)}
-                  type="button"
-                  className={settings.sound === on ? 'on' : ''}
-                  aria-pressed={settings.sound === on}
-                  onClick={() => setSound(on)}
-                >
-                  {on ? t('settings.soundOn') : t('settings.soundOff')}
-                </button>
-              ))}
+              {pendingCols != null && (
+                <span className="gv-warn" role="alertdialog" aria-live="polite" aria-labelledby="gv-corridor-ttl">
+                  <b id="gv-corridor-ttl">{t('corridor.restart.title')}</b>
+                  <span>{t('corridor.restart.body', { score: game.score, n: pendingCols })}</span>
+                  <span className="gv-warn-act">
+                    <button type="button" onClick={() => setPendingCols(null)}>
+                      {t('corridor.restart.cancel')}
+                    </button>
+                    <button
+                      type="button"
+                      className="go"
+                      onClick={() => {
+                        const cols = pendingCols
+                        setPendingCols(null)
+                        setCols(cols)
+                        onRestartWithCols(cols)
+                      }}
+                    >
+                      {t('corridor.restart.ok')}
+                    </button>
+                  </span>
+                </span>
+              )}
             </span>
-          </span>
-
-          <span className="gv-field">
-            <span className="gv-tx">{t('settings.lang')}</span>
-            <span className="gv-seg">
-              {LANGS.map((entry) => (
-                <button
-                  key={entry.code}
-                  type="button"
-                  className={settings.lang === entry.code ? 'on' : ''}
-                  aria-pressed={settings.lang === entry.code}
-                  onClick={() => setLang(entry.code)}
-                >
-                  {entry.label}
-                </button>
-              ))}
-            </span>
-          </span>
-        </div>
-
-        <div className="gv-hr" />
-
-        {/* Künye: sürüm · cihaz · ad (kalemle düzenlenir) - pencereyle aynı */}
-        <div className="gv-meta">
-          <span className="gv-chip">
-            v<b>{APP_VERSION}</b>
-          </span>
-          <span className="gv-chip">
-            #<b>{shortToken(identity.token)}</b>
-          </span>
-          <NameChip identity={identity} onChange={setIdentity} skin="gv" />
-        </div>
-
-        <div className="gv-hr" />
-
-        {/* Rozet: yalnızca seçili olan + pencereyi açan düğme */}
-        <BadgeChip version={badgeVersion} onOpen={onOpenBadges} skin="gv" />
-
-        <div className="gv-hr" />
-
-        {/* Sıralama özeti: üç sayı; tam liste kendi penceresinde */}
-        <button type="button" className="gv-rank" onClick={onOpenRanking}>
-          <span className="gv-lb">{t('settings.ranking')}</span>
-          <span className="gv-rank-row">
-            <span className="gv-cell">
-              <span className="gv-n md gold">{ranking.rank == null ? '-' : `#${ranking.rank}`}</span>
-              <span className="gv-lb">{t('settings.rankMine')}</span>
-            </span>
-            <span className="gv-cell">
-              <span className="gv-n md">{ranking.score}</span>
-              <span className="gv-lb">{t('settings.scoreMine')}</span>
-            </span>
-            <span className="gv-cell">
-              <span className="gv-n md">{ranking.players ?? '-'}</span>
-              <span className="gv-lb">{t('settings.players')}</span>
-            </span>
-          </span>
-          <span className="gv-rank-ft">
-            <span>{t('settings.openFull')}</span>
-            {rankStatus === 'local' && <i>{t('settings.serverPending')}</i>}
-            {rankStatus === 'offline' && <i>{t('rank.offline')}</i>}
-          </span>
-        </button>
-
-        {/* Nasıl oynanır tek başına tam genişlik düğme; altında Hakkında +
-            Öneri iki düğme yan yana - üçü aynı düğme dilinde */}
-        <div className="gv-btns one">
-          <button type="button" onClick={() => onOpenPage('help')}>
-            {t('settings.howTo')}
-          </button>
-        </div>
-        <div className="gv-btns">
-          {/* Hakkında: pencere değil /about statik sayfası; koşu devam
-              fişiyle (ui/resume) geri çağrılır */}
-          <button type="button" onClick={() => window.location.assign('/about')}>
-            {t('settings.about')}
-          </button>
-          <FeedbackLink lang={settings.lang} mode={config.mode} />
-        </div>
-
-        {AD_SLOT && <div className="gv-ad">REKLAM</div>}
+          }
+        />
       </aside>
     </div>
   )

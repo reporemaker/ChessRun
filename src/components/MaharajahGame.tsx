@@ -9,19 +9,29 @@ import {
   amazonAttacks,
   applyMove,
   armyAttacks,
+  armyMaterial,
+  MH_ARMY_VALUE,
   botMove,
   isCheck,
   kingPos,
   legalMoves,
+  mhScore,
   newMaharajah,
   playerSide,
 } from '../engine/maharajah'
 import type { StringKey } from '../ui/i18n'
+import { getIdentity } from '../ui/identity'
+import { readMhBest, recordMhScore } from '../ui/mhScores'
+import { useSettings } from '../ui/settings'
 import { playSound } from '../ui/sound'
 import { useT } from '../ui/text'
+import { useRanking } from '../ui/useRanking'
 import { ExitButton } from './ExitButton'
 import { Fig } from './Fig'
+import { GearIcon } from './GearIcon'
+import { MaharajahOutro } from './MaharajahOutro'
 import type { PageId } from './Pages'
+import { SidePanel } from './SidePanel'
 
 /** Bot düşünme payı: hamle anında gelmesin, oyuncu kendi hamlesini görsün */
 const BOT_DELAY_MS = 450
@@ -30,6 +40,9 @@ interface Props {
   onExit: () => void
   onOpenSettings: () => void
   onOpenPage: (page: PageId) => void
+  onOpenRanking: () => void
+  onOpenBadges: () => void
+  badgeVersion: number
 }
 
 const RESULT_KEY: Record<string, StringKey> = {
@@ -45,13 +58,19 @@ const RESULT_KEY: Record<string, StringKey> = {
 /**
  * Mihrace: önce rol seçimi (Şahin / Avcı), sonra klasik 8×8 tahta.
  * Kurallar ve botlar engine/maharajah.ts'te. Serbest oyun: günlük hak yok,
- * istendiği kadar oynanır. Puanlama sonra eklenecek, koşu deftere yazılmıyor.
+ * istendiği kadar oynanır. Bitince puan (mhScore) ve kapanış perdesi; en iyi
+ * puan cihazda (ui/mhScores), koşu defterine ve lige yazılmıyor.
  */
-export function MaharajahGame({ onExit, onOpenSettings, onOpenPage }: Props) {
+export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRanking, onOpenBadges, badgeVersion }: Props) {
   const t = useT()
+  const { pieceColor } = useSettings()
+  const [identity, setIdentity] = useState(() => getIdentity())
+  const { view: ranking, status: rankStatus } = useRanking()
   const [mode, setMode] = useState<MhMode | null>(null)
   const [game, setGame] = useState<MhState | null>(null)
   const [selected, setSelected] = useState<MhPos | null>(null)
+  /** Bitmiş oyunun rekor durumu - puan yazılırken bir kez hesaplanır */
+  const [record, setRecord] = useState<{ isRecord: boolean; best: number } | null>(null)
 
   const side = mode ? playerSide(mode) : null
   const myTurn = Boolean(game && !game.result && game.toMove === side)
@@ -60,6 +79,7 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage }: Props) {
     setMode(next)
     setGame(newMaharajah(next))
     setSelected(null)
+    setRecord(null)
   }
 
   function play(move: MhMove) {
@@ -85,6 +105,14 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game, side])
 
+  // Oyun bitti: puan bir kez yazılır, rekorsa kapanış söyler
+  const score = game ? mhScore(game) : null
+  useEffect(() => {
+    if (!mode || !score || record) return
+    const isRecord = score.total > 0 && recordMhScore(mode, score.total)
+    setRecord({ isRecord, best: readMhBest()[mode] })
+  }, [mode, score, record])
+
   // Şahin'de oyuncunun tek taşı var: sırası gelince kendiliğinden seçili
   const active: MhPos | null = myTurn && game ? (mode === 'falcon' ? game.amazon : selected) : null
   const targets = useMemo(() => (game && active ? legalMoves(game, active) : []), [game, active])
@@ -105,7 +133,9 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage }: Props) {
   }
 
   const checkedKing = game && isCheck(game) ? kingPos(game.board) : null
-  const colorOf = (piece: MhPiece) => ((piece.t === 'A') === (mode === 'falcon') ? 'white' : 'black')
+  // Oyuncunun taşları ayarlardaki renkte, rakibinki öteki renkte (Board.tsx ile aynı kural)
+  const colorOf = (piece: MhPiece) =>
+    ((piece.t === 'A') === (mode === 'falcon')) === (pieceColor === 'w') ? 'white' : 'black'
 
   const status = !game
     ? ''
@@ -118,17 +148,17 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage }: Props) {
         : t('mh.bot')
 
   return (
-    <div className="mh">
+    <div className={`mh ${game ? 'playing' : ''}`}>
       <header className="mh-hd">
         <ExitButton active={Boolean(game && !game.result && game.plies > 0)} onExit={onExit} className="mh-back">
-          ← {t('game.toMenu')}
+          ← {t('game.menu')}
         </ExitButton>
         <span className="mh-ttl">
           <Fig type="eagle" /> {t('mode.maharajah.name')}
           {mode && <em> · {t(mode === 'falcon' ? 'mh.falcon.name' : 'mh.hunter.name')}</em>}
         </span>
-        <button type="button" className="mh-gear" onClick={onOpenSettings} aria-label={t('settings.title')}>
-          ⚙
+        <button type="button" className="gv-gearbtn mh-gear" onClick={onOpenSettings} aria-label={t('settings.title')}>
+          <GearIcon />
         </button>
       </header>
 
@@ -196,9 +226,24 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage }: Props) {
               ))}
             </div>
           </div>
+
+          {game.result && score && record && (
+            <MaharajahOutro
+              key={`${mode}-${game.plies}`}
+              mode={mode}
+              result={game.result}
+              score={score}
+              best={record.best}
+              isRecord={record.isRecord}
+              onRestart={() => start(mode)}
+              onSwitch={() => start(mode === 'falcon' ? 'hunter' : 'falcon')}
+              onExit={onExit}
+            />
+          )}
           </div>
 
-          <div className="mh-side">
+          {/* Bitince düğmeler kapanış perdesinde; burada ikinci kez çizilmiyor */}
+          <div className={`mh-side ${game.result ? 'done' : ''}`}>
             <p className="mh-meta">
               {t('mh.moves', { n: game.plies })} · {t('mh.captured', { n: game.captured })}
             </p>
@@ -212,6 +257,60 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage }: Props) {
             </div>
           </div>
           <p className="mh-rules mh-foot">{t('mh.rules')}</p>
+
+          {/* Masaüstü sağ sütun: öteki oyunlarla aynı iskelet (.gv-side) -
+              üstte bu oyunun göstergeleri, altında ortak ayarlar paneli.
+              Mobilde yok; ayarlar üst çubuktaki dişliden açılıyor. */}
+          <aside className="gv-side">
+            <div className="gv-head">
+              <span className="gv-cell">
+                <span className="gv-lb">{t('mh.hud.moves')}</span>
+                <span className="gv-n xl">{game.plies}</span>
+              </span>
+              <span className="gv-sp" />
+              <span className="gv-cell" style={{ textAlign: 'right' }}>
+                <span className="gv-lb">{t('home.best')}</span>
+                <span className="gv-n lg">{readMhBest()[mode] || '-'}</span>
+              </span>
+            </div>
+
+            <div className="gv-stats">
+              <span className="gv-cell">
+                <span className="gv-lb">{t('mh.hud.captured')}</span>
+                <span className="gv-n md">{game.captured}</span>
+              </span>
+              <span className="gv-cell">
+                <span className="gv-lb">{t('mh.outro.material')}</span>
+                <span className="gv-n md">
+                  {mode === 'falcon' ? MH_ARMY_VALUE - armyMaterial(game.board) : armyMaterial(game.board)}
+                </span>
+              </span>
+            </div>
+
+            <p className={`gv-tx mh-state ${game.result ? `end ${game.result.outcome}` : ''}`} aria-live="polite">
+              {status}
+            </p>
+
+            <div className="gv-btns">
+              <button type="button" onClick={() => start(mode)}>
+                {t('mh.again')}
+              </button>
+              <button type="button" onClick={() => start(mode === 'falcon' ? 'hunter' : 'falcon')}>
+                {t('mh.switch')}
+              </button>
+            </div>
+
+            <SidePanel
+              identity={identity}
+              onIdentityChange={setIdentity}
+              ranking={ranking}
+              rankStatus={rankStatus}
+              badgeVersion={badgeVersion}
+              onOpenBadges={onOpenBadges}
+              onOpenRanking={onOpenRanking}
+              onOpenHelp={() => onOpenPage('help')}
+            />
+          </aside>
         </>
       )}
     </div>

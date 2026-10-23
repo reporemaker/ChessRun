@@ -356,7 +356,14 @@ export default function App() {
   return (
     <>
       {maharajah ? (
-        <MaharajahGame onExit={exitMaharajah} onOpenSettings={() => setSettingsOpen(true)} onOpenPage={setPage} />
+        <MaharajahGame
+          onExit={exitMaharajah}
+          onOpenSettings={() => setSettingsOpen(true)}
+          onOpenPage={setPage}
+          onOpenRanking={() => setRankOpen(true)}
+          onOpenBadges={() => setBadgesOpen(true)}
+          badgeVersion={badgeVersion}
+        />
       ) : config?.mode === 'daily' ? (
         <DailyGame
           key={runKey}

@@ -19,6 +19,9 @@
   --sq-dark: #94a3b4;
   --piece-w: #fdfdfb;
   --piece-b: #12151b;
+  /* Ana sayfanın kayan zemini: aynı tahta, perdenin altında bir ton koyu */
+  --home-light: #c9d3e0;
+  --home-dark: #7f8ca0;
 
   --cell: clamp(36px, 11vw, 60px);
   --radius: 16px;
@@ -45,6 +48,8 @@
   --piece-w: #f7f1e3;
   /* İs rengi: siyah değil, hafif sıcak koyu */
   --piece-b: #1b1612;
+  --home-light: #d9c399;
+  --home-dark: #9a5834;
 }
 
 * {

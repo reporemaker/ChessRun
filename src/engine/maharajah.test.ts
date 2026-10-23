@@ -8,6 +8,7 @@ import {
   botMove,
   isCheck,
   legalMoves,
+  mhScore,
   newMaharajah,
   playerSide,
   positionKey,
@@ -155,6 +156,34 @@ describe('Mihrace: kurallar', () => {
     expect(legalMoves(s, { r: 0, c: 4 }).some((m) => m.r === 1 && m.c === 4)).toBe(false)
     const a = setup('falcon', { '1,4': 'k', '3,4': 'A' }, 'amazon')
     expect(legalMoves(a).some((m) => m.r === 1 && m.c === 4)).toBe(false)
+  })
+})
+
+describe('Mihrace: puan', () => {
+  it('oyun sürerken puan yok', () => {
+    expect(mhScore(newMaharajah('falcon'))).toBeNull()
+  })
+
+  it('Şahin kazancı: yenen malzeme + 50 + hız payı', () => {
+    // Ordudan yalnızca şah kaldı: 39 malzeme yenmiş; 12 hamlede mat
+    const s = setup('falcon', { '0,0': 'k', '2,2': 'A' }, 'amazon')
+    const next = applyMove({ ...s, plies: 11 }, find(s, 2, 2, 1, 2))
+    expect(next.plies).toBe(12)
+    expect(mhScore(next)).toEqual({ material: 39, result: 50, speed: 38, total: 127 })
+  })
+
+  it('Avcı kazancı: ayakta kalan malzeme sayılır, 50 hamleyi aşınca hız payı 0', () => {
+    const s = setup('hunter', { '7,4': 'k', '6,3': 'p', '7,0': 'r', '5,4': 'A' }, 'army')
+    const next = applyMove({ ...s, plies: 70 }, find(s, 6, 3, 5, 4))
+    expect(mhScore(next)).toEqual({ material: 6, result: 50, speed: 0, total: 56 })
+  })
+
+  it('beraberlik 10, kayıpta hız payı yok', () => {
+    const f = setup('falcon', { '0,0': 'k', '3,2': 'A' }, 'amazon')
+    const stale = legalMoves(f).map((m) => applyMove(f, m)).find((n) => n.result?.reason === 'stalemate')!
+    expect(mhScore(stale)).toEqual({ material: 39, result: 10, speed: 0, total: 49 })
+    const lost: MhState = { ...newMaharajah('falcon'), result: { outcome: 'loss', reason: 'captured' } }
+    expect(mhScore(lost)).toEqual({ material: 0, result: 0, speed: 0, total: 0 })
   })
 })
 
