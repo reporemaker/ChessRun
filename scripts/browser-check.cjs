@@ -4,7 +4,7 @@
  * Gerçek Chrome ile (Playwright, kurulu Chrome kanalı; ek tarayıcı indirmez):
  *   cd server && npm run dev          (8787, yerel D1 migrate edilmiş)
  *   npx vite --port 5173              (kökte)
- *   cd /tmp && npm i playwright-core && BASE=http://localhost:5173 node <bu dosya>
+ *   cd /tmp && npm i playwright-core@1.64.1 && BASE=http://localhost:5173 node <bu dosya>
  * 28 adım; ekran görüntüleri dosyanın yanına düşer. CI'ye bağlı değil.
  */
 const { chromium } = require('playwright-core')
