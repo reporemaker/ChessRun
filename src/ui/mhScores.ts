@@ -10,6 +10,30 @@ import { MH_ARMY_VALUE, armyMaterial } from '../engine/maharajah'
  */
 const KEY = 'chessrun:mh-best'
 const STATS_KEY = 'chessrun:mh-stats'
+const GUIDE_KEY = 'chessrun:mh-guide'
+
+/* ------------------------------------------------------------------ *
+ * Kılavuz tercihi (rol seçimindeki anahtar). Varsayılan açık; kapalıysa
+ * tehlikeli kareler gösterilmez ve puan ×2. Oyuna başlarken MhState.guide
+ * olarak sabitlenir - burası yalnızca anahtarın son konumu.
+ * ------------------------------------------------------------------ */
+
+export function readMhGuide(): boolean {
+  try {
+    return localStorage.getItem(GUIDE_KEY) !== 'off'
+  } catch {
+    return true
+  }
+}
+
+export function writeMhGuide(on: boolean): void {
+  try {
+    if (on) localStorage.removeItem(GUIDE_KEY)
+    else localStorage.setItem(GUIDE_KEY, 'off')
+  } catch {
+    // depo yoksa tercih bu oturumla sınırlı
+  }
+}
 
 export type MhBest = Record<MhMode, number>
 

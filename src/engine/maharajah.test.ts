@@ -170,34 +170,48 @@ describe('Mihrace: puan', () => {
     const s = setup('falcon', { '0,0': 'k', '2,2': 'A' }, 'amazon')
     const next = applyMove({ ...s, plies: 11 }, find(s, 2, 2, 1, 2))
     expect(next.plies).toBe(12)
-    expect(mhScore(next)).toEqual({ material: 39, result: 50, speed: 38, total: 127 })
+    expect(mhScore(next)).toEqual({ material: 39, result: 50, speed: 38, base: 127, multiplier: 1, total: 127 })
   })
 
   it('Avcı kazancı: ayakta kalan malzeme sayılır, 50 hamleyi aşınca hız payı 0', () => {
     const s = setup('hunter', { '7,4': 'k', '6,3': 'p', '7,0': 'r', '5,4': 'A' }, 'army')
     const next = applyMove({ ...s, plies: 70 }, find(s, 6, 3, 5, 4))
-    expect(mhScore(next)).toEqual({ material: 6, result: 50, speed: 0, total: 56 })
+    expect(mhScore(next)).toEqual({ material: 6, result: 50, speed: 0, base: 56, multiplier: 1, total: 56 })
   })
 
   it('pat 10; kayıpta hız payı yok', () => {
     const f = setup('falcon', { '0,0': 'k', '3,2': 'A' }, 'amazon')
     const stale = legalMoves(f).map((m) => applyMove(f, m)).find((n) => n.result?.reason === 'stalemate')!
-    expect(mhScore(stale)).toEqual({ material: 39, result: 10, speed: 0, total: 49 })
+    expect(mhScore(stale)).toEqual({ material: 39, result: 10, speed: 0, base: 49, multiplier: 1, total: 49 })
     const lost: MhState = { ...newMaharajah('falcon'), result: { outcome: 'loss', reason: 'captured' } }
-    expect(mhScore(lost)).toEqual({ material: 0, result: 0, speed: 0, total: 0 })
+    expect(mhScore(lost)).toEqual({ material: 0, result: 0, speed: 0, base: 0, multiplier: 1, total: 0 })
   })
 
   it('bedava puan yok: tekrar/50 hamle beraberliği sonuç vermez, Avcı kazanmadan taş sayılmaz', () => {
     const rep: MhState = { ...newMaharajah('hunter'), plies: 3, result: { outcome: 'draw', reason: 'repetition' } }
-    expect(mhScore(rep)).toEqual({ material: 0, result: 0, speed: 0, total: 0 })
+    expect(mhScore(rep)).toEqual({ material: 0, result: 0, speed: 0, base: 0, multiplier: 1, total: 0 })
     const fifty: MhState = { ...newMaharajah('falcon'), result: { outcome: 'draw', reason: 'fifty' } }
     expect(mhScore(fifty)?.result).toBe(0)
   })
 
-  it('tek oyunun puanı sunucu tavanını aşamaz', () => {
-    // En iyi durum: ordudan yalnızca şah kalmış, ilk hamlede mat
+  it('kılavuz kapalıyken puan ×2; eski durum (alan yok) kılavuz açık sayılır', () => {
     const s = setup('falcon', { '0,0': 'k', '2,2': 'A' }, 'amazon')
-    const best = mhScore(applyMove(s, find(s, 2, 2, 1, 2)))!
+    const off = mhScore(applyMove({ ...s, plies: 11, guide: false }, find(s, 2, 2, 1, 2)))!
+    expect(off).toEqual({ material: 39, result: 50, speed: 38, base: 127, multiplier: 2, total: 254 })
+    const legacy = { ...s, plies: 11 } as MhState
+    delete legacy.guide
+    expect(mhScore(applyMove(legacy, find(s, 2, 2, 1, 2)))?.multiplier).toBe(1)
+    // Kayıpta çarpan puanı değiştirmez: 0 × 2 = 0
+    const lost: MhState = { ...newMaharajah('falcon', false), result: { outcome: 'loss', reason: 'captured' } }
+    expect(mhScore(lost)?.total).toBe(0)
+    expect(newMaharajah('hunter').guide).toBe(true)
+    expect(newMaharajah('hunter', false).guide).toBe(false)
+  })
+
+  it('tek oyunun puanı sunucu tavanını aşamaz', () => {
+    // En iyi durum: ordudan yalnızca şah kalmış, ilk hamlede mat, kılavuz kapalı
+    const s = setup('falcon', { '0,0': 'k', '2,2': 'A' }, 'amazon')
+    const best = mhScore(applyMove({ ...s, guide: false }, find(s, 2, 2, 1, 2)))!
     expect(best.total).toBe(SCORE_CAP.maharajah)
   })
 })

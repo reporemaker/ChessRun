@@ -24,7 +24,7 @@ import type { StringKey } from '../ui/i18n'
 import { getIdentity } from '../ui/identity'
 import { RANKS_EVENT, submitRun } from '../ui/leaderboard'
 import { type BadgeAward, claimMhBadges } from '../ui/badges'
-import { readMhBest, recordMhResult, recordMhScore } from '../ui/mhScores'
+import { readMhBest, readMhGuide, recordMhResult, recordMhScore, writeMhGuide } from '../ui/mhScores'
 import { type MhTicket, clearMhResume, saveMhResume } from '../ui/mhResume'
 import { trackRun } from '../ui/stats'
 import { dailyScoreOf, dayKey, readRuns, recordRun } from '../ui/scores'
@@ -73,6 +73,11 @@ const RESULT_KEY: Record<string, StringKey> = {
  * öteki oyunlar gibi koşu defterine yazılır ve haftalık lige gider (mod
  * `maharajah`, mesafe = oyuncunun hamle sayısı); günlük çarpan da uygulanır.
  * Rol başına en iyi puan ayrıca cihazda (ui/mhScores).
+ *
+ * Kılavuz anahtarı (rol seçiminde): açıkken hamle hedeflerinden rakibin tehdit
+ * ettiği kareler kırmızı nokta alır; kapalıyken oyuncu tehlikeyi kendi bulur ve
+ * puan ×2 (engine mhScore). Tercih cihazda kalır, oyun başında duruma yazılır
+ * ve oyun sürerken değişmez.
  */
 export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRanking, onOpenBadges, badgeVersion, resume }: Props) {
   const t = useT()
@@ -87,6 +92,7 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRankin
   }, [])
   const { view: ranking, status: rankStatus } = useRanking(rankTick)
   const [mode, setMode] = useState<MhMode | null>(resume?.game.mode ?? null)
+  const [guide, setGuide] = useState(() => readMhGuide())
   const [game, setGame] = useState<MhState | null>(resume?.game ?? null)
   const [selected, setSelected] = useState<MhPos | null>(null)
   /** Bitmiş oyunun kaydı - puan yazılırken bir kez hesaplanır */
@@ -110,9 +116,15 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRankin
     runDay.current = dayKey()
     dailyToday.current = dailyScoreOf(readRuns(), runDay.current)
     setMode(next)
-    setGame(newMaharajah(next))
+    setGame(newMaharajah(next, guide))
     setSelected(null)
     setRecord(null)
+  }
+
+  function toggleGuide() {
+    const next = !guide
+    setGuide(next)
+    writeMhGuide(next)
   }
 
   function play(move: MhMove) {
@@ -201,7 +213,8 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRankin
   // Şahin'de oyuncunun tek taşı var: sırası gelince kendiliğinden seçili
   const active: MhPos | null = myTurn && game ? (mode === 'falcon' ? game.amazon : selected) : null
   const targets = useMemo(() => (game && active ? legalMoves(game, active) : []), [game, active])
-  const risky = useMemo(() => (game && active ? riskOf(game, targets) : new Set<number>()), [game, active, targets])
+  const guideOn = game?.guide !== false
+  const risky = useMemo(() => (game && active && guideOn ? riskOf(game, targets) : new Set<number>()), [game, active, targets, guideOn])
 
   function onSquare(r: number, c: number) {
     if (!game || !myTurn) return
@@ -241,6 +254,7 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRankin
         <span className="mh-ttl">
           <Fig type="eagle" /> {t('mode.maharajah.name')}
           {mode && <em> · {t(mode === 'falcon' ? 'mh.falcon.name' : 'mh.hunter.name')}</em>}
+          {game && !guideOn && <em className="mh-x2"> · ×2</em>}
         </span>
         <button type="button" className="gv-gearbtn mh-gear" onClick={onOpenSettings} aria-label={t('settings.title')}>
           <GearIcon />
@@ -261,6 +275,22 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRankin
               </span>
             </button>
           ))}
+          <div className="mh-guide">
+            <span className="mh-guide-t">
+              <b>{t('mh.guide')}</b>
+              <small>{t(guide ? 'mh.guide.on' : 'mh.guide.off')}</small>
+            </span>
+            <button
+              type="button"
+              className={`pop-tg ${guide ? 'on' : ''}`}
+              role="switch"
+              aria-checked={guide}
+              aria-label={t('mh.guide')}
+              onClick={toggleGuide}
+            >
+              <i />
+            </button>
+          </div>
           <p className="mh-rules">{t('mh.rules')}</p>
           <button type="button" className="mh-link" onClick={() => onOpenPage('help')}>
             {t('settings.howTo')}
@@ -333,7 +363,7 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRankin
           {/* Bitince düğmeler kapanış perdesinde; burada ikinci kez çizilmiyor */}
           <div className={`mh-side ${game.result ? 'done' : ''}`}>
             <p className="mh-meta">
-              {t('mh.moves', { n: game.plies })} · {t('mh.captured', { n: game.captured })}
+              {t('mh.moves', { n: game.plies })} · {t('mh.captured', { n: game.captured })} · {t(guideOn ? 'mh.guide.short.on' : 'mh.guide.short.off')}
             </p>
             <div className="mh-act">
               <button type="button" className={game.result ? 'go' : ''} onClick={() => start(mode)}>
@@ -366,6 +396,10 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRankin
               <span className="gv-cell">
                 <span className="gv-lb">{t('mh.hud.captured')}</span>
                 <span className="gv-n md">{game.captured}</span>
+              </span>
+              <span className="gv-cell">
+                <span className="gv-lb">{t('mh.guide')}</span>
+                <span className="gv-n md">{guideOn ? t('mh.guide.short.on') : '×2'}</span>
               </span>
               <span className="gv-cell">
                 <span className="gv-lb">{t('mh.outro.material')}</span>

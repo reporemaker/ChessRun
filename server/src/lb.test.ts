@@ -136,13 +136,13 @@ describe('cleanSubmit', () => {
     expect(plausibleScoreMax('trio', 0)).toBe(100)
   })
 
-  it('Mihrace: tanınan mod, mesafe = hamle; tek oyunun puanı 138 tavanlı', () => {
+  it('Mihrace: tanınan mod, mesafe = hamle; tek oyunun puanı 276 tavanlı (138 × kılavuzsuz 2)', () => {
     const mh = { ...GOOD, mode: 'maharajah', score: 127, distance: 12 }
     expect(cleanSubmit(mh, NOW)).toMatchObject({ mode: 'maharajah', score: 127, distance: 12 })
-    expect(cleanSubmit({ ...mh, score: 138, distance: 1 }, NOW)).not.toBeNull()
-    expect(cleanSubmit({ ...mh, score: 139, distance: 60 }, NOW)).toBeNull()
+    expect(cleanSubmit({ ...mh, score: 276, distance: 1 }, NOW)).not.toBeNull()
+    expect(cleanSubmit({ ...mh, score: 277, distance: 60 }, NOW)).toBeNull()
     // Mutlak tavan hamle başı tavandan önce gelir
-    expect(plausibleScoreMax('maharajah', 0)).toBe(138)
+    expect(plausibleScoreMax('maharajah', 0)).toBe(276)
     // Puansız ama oynanmış oyun da koşu sayılır (lig: koşu sayısı)
     expect(cleanSubmit({ ...mh, score: 0, distance: 9 }, NOW)).not.toBeNull()
   })

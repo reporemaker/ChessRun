@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { type MhGrid, type MhState, newMaharajah } from '../engine/maharajah'
 import { MH_SWIFT_PLIES, claimMhBadges, readBadges } from './badges'
-import { applyMhResult, readMhStats, recordMhResult } from './mhScores'
+import { applyMhResult, readMhGuide, readMhStats, recordMhResult, writeMhGuide } from './mhScores'
 import { MH_RESUME_KEY, clearMhResume, readMhResume, saveMhResume } from './mhResume'
 import { RESUME_TTL_MS } from './resume'
 
@@ -58,8 +58,29 @@ describe('Mihrace rozet sayaçları', () => {
   })
 })
 
+describe('Mihrace kılavuz tercihi', () => {
+  it('varsayılan açık; kapatınca kalır, açınca anahtar silinir', () => {
+    expect(readMhGuide()).toBe(true)
+    writeMhGuide(false)
+    expect(readMhGuide()).toBe(false)
+    expect(store.get('chessrun:mh-guide')).toBe('off')
+    writeMhGuide(true)
+    expect(readMhGuide()).toBe(true)
+    expect(store.has('chessrun:mh-guide')).toBe(false)
+  })
+})
+
 describe('Mihrace devam fişi', () => {
   const live = (plies: number): MhState => ({ ...newMaharajah('hunter'), plies })
+
+  it('kılavuzsuz oyunun fişi kılavuzsuz sürer; eski fiş (alan yok) kılavuz açık sayılır', () => {
+    saveMhResume({ game: { ...newMaharajah('falcon', false), plies: 2 }, runDay: '2026-10-24', dailyToday: null, elapsedMs: 0 }, 1_000)
+    expect(readMhResume(2_000)?.game.guide).toBe(false)
+    const legacy = { ...live(2) } as MhState
+    delete legacy.guide
+    saveMhResume({ game: legacy, runDay: '2026-10-24', dailyToday: null, elapsedMs: 0 }, 1_000)
+    expect(readMhResume(2_000)?.game.guide).toBeUndefined()
+  })
 
   it('süren oyun okunur; hamlesiz, bitmiş ya da eski fiş atılır', () => {
     saveMhResume({ game: live(3), runDay: '2026-10-23', dailyToday: null, elapsedMs: 5000 }, 1_000)

@@ -70,6 +70,13 @@ export interface MhState {
   plies: number
   /** Oyuncunun yediği taşlar (puanlama sonra) */
   captured: number
+  /**
+   * Kılavuz: hamle hedeflerinde rakibin tehdit ettiği kareler kırmızı nokta ile
+   * gösterilir. Kapalıysa oyuncu tehlikeyi kendi görür ve puan ×2 olur. Oyun
+   * başında sabitlenir (durumda taşınır ki oyun sürerken değişmesin, devam
+   * fişinden sürerken de korunsun). Eski fişlerde alan yok → açık sayılır.
+   */
+  guide?: boolean
   result: { outcome: MhOutcome; reason: MhReason } | null
 }
 
@@ -98,7 +105,7 @@ function pawnDir(armyTop: boolean) {
   return armyTop ? 1 : -1
 }
 
-export function newMaharajah(mode: MhMode): MhState {
+export function newMaharajah(mode: MhMode, guide = true): MhState {
   const armyTop = mode === 'falcon'
   const home = homeRow(armyTop)
   const pawns = home + pawnDir(armyTop)
@@ -122,6 +129,7 @@ export function newMaharajah(mode: MhMode): MhState {
     lastBot: null,
     plies: 0,
     captured: 0,
+    guide,
     result: null,
   }
   state.seen[positionKey(state)] = 1
@@ -407,8 +415,9 @@ function judge(s: MhState, repeats: number): MhState['result'] {
  *          tuttuğun malzeme (piyon 1 · at/fil 3 · kale 5 · vezir 9; ordu 39)
  *   sonuç  kazanç 50 · pat 10 · kayıp ve öteki beraberlikler 0
  *   hız    yalnızca kazançta: 50 hamleden önce biten her hamle +1
+ *   çarpan kılavuz kapalıysa (tehlikeli kareler gösterilmez) ×2
  *
- * Puan haftalık lige giriyor (shared/leaderboard SCORE_CAP = 138), bu yüzden
+ * Puan haftalık lige giriyor (shared/leaderboard SCORE_CAP = 276), bu yüzden
  * bedava puan yok: Avcı'nın 39'u oyun başında hazır olduğu ve üç tekrar ya
  * da 50 hamle beraberliği birkaç hamlede zorlanabildiği için ikisi de
  * yalnızca gerçek bir sonuçla (kazanç / pat) puan getiriyor.
@@ -418,11 +427,18 @@ export const MH_ARMY_VALUE = 39
 export const MH_WIN_POINTS = 50
 export const MH_STALEMATE_POINTS = 10
 export const MH_SPEED_PAR = 50
+/** Kılavuzsuz oyunun çarpanı */
+export const MH_NO_GUIDE_MULTIPLIER = 2
 
 export interface MhScore {
   material: number
   result: number
   speed: number
+  /** Üç kalemin toplamı, çarpansız */
+  base: number
+  /** 1 (kılavuz açık) ya da MH_NO_GUIDE_MULTIPLIER */
+  multiplier: number
+  /** base × multiplier - lige giden ve rekor sayılan puan */
   total: number
 }
 
@@ -441,7 +457,9 @@ export function mhScore(s: MhState): MhScore | null {
   const material = s.mode === 'falcon' ? MH_ARMY_VALUE - left : outcome === 'win' ? left : 0
   const result = outcome === 'win' ? MH_WIN_POINTS : reason === 'stalemate' ? MH_STALEMATE_POINTS : 0
   const speed = outcome === 'win' ? Math.max(0, MH_SPEED_PAR - s.plies) : 0
-  return { material, result, speed, total: material + result + speed }
+  const base = material + result + speed
+  const multiplier = s.guide === false ? MH_NO_GUIDE_MULTIPLIER : 1
+  return { material, result, speed, base, multiplier, total: base * multiplier }
 }
 
 /* ------------------------------------------------------------------ *

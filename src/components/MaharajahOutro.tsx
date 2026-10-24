@@ -101,6 +101,7 @@ export function MaharajahOutro({ mode, result, score, best, earned, bonus, isRec
           <p className="outro-score">
             <strong>{shown}</strong>
             <span>{t(`mh.reason.${result.reason}`)}</span>
+            {score.multiplier > 1 && <em className="outro-bonus">{t('mh.outro.noGuide', { x: score.multiplier })}</em>}
             {bonus > 1 && <em className="outro-bonus">{t('game.bonus', { x: bonus.toFixed(2) })}</em>}
           </p>
           {isRecord && <p className="outro-record">{t('outro.record')}</p>}

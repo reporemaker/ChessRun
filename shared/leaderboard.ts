@@ -78,15 +78,15 @@ export const LB_LIMITS = {
  * Satır başına kabul edilen en yüksek puan (üstü: koşu atılır). Mihrace'de
  * "satır" oyuncunun hamle sayısı; tek oyunun puanı da tavanlı (aşağıda).
  */
-export const PLAUSIBLE_PER_ROW: Record<Mode, number> = { classic: 80, kingRun: 80, trio: 100, daily: 1000, maharajah: 140 }
+export const PLAUSIBLE_PER_ROW: Record<Mode, number> = { classic: 80, kingRun: 80, trio: 100, daily: 1000, maharajah: 280 }
 /** Panel işareti için "olağan dışı" puan/satır eşiği (gerçek oyunda görülenin ~2 katı) */
-export const SUSPECT_PER_ROW: Record<Mode, number> = { classic: 8, kingRun: 8, trio: 12, daily: 60, maharajah: 20 }
+export const SUSPECT_PER_ROW: Record<Mode, number> = { classic: 8, kingRun: 8, trio: 12, daily: 60, maharajah: 40 }
 /**
  * Tek koşunun mutlak tavanı - yalnızca puanı sınırlı oyunlarda. Mihrace:
- * taş 39 + kazanç 50 + hız en çok 49 = 138 (engine/maharajah.ts mhScore;
- * motor testi bu tavanı bekçi olarak kullanıyor).
+ * (taş 39 + kazanç 50 + hız en çok 49 = 138) × kılavuzsuz çarpan 2 = 276
+ * (engine/maharajah.ts mhScore; motor testi bu tavanı bekçi olarak kullanıyor).
  */
-export const SCORE_CAP: Partial<Record<Mode, number>> = { maharajah: 138 }
+export const SCORE_CAP: Partial<Record<Mode, number>> = { maharajah: 276 }
 export const BURST_WINDOW_MS = 60_000
 /** Pencere içinde kabul edilen koşu sayısı; üstü düşer */
 export const BURST_MAX_RUNS = 8
