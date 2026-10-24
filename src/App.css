@@ -4559,6 +4559,8 @@ button.gv-chip {
 }
 
 .mh-back {
+  flex: 0 0 auto;
+  white-space: nowrap;
   border: 0;
   background: none;
   color: var(--arc-dim);
@@ -4578,7 +4580,14 @@ button.gv-chip {
 
 
 .mh-ttl {
-  font-size: 13px;
+  /* Tek satır: dar ekranda uzun rol adı (MAHARADSCHA · JÄGER · ×2) sarmasın,
+     sığmayan kısım küçülerek sığsın - sarma menü düğmesini de ikiye bölüyordu */
+  flex: 0 1 auto; /* büyümez: ×2 hep başlığın hemen yanında; sığmazsa yalnızca bu küçülür */
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: clamp(10px, 3vw, 13px);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--arc-gold);
@@ -4703,10 +4712,13 @@ button.gv-chip {
   color: var(--arc-dim);
 }
 
-/* Başlıkta kılavuzsuz oyunun işareti */
-.mh-ttl .mh-x2 {
+/* Kılavuzsuz oyunun işareti: başlığın yanında ayrı öğe; başlık sığmayınca kısalır, bu kalır */
+.mh-x2 {
+  flex: 0 0 auto;
+  margin-left: -4px;
+  font-size: 13px;
+  letter-spacing: 0.14em;
   color: var(--arc-gold);
-  font-style: normal;
 }
 
 /* Oyun */

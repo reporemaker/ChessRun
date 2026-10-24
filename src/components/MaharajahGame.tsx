@@ -295,8 +295,9 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRankin
         <span className="mh-ttl">
           <Fig type="eagle" /> {t('mode.maharajah.name')}
           {mode && <em> · {t(mode === 'falcon' ? 'mh.falcon.name' : 'mh.hunter.name')}</em>}
-          {game && !guideOn && <em className="mh-x2"> · ×2</em>}
         </span>
+        {/* Kılavuzsuz oyunun işareti başlığın DIŞINDA: dar ekranda başlık kısalsa da ×2 görünür kalır */}
+        {game && !guideOn && <span className="mh-x2" aria-label={t('mh.guide.short.off')}>×2</span>}
         <button type="button" className="gv-gearbtn mh-gear" onClick={onOpenSettings} aria-label={t('settings.title')}>
           <GearIcon />
         </button>
@@ -441,7 +442,7 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRankin
               </span>
               <span className="gv-cell">
                 <span className="gv-lb">{t('mh.guide')}</span>
-                <span className="gv-n md">{guideOn ? t('mh.guide.short.on') : '×2'}</span>
+                <span className="gv-n md">{guideOn ? t('mh.guide.cell.on') : '×2'}</span>
               </span>
               <span className="gv-cell">
                 <span className="gv-lb">{t('mh.outro.material')}</span>
