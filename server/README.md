@@ -1,18 +1,18 @@
-# chessrun-stats — istatistik Worker'ı
+# chessrun-stats — statistics Worker
 
-Cloudflare Worker + D1. Tek betik, iki alan adı:
+Cloudflare Worker + D1. One script, two domains:
 
-| Yol | Erişim |
+| Path | Access |
 |---|---|
-| `chessrun.app/collect/*` | herkese açık toplama — **oyunla aynı origin** |
-| `chessrun.app/lb/*` | haftalık sıralama (`POST /runs` · `GET /weekly` · `GET /pulse`) — herkese açık |
-| `1403.chessrun.app/*` | panel + `/api/*` (istatistik + ad moderasyonu) — **Cloudflare Access arkasında** |
+| `chessrun.app/collect/*` | public collection — **same origin as the game** |
+| `chessrun.app/lb/*` | weekly leaderboard (`POST /runs` · `GET /weekly` · `GET /pulse`) — public |
+| `1403.chessrun.app/*` | panel + `/api/*` (statistics + name moderation) — **behind Cloudflare Access** |
 
-Toplamanın apex'te olması tesadüf değil. `sendBeacon` preflight yapamaz;
-çapraz origin'de oturum olayları iOS'ta sessizce kaybolur. Aynı origin'de
-CORS diye bir şey yok ve Worker'ın hiç CORS kodu taşıması gerekmiyor.
+Collection lives on the apex on purpose. `sendBeacon` cannot send a preflight;
+cross-origin session events silently get lost on iOS. On the same origin there
+is no CORS at all, and the Worker does not need any CORS code.
 
-## Yerelde çalıştırma
+## Running locally
 
 ```bash
 cd server
@@ -21,50 +21,52 @@ npm run migrate:local     # wrangler d1 migrations apply chessrun --local
 npm run dev               # 8787
 ```
 
-Sonra proje kökünde `cp .env.example .env.local` ve `npm run dev`.
-Vite'ın dev proxy'si `/collect`'i 8787'ye yönlendiriyor, böylece **yerel de
-üretim gibi aynı origin** oluyor.
+Then, in the project root, `cp .env.example .env.local` and `npm run dev`.
+Vite's dev proxy forwards `/collect` to 8787, so **local is the same origin
+too**, just like production.
 
-Satırları görmek için:
+To see the rows:
 
 ```bash
 npx wrangler d1 execute chessrun --local --json \
   --command "SELECT mode, COUNT(*) FROM run_event GROUP BY mode"
 ```
 
-## Yayına almadan önce doldurulacaklar
+## To fill in before the first deploy
 
-`wrangler.toml` içinde `PLACEHOLDER` geçen her yer:
+Every place in `wrangler.toml` that says `PLACEHOLDER`:
 
 - `database_id` ← `wrangler d1 create chessrun`
 - KV `id` ← `wrangler kv namespace create SALT`
-- `ACCESS_TEAM` / `ACCESS_AUD` ← Access uygulaması kurulunca (politika: Allow → Emails → `chessrun@smartkraft.ch`)
+- `ACCESS_TEAM` / `ACCESS_AUD` ← once the Access application exists (policy: Allow → Emails → `chessrun@smartkraft.ch`)
 
 
-## Değişmez kurallar
+## Rules that do not change
 
-- **IP hiçbir yere yazılmıyor.** Yalnızca istek işleyicisinde yerel değişken
-  olarak var, günlük dönen tuzla hash'leniyor, tuz 48 saatte siliniyor.
-- **Cihaz jetonu istatistiğe hiç gelmiyor.** Sıralama tablosu jetona ihtiyaç
-  duyuyor çünkü o bir kimlik iddiası; istatistik duymuyor. Sıralama tarafında
-  da ham jeton **yazılmıyor**: `lb_player` anahtarı SHA-256 hash, gösterim
-  kısa hâl (`a1b2…9f`), cevaplar ve panel tam jetonu hiç görmüyor.
-- **Sıralama sunucusu imzayı doğrulayamıyor** (anahtar cihazda) — jeton
-  taşıyıcı sırdır. Savunma: hafta başına oyuncu×mod tek satır (upsert),
-  beyaz-liste kelepçesi (`shared/leaderboard.ts` LB_LIMITS), hafta penceresi
-  (dün/bugün/yarın), WAF hız sınırı `/lb/*`, panelden gölgeleme/yasak.
-- **Ham User-Agent saklanmıyor** — üç kovaya ayrıştırılıyor.
-- **Şehir alınmıyor.** Şehir + tarayıcı + işletim sistemi + saat dilimi bir
-  haneyi tekilleştirir ve hiçbir ürün sorusunu cevaplamaz.
-- **Toplama uçları her durumda 204 döner** — doğrulama başarısız olsa bile.
-  Şema şeklini sızdırmamak ve istemciyi yeniden denemeye itmemek için.
-- **`workers_dev = false` kalmalı.** Access rotanın önünde duruyor; Worker
-  `*.workers.dev` üstünden erişilebilir olsaydı Access baypas edilir, tüm
-  veri seti tahmin edilecek bir alan adı uzaklıkta kalırdı.
+- **An IP is never written anywhere.** It exists only as a local variable in the
+  request handler, is hashed with a salt that rotates daily, and the salt is
+  deleted after 48 hours.
+- **The device token never reaches the statistics.** The leaderboard needs the
+  token because it is a claim of identity; the statistics do not. The
+  leaderboard does **not** store the raw token either: the `lb_player` key is a
+  SHA-256 hash, the display form is short (`a1b2…9f`), and neither the
+  responses nor the panel ever see the full token.
+- **The leaderboard server cannot verify the signature** (the key stays on the
+  device) — the token is a bearer secret. Defences: one row per week per
+  player×mode (upsert), a whitelist clamp (`shared/leaderboard.ts` LB_LIMITS),
+  a week window (yesterday/today/tomorrow), a rate limit on `/lb/*`, and
+  shadowing/banning from the panel.
+- **The raw User-Agent is not stored** — it is parsed into three buckets.
+- **The city is not collected.** City + browser + operating system + time zone
+  would single out a household and answer no product question.
+- **Collection endpoints always return 204** — even when validation fails, so
+  that the schema shape does not leak and the client is not pushed to retry.
+- **`workers_dev = false` must stay.** Access sits in front of the route; if the
+  Worker were reachable on `*.workers.dev`, Access would be bypassed and the
+  whole data set would be one guessable domain away.
 
-## Kapsam dışı (bilinçli)
+## Out of scope (on purpose)
 
-Mail — panelde hiç olmayacak; iletişim ve Access girişi `chessrun@smartkraft.ch` üstünden.
-Gerçek zamanlı görünüm, veri dışa aktarma, çoklu yönetici, geçmiş
-`localStorage` verisinin aktarımı (cihaz başına tutulduğu için sunucuya
-taşınamaz).
+Mail — never in the panel; contact and Access sign-in go through `chessrun@smartkraft.ch`.
+Real-time views, data export, multiple admins, moving old `localStorage` data
+(it is kept per device, so it cannot be moved to the server).
