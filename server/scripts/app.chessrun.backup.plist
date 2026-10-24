@@ -6,12 +6,12 @@
   <key>ProgramArguments</key>
   <array>
     <string>/bin/sh</string>
-    <string>/Users/seu/Code/Genel_projeler/chessrun/server/scripts/backup.sh</string>
+    <string>__SERVER_DIR__/scripts/backup.sh</string>
   </array>
   <key>StartCalendarInterval</key>
   <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>9</integer><key>Minute</key><integer>0</integer></dict>
-  <key>StandardOutPath</key><string>/Users/seu/Code/Genel_projeler/chessrun/server/backups/launchd.out.log</string>
-  <key>StandardErrorPath</key><string>/Users/seu/Code/Genel_projeler/chessrun/server/backups/launchd.err.log</string>
+  <key>StandardOutPath</key><string>__SERVER_DIR__/backups/launchd.out.log</string>
+  <key>StandardErrorPath</key><string>__SERVER_DIR__/backups/launchd.err.log</string>
   <key>EnvironmentVariables</key>
   <dict><key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string></dict>
 </dict>
