@@ -19,7 +19,7 @@ import { tuningActive } from '../engine/tuning'
 import type { PieceType, Pos } from '../engine/types'
 import { getIdentity } from '../ui/identity'
 import { DAILY_REPLAY_ALLOWED, markDailyPlayed } from '../ui/dailyLock'
-import { RANKS_EVENT, leaderboardEnabled, startDaily } from '../ui/leaderboard'
+import { RANKS_EVENT, leaderboardEnabled, startDaily, submitRun } from '../ui/leaderboard'
 import { PIECE_NAME_KEY } from '../ui/pieces'
 import { Fig } from './Fig'
 import { type RunRecord, currentStreak, readRuns, readStanding, recordRun } from '../ui/scores'
@@ -355,10 +355,7 @@ export function DailyGame({
     tally.bestStreak = state.bestCombo
     for (const piece of state.chain) tally.captured[piece] += 1
     recordLifetime(tally, { mode: 'daily', distance: state.distance, daily: day || undefined })
-    if (DAILY_SUBMIT) {
-      const { submitRun } = await import('../ui/leaderboard')
-      void submitRun(run)
-    }
+    if (DAILY_SUBMIT) void submitRun(run)
     // İstatistik: ayrı uç, jeton yok. Hız ayarı bu modda yok - 'normal'.
     trackRun({
       mode: 'daily',
