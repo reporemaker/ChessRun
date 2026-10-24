@@ -22,8 +22,14 @@ Cloudflare Worker + D1. One script, two domains:
 | GET · HEAD | `/lb/health` | liveness check |
 
 Both `/lb/*` and `/collect/*` are rate limited per IP with Workers rate-limiting
-bindings (`wrangler.toml`). A daily cron rotates the salt, rolls up yesterday and
-deletes raw rows older than 35 days.
+bindings (`wrangler.toml`). A daily cron rolls up every day that is still missing,
+deletes raw rows older than 35 days and prunes the league (archives last week's top
+three, drops weeks older than 8). The salt is per day: created on the first request of
+the day and expired by KV after 48 hours; the cron does not touch it.
+
+`/api/*` (panel, behind Access): `summary`, `series`, `breakdown`, `breakdowns`,
+`league`, `names` and `names/act` (moderation), `words` (banned words), `health`, and
+`rollup` (runs the daily rollup by hand).
 
 Collection lives on the apex on purpose. `sendBeacon` cannot send a preflight;
 cross-origin session events silently get lost on iOS. On the same origin there
@@ -52,12 +58,16 @@ npx wrangler d1 execute chessrun --local --json \
 
 ## Setting up a new deployment
 
-`wrangler.toml` holds the IDs of the existing deployment. For a new one, replace:
+`wrangler.toml` holds the IDs of the existing deployment. For a new one:
 
-- `database_id` ← `wrangler d1 create chessrun`
-- KV `id` ← `wrangler kv namespace create SALT`
-- `ACCESS_TEAM` / `ACCESS_AUD` ← once the Access application exists (policy: Allow → Emails → `chessrun@smartkraft.ch`)
-- the secret: `wrangler secret put DAILY_SECRET`
+1. Replace `database_id` (`wrangler d1 create chessrun`), the KV `id`
+   (`wrangler kv namespace create SALT`), the routes and `zone_name`, and the panel's
+   custom domain.
+2. Create the Access application for the panel domain and set `ACCESS_TEAM` /
+   `ACCESS_AUD` (policy: Allow → Emails → the admin address).
+3. `wrangler secret put DAILY_SECRET`.
+4. `npm run migrate` (applies the migrations to the remote D1).
+5. `cd sub && npm run build` (the panel is served from `../sub/dist`), then `npm run deploy`.
 
 ## Backup
 

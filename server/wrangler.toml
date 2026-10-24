@@ -40,7 +40,8 @@ namespace_id = "1002"
 simple = { limit = 40, period = 10 }
 
 [triggers]
-# 00:05 UTC: tuzu döndür, dünü topla, 35 günü aşan ham satırları sil
+# 00:05 UTC: eksik günleri topla, 35 günü aşan ham satırları sil, ligi buda
+# (tuz cron'la dönmüyor: güne bağlı, ilk istekte üretilir, KV 48 saatte siler)
 crons = ["5 0 * * *"]
 
 # --- Rotalar -----------------------------------------------------------
