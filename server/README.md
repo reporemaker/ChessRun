@@ -4,9 +4,26 @@ Cloudflare Worker + D1. One script, two domains:
 
 | Path | Access |
 |---|---|
-| `chessrun.app/collect/*` | public collection — **same origin as the game** |
-| `chessrun.app/lb/*` | weekly leaderboard (`POST /runs` · `GET /weekly` · `GET /pulse`) — public |
-| `1403.chessrun.app/*` | panel + `/api/*` (statistics + name moderation) — **behind Cloudflare Access** |
+| `chessrun.app/collect/*` | public collection (`POST /visit` · `/run` · `/session`) — **same origin as the game** |
+| `chessrun.app/lb/*` | leaderboard, daily challenge and profiles — public (see below) |
+| `chessrun.app/s/*` | share links: an og preview for bots, a redirect for people — public |
+| `1403.chessrun.app/*` | panel + `/api/*` (statistics, league, name moderation, banned words) — **behind Cloudflare Access** |
+
+`/lb/*` endpoints:
+
+| Method | Path | What |
+|---|---|---|
+| POST | `/lb/runs` | submit a finished run |
+| GET | `/lb/weekly` · `/lb/pulse` · `/lb/awards` | weekly table, today's activity, badges |
+| GET · POST | `/lb/daily` · `/lb/daily/start` | today's challenge: seed and leaderboard, start a run |
+| POST | `/lb/hello` | once a day: name and badges of a device |
+| GET · POST | `/lb/profile` | read / save a profile (moving between devices) |
+| POST | `/lb/recovery` · `/lb/recovery/fetch` | set a recovery code / restore a profile with it |
+| GET · HEAD | `/lb/health` | liveness check |
+
+Both `/lb/*` and `/collect/*` are rate limited per IP with Workers rate-limiting
+bindings (`wrangler.toml`). A daily cron rotates the salt, rolls up yesterday and
+deletes raw rows older than 35 days.
 
 Collection lives on the apex on purpose. `sendBeacon` cannot send a preflight;
 cross-origin session events silently get lost on iOS. On the same origin there
@@ -22,8 +39,9 @@ npm run dev               # 8787
 ```
 
 Then, in the project root, `cp .env.example .env.local` and `npm run dev`.
-Vite's dev proxy forwards `/collect` to 8787, so **local is the same origin
-too**, just like production.
+Vite's dev proxy forwards `/collect` and `/lb` to 8787, so **local is the same
+origin too**, just like production. For local secrets copy `.dev.vars.example` to
+`.dev.vars` (`SKIP_ACCESS`, `DAILY_SECRET`).
 
 To see the rows:
 
@@ -32,14 +50,20 @@ npx wrangler d1 execute chessrun --local --json \
   --command "SELECT mode, COUNT(*) FROM run_event GROUP BY mode"
 ```
 
-## To fill in before the first deploy
+## Setting up a new deployment
 
-Every place in `wrangler.toml` that says `PLACEHOLDER`:
+`wrangler.toml` holds the IDs of the existing deployment. For a new one, replace:
 
 - `database_id` ← `wrangler d1 create chessrun`
 - KV `id` ← `wrangler kv namespace create SALT`
 - `ACCESS_TEAM` / `ACCESS_AUD` ← once the Access application exists (policy: Allow → Emails → `chessrun@smartkraft.ch`)
+- the secret: `wrangler secret put DAILY_SECRET`
 
+## Backup
+
+`npm run backup` writes a full SQL dump of the production database to `server/backups/`
+(not in git). `sh scripts/install-backup.sh` installs the scheduled backup on macOS; run
+it again if the repository moves.
 
 ## Rules that do not change
 
