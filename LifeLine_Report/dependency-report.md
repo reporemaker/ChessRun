@@ -4,133 +4,137 @@ Ecosystems: npm (3 projects: `.`, `server/`, `sub/`) · Previous report: 2026-10
 
 ## Summary
 
-- **Çalışma anında dışarıdan gelen kod yalnızca React.** Oyunun (`.`) ve panelin (`sub/`)
-  tarayıcıya giden paketleri `react`, `react-dom` 19.3.1 ve onların bağımlılığı `scheduler` — 3
-  paket. Geri kalan her şey geliştirme/derleme aracı.
-- **Projeyi rehin tutan bağımlılıklar:** `react`/`react-dom` (iki arayüzün temeli), `vite` +
-  `typescript` (derleme), `wrangler` (sunucunun bütün araç zinciri) ve Cloudflare (barındırma,
-  veritabanı, kimlik doğrulama).
-- **Bu çalıştırmada:** ChessRun 1.1.1 ile bütün paketler aralıkları içinde güncellendi;
-  **22 bilinen açık kapandı** (aşağıda, bulunma ve kapanma tarihleriyle). Kendi sunduğumuz yazı
-  tipleri artık lisans metinleriyle birlikte ve `VENDORED.md`'de kayıtlı.
-- Bakımsız, deprecated, arşivli ya da kurulum betiği taşıyan doğrudan bağımlılık **yok**.
-  Yerleşik karşılığı olan mikro paket **yok**.
+- **The only outside code at runtime is React.** What the game (`.`) and the panel (`sub/`)
+  send to the browser from outside is `react`, `react-dom` 19.3.1 and their dependency
+  `scheduler` — 3 packages. Everything else is a development or build tool.
+- **The dependencies that hold the project hostage:** `react`/`react-dom` (the base of both
+  interfaces), `vite` + `typescript` (the build), `wrangler` (the whole server toolchain) and
+  Cloudflare (hosting, database, authentication).
+- **In this run:** with ChessRun 1.1.1 every package was updated within its range, and
+  **22 known vulnerabilities were closed** (listed below with the dates they were found and
+  closed). The self-hosted fonts now ship with their license texts and are recorded in
+  `VENDORED.md`.
+- **No** direct dependency is unmaintained, deprecated, archived or runs an install script.
+  **No** micro-package has a built-in replacement.
 
 ## Context Map
 
-**Ekosistemler**
+**Ecosystems**
 
-| Proje | Manifest | Lock | Çalışma anı | Ne |
+| Project | Manifest | Lock | Runtime | What |
 |---|---|---|---|---|
-| oyun | `package.json` | `package-lock.json` (v3) | 3 paket | React + Vite, chessrun.app (Cloudflare Pages) |
-| sunucu | `server/package.json` | `server/package-lock.json` (v3) | 0 | Cloudflare Worker `chessrun-stats` |
-| panel | `sub/package.json` | `sub/package-lock.json` (v3) | 3 paket | React + Vite, 1403.chessrun.app (Worker assets) |
+| game | `package.json` | `package-lock.json` (v3) | 3 packages | React + Vite, chessrun.app (Cloudflare Pages) |
+| server | `server/package.json` | `server/package-lock.json` (v3) | 0 | Cloudflare Worker `chessrun-stats` |
+| panel | `sub/package.json` | `sub/package-lock.json` (v3) | 3 packages | React + Vite, 1403.chessrun.app (Worker assets) |
 
-CI iş akışı, Dockerfile, devcontainer: **yok**. Yayın elle yapılıyor.
+CI workflows, Dockerfile, devcontainer: **none**. Deploys are done by hand.
 
-**Modüller**
+**Modules**
 
-- `src/` — oyun arayüzü ve motoru (`engine/`, `ui/`, `components/`)
-- `shared/` — oyun, panel ve sunucunun ortak kodu; `@shared/*` takma adıyla içeri alınıyor
-  (`tsconfig.app.json`, `vite.config.ts`) — **dış paket değil**
-- `server/src/` — Worker: toplama, sıralama, paylaşım, panel API'si, cron
-- `sub/src/` — yönetim paneli
-- `scripts/browser-check.cjs` — elle çalıştırılan tarayıcı denetimi (CI'ye bağlı değil)
+- `src/` — game interface and engine (`engine/`, `ui/`, `components/`)
+- `shared/` — code shared by the game, the panel and the server, imported through the
+  `@shared/*` alias (`tsconfig.app.json`, `vite.config.ts`) — **not an outside package**
+- `server/src/` — the Worker: collection, leaderboards, sharing, panel API, cron
+- `sub/src/` — the admin panel
+- `scripts/browser-check.cjs` — browser check run by hand (not part of CI)
 
-**Modül → dış paket haritası** (import sayısı)
+**Module → outside package map** (import count)
 
-| Modül | Dış paketler |
+| Module | Outside packages |
 |---|---|
-| `src/` | `react` (26), `vitest` (21, testler), `react-dom` (2) |
+| `src/` | `react` (26), `vitest` (21, tests), `react-dom` (2) |
 | `shared/` | — |
-| `server/src/` | `vitest` (3, testler); çalışma anında dış paket yok, yalnızca Workers çalışma ortamı |
-| `server/scripts/` | yalnızca Node yerleşikleri (`node:fs`, `node:path`, `node:os`, `node:child_process`) |
+| `server/src/` | `vitest` (3, tests); no outside package at runtime, only the Workers runtime |
+| `server/scripts/` | Node built-ins only (`node:fs`, `node:path`, `node:os`, `node:child_process`) |
 | `sub/src/` | `react` (7), `react-dom` (1) |
-| `scripts/` | `playwright-core` (1) — betiğin başında yazan sabit sürümle (1.64.1) ayrı kuruluyor |
-| kök yapılandırma | `vite`, `@vitejs/plugin-react`, `vitest` |
+| `scripts/` | `playwright-core` (1) — installed separately, at the fixed version (1.64.1) written at the top of the script |
+| root config | `vite`, `@vitejs/plugin-react`, `vitest` |
 
 ## External Code Inventory
 
-**Paketler** (doğrudan; sürüm = kurulu)
+**Packages** (direct; version = installed)
 
 | Package | Version | Projects | Direct? | Used? | License | Last release | Risk signals | Criticality |
 |---|---|---|---|---|---|---|---|---|
-| react | 19.3.1 | oyun, panel | direct (runtime) | yes (33 dosya) | MIT | 2026-10 (19.3.1) | — | HIGH |
-| react-dom | 19.3.1 | oyun, panel | direct (runtime) | yes (giriş noktası) | MIT | 2026-10 (19.3.1) | — | HIGH |
-| vite | 8.3.5 | oyun, panel | dev | yes (derleme) | MIT | 2026-10 (8.3.5) | — | HIGH |
-| typescript | 6.0.3 | hepsi | dev | yes (derleme, `tsc -b`) | Apache-2.0 | 2026-07 (7.0.2) | `~6.0` — 7.x büyük sürüm dışarıda | HIGH |
-| wrangler | 4.152.0 | sunucu | dev | yes (dev, deploy, migrate, types, backup) | Apache-2.0 OR MIT | 2026-10 (4.152.0) | — | HIGH |
-| vitest | 4.1.12 | hepsi | dev | yes (oyun, sunucu); panelde test dosyası yok | MIT | 2026-10 (5.0.5) | — | MED |
-| @vitejs/plugin-react | 6.1.2 | oyun, panel | dev | yes (vite config) | MIT | 2026-10 (6.1.2) | — | MED |
-| oxlint | 1.89.0 | hepsi | dev | yes (lint) | MIT | 2026-10 (1.89.0) | — | LOW |
-| @types/node, @types/react, @types/react-dom | 24.19.2 / 19.3.0 / 19.3.0 | oyun, panel | dev | yes (tipler) | MIT | 2026-09/10 | — | LOW |
+| react | 19.3.1 | game, panel | direct (runtime) | yes (33 files) | MIT | 2026-10 (19.3.1) | — | HIGH |
+| react-dom | 19.3.1 | game, panel | direct (runtime) | yes (entry point) | MIT | 2026-10 (19.3.1) | — | HIGH |
+| vite | 8.3.5 | game, panel | dev | yes (build) | MIT | 2026-10 (8.3.5) | — | HIGH |
+| typescript | 6.0.3 | all | dev | yes (build, `tsc -b`) | Apache-2.0 | 2026-07 (7.0.2) | `~6.0` — major version 7 left out | HIGH |
+| wrangler | 4.152.0 | server | dev | yes (dev, deploy, migrate, types, backup) | Apache-2.0 OR MIT | 2026-10 (4.152.0) | — | HIGH |
+| vitest | 4.1.12 | all | dev | yes (game, server); no test files in the panel | MIT | 2026-10 (5.0.5) | — | MED |
+| @vitejs/plugin-react | 6.1.2 | game, panel | dev | yes (vite config) | MIT | 2026-10 (6.1.2) | — | MED |
+| oxlint | 1.89.0 | all | dev | yes (lint) | MIT | 2026-10 (1.89.0) | — | LOW |
+| @types/node, @types/react, @types/react-dom | 24.19.2 / 19.3.0 / 19.3.0 | game, panel | dev | yes (types) | MIT | 2026-09/10 | — | LOW |
 
-Çalışma anı dolaylı bağımlılığı: `scheduler` 0.28.0 (React'in), MIT, sağlıklı.
+Transitive runtime dependency: `scheduler` 0.28.0 (React's), MIT, healthy.
 
-**Araç zinciri**
+**Toolchain**
 
-| Araç | Nerede |
+| Tool | Where |
 |---|---|
-| wrangler | Pages yayını (oyun), Worker yayını, D1 göçleri ve yedek — hepsi `server/`'daki kilitli sürümle |
-| playwright-core 1.64.1 | `scripts/browser-check.cjs` (elle çalıştırılan tarayıcı denetimi) |
-| Node.js | yerel; `engines` alanı yok |
+| wrangler | Pages deploy (game), Worker deploy, D1 migrations and backup — all with the locked version in `server/` |
+| playwright-core 1.64.1 | `scripts/browser-check.cjs` (browser check run by hand) |
+| Node.js | local; no `engines` field |
 
-**Varlıklar (assets)**
+**Assets**
 
-| Dosya | Ne | Kaynak | Lisans |
+| File | What | Source | License |
 |---|---|---|---|
-| `public/fonts/press-start-2p-latin*.woff2` (2) | Press Start 2P yazı tipi | Google Fonts | SIL OFL 1.1 — metin: `public/fonts/OFL-PressStart2P.txt` |
-| `public/fonts/vt323-latin*.woff2` (2) | VT323 yazı tipi | Google Fonts | SIL OFL 1.1 — metin: `public/fonts/OFL-VT323.txt` |
+| `public/fonts/press-start-2p-latin*.woff2` (2) | Press Start 2P font | Google Fonts | SIL OFL 1.1 — text: `public/fonts/OFL-PressStart2P.txt` |
+| `public/fonts/vt323-latin*.woff2` (2) | VT323 font | Google Fonts | SIL OFL 1.1 — text: `public/fonts/OFL-VT323.txt` |
 
-CDN'den yüklenen betik, stil ya da yazı tipi **yok** — her şey kendi alan adından sunuluyor.
+**No** script, style or font is loaded from a CDN — everything is served from the project's
+own domain.
 
-**Bulgular**
+**Findings**
 
-- 🟡 **Panel `vitest` bildiriyor ve `npm test` betiği var, ama `sub/` altında test dosyası yok.**
-  `vitest run` test bulamayınca hata verir; kök `npm run check` panel testlerini çalıştırmıyor.
-- ⚪ `oxlint` 1.89 yeni React kuralları getirdi: lint uyarıları 1'den 22'ye çıktı (hepsi uyarı,
-  hata değil; `npm run check` geçiyor).
-- ⚪ `typescript` 7 ve `vitest` 5 büyük sürümleri çıkmış; mevcut aralıklar bunları almıyor (bilinçli).
-- ⚪ npm'deki "tek bakımcı" görünümü (`@types/*`, `oxlint`, `wrangler`) kurumsal hesaplardan
-  geliyor (DefinitelyTyped, Oxc, Cloudflare); gerçek bir tek-kişi riski değil.
-- ⚪ React artık npm'e CI'dan (GitHub Actions, trusted publishing) yayımlanıyor.
-- ⚪ Kurulum betiği taşıyan paketler yalnızca geliştirme ağacında: `fsevents` (3 proje),
-  `esbuild` ve `workerd` (sunucu). Üçü de yaygın, beklenen ikili indiricileri.
+- 🟡 **The panel declares `vitest` and has an `npm test` script, but there are no test files
+  under `sub/`.** `vitest run` fails when it finds no tests; the root `npm run check` does not
+  run the panel tests.
+- ⚪ `oxlint` 1.89 brought new React rules: lint warnings went from 1 to 22 (all warnings,
+  no errors; `npm run check` passes).
+- ⚪ `typescript` 7 and `vitest` 5 are out; the current ranges do not take them (on purpose).
+- ⚪ The "single maintainer" accounts on npm (`@types/*`, `oxlint`, `wrangler`) are
+  organisation accounts (DefinitelyTyped, Oxc, Cloudflare), not a real one-person risk.
+- ⚪ React is now published to npm from CI (GitHub Actions, trusted publishing).
+- ⚪ Packages that run an install script exist only in the development tree: `fsevents`
+  (3 projects), `esbuild` and `workerd` (server). All three are common, expected binary
+  downloaders.
 
 ## External Services
 
 | Service | Referenced in | Credential |
 |---|---|---|
-| Cloudflare Pages (`chessrun` projesi) | elle yayın, `public/_headers`, `_redirects` | Cloudflare hesabı |
-| Cloudflare Workers (`chessrun-stats`) | `server/wrangler.toml`: `/collect/*`, `/lb/*`, `/s/*`, `1403.chessrun.app` | Cloudflare hesabı |
+| Cloudflare Pages (`chessrun` project) | manual deploy, `public/_headers`, `_redirects` | Cloudflare account |
+| Cloudflare Workers (`chessrun-stats`) | `server/wrangler.toml`: `/collect/*`, `/lb/*`, `/s/*`, `1403.chessrun.app` | Cloudflare account |
 | Cloudflare D1 (`chessrun`) | `env.DB` | binding |
 | Cloudflare KV (`SALT`) | `env.SALT` | binding |
 | Cloudflare Rate Limiting | `env.LB_LIMIT`, `env.COLLECT_LIMIT` | binding |
-| Cloudflare Access | `server/src/access.ts` | evet |
-| Worker secret | `env.DAILY_SECRET` | evet |
+| Cloudflare Access | `server/src/access.ts` | yes |
+| Worker secret | `env.DAILY_SECRET` | yes |
 | Cron (`5 0 * * *`) | `wrangler.toml` | — |
-| Paylaşım hedefleri: x.com, facebook.com, t.me, wa.me | `src/ui/share.ts` | hayır (yalnızca giden bağlantı) |
-| remaker.ch, smartkraft.ch, github.com | `Home.tsx`, `about.html` | hayır (yalnızca bağlantı) |
+| Share targets: x.com, facebook.com, t.me, wa.me | `src/ui/share.ts` | no (outgoing links only) |
+| remaker.ch, smartkraft.ch, github.com | `Home.tsx`, `about.html` | no (links only) |
 
 ## Recommendations
 
-Hepsi öneri; uygulanması proje sahibinin kararı.
+All of these are recommendations; acting on them is the project owner's decision.
 
-| Konu | Verdict | Neden | Maliyet |
+| Topic | Verdict | Why | Cost |
 |---|---|---|---|
-| Panel `vitest` | **decide** — panel testleri gelecekse kalsın (gerekirse `--passWithNoTests`), gelmeyecekse kaldır | ölü bağımlılık ya da kırık `npm test` | çok düşük |
-| Yeni lint uyarıları | **review** — 22 React uyarısına bir kez bakılsın | çoğu gerçek bir yeniden çizim sorununa işaret edebilir | düşük |
+| Panel `vitest` | **decide** — keep it if panel tests are coming (with `--passWithNoTests` if needed), remove it if not | a dead dependency or a broken `npm test` | very low |
+| New lint warnings | **review** — look through the 22 React warnings once | some may point to a real re-render problem | low |
 
-**Vendoring:** aday yok. Çalışma anındaki tek dış kod React; o bir framework, kopyalanmaz.
-`replacements.md`'deki yerleşik karşılığı olan hiçbir paket kullanılmıyor.
+**Vendoring:** no candidates. The only outside code at runtime is React; it is a framework
+and is not copied in. No package listed in `replacements.md` (built-in replacements) is used.
 
-Baseline'daki **yazı tipi** önerisi uygulandı (OFL metinleri + `VENDORED.md`).
+The **font** recommendation from the baseline was carried out (OFL texts + `VENDORED.md`).
 
 ## Vendor Tracking
 
 | Entry | Recorded | Latest upstream | Status | Local |
 |---|---|---|---|---|
-| retro-fonts (Press Start 2P, VT323) | Google Fonts subsets, 2026-08-23 | — | unchecked — Google Fonts'un makinece okunur sürümü yok; yılda bir elle karşılaştırılır | unchanged (checksum eşleşiyor) |
+| retro-fonts (Press Start 2P, VT323) | Google Fonts subsets, 2026-08-23 | — | unchecked — Google Fonts has no machine-readable version; compared by hand once a year | unchanged (checksum matches) |
 
 ## Closed vulnerabilities
 
@@ -166,27 +170,27 @@ none was part of what chessrun.app or the panel serve to users.
 
 ## Changes since last report
 
-- 22 bilinen açık kapandı (yukarıda).
-- Doğrudan bağımlılıklar aralıkları içinde güncellendi: react/react-dom 19.2.8 → 19.3.1,
+- 22 known vulnerabilities closed (above).
+- Direct dependencies updated within their ranges: react/react-dom 19.2.8 → 19.3.1,
   vite 8.2.1 → 8.3.5, vitest 4.1.10 → 4.1.12, wrangler 4.123.0 → 4.152.0, oxlint 1.78.0 → 1.89.0,
-  @vitejs/plugin-react 6.0.5 → 6.1.2 ve tipler; ayrıca 222 dolaylı geliştirme paketi.
-- Yeni: `VENDORED.md` kaydı (`retro-fonts`), OFL lisans metinleri.
-- Önemli (🔴) değişiklik yok: el değiştirme, yeni kurulum betiği, lisans değişikliği görülmedi.
-- Ayrıntı: [changes/2026-10-24-2-changes.md](changes/2026-10-24-2-changes.md) · uzun görünüm: [timeline.md](timeline.md)
+  @vitejs/plugin-react 6.0.5 → 6.1.2 and the type packages; plus 222 transitive development packages.
+- New: a `VENDORED.md` entry (`retro-fonts`) and the OFL license texts.
+- No high-severity (🔴) change: no maintainer handover, no new install script, no license change.
+- Details: [changes/2026-10-24-2-changes.md](changes/2026-10-24-2-changes.md) · long view: [timeline.md](timeline.md)
 
 ## Limits of This Analysis
 
-- Dinamik import'lar (`import()` değişkenle, `require` hesaplanmış yolla) izlenmedi.
-- Kurulu sürümler `npm ls` ile, dolaylı ağaç kilit dosyalarından okundu; npm'in kendi aracı
-  mevcuttu, tahmin yok.
-- Bilinen açık taraması `npm audit` ve OSV ile yapıldı.
-- Yazı tiplerinin lisansı Google Fonts deposundaki OFL metinlerinden alındı; `woff2`
-  üstverisi `fontTools` olmadan okunamadı.
-- `upstream-health.sh`'nin "maintainers" alanı npm hesabı sayar; kurumsal hesapların arkasındaki
-  gerçek kişi sayısını göstermez.
-- İki çalıştırma aynı gün yapıldı (açıkları kapatmadan önce ve sonra); zaman çizelgesindeki
-  adımlar bu yüzden saatler, aylar değil.
-- `nogit/`, `dist/`, `node_modules/` taranmadı.
+- Dynamic imports (`import()` with a variable, `require` with a computed path) were not traced.
+- Installed versions were read with `npm ls` and the transitive tree from the lock files;
+  npm's own tool was available, nothing was guessed.
+- Known vulnerabilities were checked with `npm audit` and OSV.
+- The font licenses were taken from the OFL texts in the Google Fonts repository; the
+  `woff2` metadata could not be read without `fontTools`.
+- The "maintainers" field of `upstream-health.sh` counts npm accounts; it does not show how
+  many people stand behind an organisation account.
+- Both runs were made on the same day (before and after closing the vulnerabilities), so the
+  steps in the timeline are hours apart, not months.
+- `nogit/`, `dist/` and `node_modules/` were not scanned.
 
 ## Sensitive report
 

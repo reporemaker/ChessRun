@@ -4,9 +4,6 @@
 > Every advisory, package version, service detail and weakness below is invented. The
 > real sensitive report of ChessRun is `private/sensitive-report.md`; it is never in this
 > repository and only goes to the customer, outside GitHub.
->
-> **BU BİR ÖRNEKTİR — BU DOSYADAKİ BÜTÜN VERİLER SAHTEDİR.** Gerçek hassas rapor hiçbir
-> zaman bu depoda değildir.
 
 > **CONFIDENTIAL — DO NOT COMMIT, DO NOT PUSH, DO NOT PUBLISH.**
 >
@@ -18,18 +15,6 @@
 > Keep it out of every repository, issue tracker, chat and shared drive. Deliver it to
 > the customer only: on a USB stick, by encrypted e-mail, or by hand. It is listed in
 > `LifeLine_Report/.gitignore` so git skips it — check that before every commit.
-
-> **GİZLİ — COMMIT ETMEYİN, GÖNDERMEYİN (PUSH), YAYIMLAMAYIN.**
->
-> Bu dosya ChessRun'ın açık zayıf noktalarını listeler: kapanmamış açıklar, bir servis
-> giderse neyin bozulacağı, yedeklerin ve sırların nasıl tutulduğu, hangi araçların
-> sabitlenmemiş kod çalıştırdığı. Bunların hiçbiri tek başına bir sızıntı değildir. Bir
-> araya geldiklerinde, bir saldırının en çok nereyi acıtacağını gösteren bir harita gibi
-> okunurlar.
->
-> Hiçbir depoya, hata kaydına, sohbete ya da ortak klasöre koymayın. Yalnızca müşteriye
-> teslim edin: USB bellekle, şifreli e-postayla ya da elden. `LifeLine_Report/.gitignore`
-> içinde olduğu için git bu dosyayı atlar — her commit'ten önce bunu kontrol edin.
 
 # Sensitive Report — ChessRun (EXAMPLE, FAKE DATA)
 Generated: 2026-10-24 · Belongs to: LifeLine_Report/dependency-report.md of the same run
