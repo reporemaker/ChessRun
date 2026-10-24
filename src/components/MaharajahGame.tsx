@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { applyDailyBonus, dailyBonus } from '@shared/leaderboard'
 import {
   type MhGrid,
@@ -41,6 +41,13 @@ import { SidePanel } from './SidePanel'
 
 /** Bot düşünme payı: hamle anında gelmesin, oyuncu kendi hamlesini görsün */
 const BOT_DELAY_MS = 450
+/** Taşın kareden kareye kayma süresi. Kayan tahtadan (150) biraz uzun: bu bir
+    runner değil, hamle okunsun; vezir gibi tahta boyu giden mihrace de yetişsin. */
+export const MH_SLIDE_MS = 220
+
+/** Hareket azaltma tercihi: taş kaymaz, yerine gelir (MiniBoard ile aynı ölçüt) */
+const reducedMotion = () =>
+  typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
 interface Props {
   onExit: () => void
@@ -106,6 +113,39 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRankin
   const startedAt = useRef(performance.now() - (resume?.elapsedMs ?? 0))
   /** Aynı oyun iki kez yazılmasın (StrictMode efekti iki kez çalıştırır) */
   const recorded = useRef<MhState | null>(null)
+  const boardRef = useRef<HTMLDivElement>(null)
+  /** FLIP: taş kimliği → son çizimdeki karesinin yeri (Board.tsx ile aynı yöntem) */
+  const offsets = useRef(new Map<number, { top: number; left: number }>())
+
+  /* Taşlar kareden kareye KAYAR: her çizimden sonra her taşın yeni yerini
+     ölçüp bir öncekinden buraya kaydırıyoruz (rokta kale de kendi
+     kimliğiyle kayar; yenen taş hedefte kaybolur, yiyen üstüne gelir).
+     Yalnızca `transform` - taşlarda filter yok, bkz. App.css .piece notu. */
+  useLayoutEffect(() => {
+    const root = boardRef.current
+    if (!root) return
+    const next = new Map<number, { top: number; left: number }>()
+    const still = reducedMotion()
+    root.querySelectorAll<HTMLElement>('[data-piece-id]').forEach((square) => {
+      const id = Number(square.dataset.pieceId)
+      const now = { top: square.offsetTop, left: square.offsetLeft }
+      const before = offsets.current.get(id)
+      next.set(id, now)
+      if (!before || still) return
+      const dx = before.left - now.left
+      const dy = before.top - now.top
+      if (dx === 0 && dy === 0) return
+      const piece = square.querySelector<HTMLElement>('.piece')
+      if (!piece) return
+      square.classList.add('mh-moving')
+      const anim = piece.animate(
+        [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }],
+        { duration: MH_SLIDE_MS, easing: 'cubic-bezier(.22,.68,.28,1)' },
+      )
+      anim.onfinish = () => square.classList.remove('mh-moving')
+    })
+    offsets.current = next
+  })
 
   const side = mode ? playerSide(mode) : null
   const myTurn = Boolean(game && !game.result && game.toMove === side)
@@ -115,6 +155,7 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRankin
     startedAt.current = performance.now()
     runDay.current = dayKey()
     dailyToday.current = dailyScoreOf(readRuns(), runDay.current)
+    offsets.current = new Map() // yeni dizilim: eski yerlerden kayma yok
     setMode(next)
     setGame(newMaharajah(next, guide))
     setSelected(null)
@@ -305,7 +346,7 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRankin
           {/* Tahta alanı öteki oyunlarla aynı ölçüde: .gv-board kuralları */}
           <div className="mh-board">
           <div className="board-frame">
-            <div className="board" role="grid">
+            <div className="board" role="grid" ref={boardRef}>
               {game.board.map((row, r) => (
                 <div className="board-row" key={r} role="row">
                   {row.map((piece, c) => {
@@ -324,6 +365,7 @@ export function MaharajahGame({ onExit, onOpenSettings, onOpenPage, onOpenRankin
                         key={c}
                         type="button"
                         role="gridcell"
+                        data-piece-id={piece?.id}
                         className={classes.join(' ')}
                         disabled={!myTurn}
                         onClick={() => onSquare(r, c)}

@@ -4829,6 +4829,15 @@ button.gv-chip {
   pointer-events: none;
 }
 
+/* Kayan taş öteki karelerin üstünden geçsin (yolu üstündeki taşların altına girmesin) */
+.square.mh-moving {
+  z-index: 2;
+}
+
+.square.mh-moving .piece {
+  z-index: 3;
+}
+
 /* Kırmızı nokta: gidilecek kare rakibin tehdidinde */
 .dot.mh-risk {
   background: rgba(214, 31, 56, 0.85);
