@@ -15,7 +15,9 @@
 // yalnızca SPA yollarında '/' anahtarına yazılır, statik sayfalar kendi
 // adresleriyle saklanır. Aksi hâlde /about ziyareti '/' önbelleğini
 // eziyor ve çevrimdışı açılışta oyun yerine hakkında geliyordu.
-const CACHE = 'chessrun-v4'
+// v5 (24 Ekim): manifest İngilizce (description, lang en); hash'siz olduğu için
+// eski kopya ancak ad yükseltmesiyle düşer.
+const CACHE = 'chessrun-v5'
 
 /** Gerçek statik sayfalar: SPA fallback'ine ait olmayan gezinmeler */
 const STATIC_PAGES = ['/about']
