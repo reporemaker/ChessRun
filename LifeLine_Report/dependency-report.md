@@ -11,7 +11,7 @@ Ecosystems: npm (3 projects: `.`, `server/`, `sub/`) · Previous report: 2026-10
   interfaces), `vite` + `typescript` (the build), `wrangler` (the whole server toolchain) and
   Cloudflare (hosting, database, authentication).
 - **In this run:** with ChessRun 1.1.1 every package was updated within its range, and
-  **22 known vulnerabilities were closed** (listed below with the dates they were found and
+  **21 known vulnerabilities were closed** (listed below with the dates they were found and
   closed). The self-hosted fonts now ship with their license texts and are recorded in
   `VENDORED.md`.
 - **No** direct dependency is unmaintained, deprecated, archived or runs an install script.
@@ -138,7 +138,7 @@ The **font** recommendation from the baseline was carried out (OFL texts + `VEND
 
 ## Closed vulnerabilities
 
-Responsible disclosure: these were found by LifeLine and are fixed now. 22 advisories,
+Responsible disclosure: these were found by LifeLine and are fixed now. 21 advisories,
 found 2026-10-24 and closed 2026-10-24 by the ChessRun 1.1.1 dependency update.
 
 | Advisory | Package | Project | Found | Closed | Days open |
@@ -170,7 +170,7 @@ none was part of what chessrun.app or the panel serve to users.
 
 ## Changes since last report
 
-- 22 known vulnerabilities closed (above).
+- 21 known vulnerabilities closed (above).
 - Direct dependencies updated within their ranges: react/react-dom 19.2.8 → 19.3.1,
   vite 8.2.1 → 8.3.5, vitest 4.1.10 → 4.1.12, wrangler 4.123.0 → 4.152.0, oxlint 1.78.0 → 1.89.0,
   @vitejs/plugin-react 6.0.5 → 6.1.2 and the type packages; plus 222 transitive development packages.

@@ -1,6 +1,7 @@
 > **EXAMPLE — ALL DATA IN THIS FILE IS FAKE.**
 >
 > This file is committed on purpose, to show what LifeLine's private report looks like.
+> It lives in `private_test/`, not in `private/`, so it can never be mistaken for a real one.
 > Every advisory, package version, service detail and weakness below is invented. The
 > real sensitive report of ChessRun is `private/sensitive-report.md`; it is never in this
 > repository and only goes to the customer, outside GitHub.

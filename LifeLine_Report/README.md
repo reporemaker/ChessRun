@@ -11,7 +11,7 @@ example of its output.
 | [changes/](changes/) | one short report per run: only what changed and what needs attention |
 | [timeline.md](timeline.md) | every dependency's changes across all runs |
 | [state/](state/) | machine snapshots the comparisons are made from (no vulnerability data) |
-| [private/sensitive-report.EXAMPLE.md](private/sensitive-report.EXAMPLE.md) | **example with fake data** — what the private report looks like |
+| [private_test/sensitive-report.EXAMPLE.md](private_test/sensitive-report.EXAMPLE.md) | **example with fake data** — what the private report looks like |
 
 ## Why there is no real `private/` folder here
 
@@ -25,6 +25,8 @@ customer only, outside GitHub: on a USB stick, by encrypted e-mail, or by hand. 
 public report does not even say how many open items there are; it ends with the date
 and the sha256 of the private report, so the recipient can check the file they got.
 
-The one file under `private/` in this repository, `sensitive-report.EXAMPLE.md`, was
-added on purpose to show the format. **Every value in it is invented.** If you use
-LifeLine in your own project, do not commit your `private/` folder.
+To show the format anyway, this repository has a separate folder, `private_test/`, with
+one file, `sensitive-report.EXAMPLE.md`. **Every value in it is invented.** It is kept out
+of `private/` on purpose, so the real folder stays empty in git and LifeLine's guard
+("stop if git tracks anything under `private/`") keeps working without exceptions. If you
+use LifeLine in your own project, do not commit your `private/` folder.
