@@ -50,6 +50,8 @@ export interface DailyResume {
   game: DailyState
   elapsedMs: number
   day: string
+  /** İlk 10 saniye dolduğundaki yeme sayısı (hızlanma iki kat); dolmadıysa yok */
+  boostAt?: number
 }
 
 export interface ResumeTicket {

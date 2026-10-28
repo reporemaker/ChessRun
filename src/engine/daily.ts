@@ -43,6 +43,15 @@ export const DAILY_FINAL_MS = 1000
 export const DAILY_TICK_CAPTURES = 5
 export const DAILY_TICKS = 20
 
+/**
+ * Koşunun ilk bu kadar süresinden sonra hızlanma iki kat sıklaşır: her yeme
+ * eğride iki yeme sayılır, tık 5 yerine 2,5 yemede bir gelir (kullanıcı
+ * 28 Ekim). Süre arayüzde ölçülür; motor yalnızca o andaki yeme sayısını
+ * (`boostAt`) alır.
+ */
+export const DAILY_BOOST_MS = 10_000
+export const DAILY_BOOST_FACTOR = 2
+
 /** Günde tek hak olduğu için puan diğer oyunların iki katı */
 export const DAILY_SCORE_FACTOR = 2
 
@@ -162,6 +171,15 @@ export interface DailyState {
 /* ------------------------------------------------------------------ *
  * Hız eğrisi
  * ------------------------------------------------------------------ */
+
+/**
+ * Hız eğrisinin saydığı yeme: `boostAt` (ilk DAILY_BOOST_MS dolduğundaki yeme
+ * sayısı) öncesi bir, sonrası DAILY_BOOST_FACTOR kat. Henüz dolmadıysa null.
+ */
+export function dailySpeedCaptures(captures: number, boostAt: number | null): number {
+  if (boostAt === null || captures <= boostAt) return captures
+  return boostAt + (captures - boostAt) * DAILY_BOOST_FACTOR
+}
 
 /** Kaç tık hızlanıldı (0..DAILY_TICKS) */
 export function dailyTicks(captures: number): number {

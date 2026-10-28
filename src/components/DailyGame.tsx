@@ -2,8 +2,10 @@ import { type CSSProperties, type Ref, useEffect, useImperativeHandle, useMemo, 
 import { flushSync } from 'react-dom'
 import { ROWS } from '../engine/config'
 import {
+  DAILY_BOOST_MS,
   DAILY_COLS,
   DAILY_MAX_COMBO,
+  DAILY_QUEEN_CAPTURES,
   DAILY_START_MS,
   type DailyEvent,
   type DailyState,
@@ -13,6 +15,7 @@ import {
   dailyIntervalMs,
   dailyLevel,
   dailyMoves,
+  dailySpeedCaptures,
   dailyStriker,
 } from '../engine/daily'
 import { tuningActive } from '../engine/tuning'
@@ -248,8 +251,20 @@ export function DailyGame({
   latest.current = game
   const slideRef = useRef<HTMLDivElement | null>(null)
   const progress = useRef(0)
+  // İlk DAILY_BOOST_MS dolduğundaki yeme sayısı; sonrası eğride iki kat sayılır.
+  // Eski fişte alan yok: süre çoktan dolduysa devam anındaki yeme sayısı
+  const boostAt = useRef<number | null>(
+    !resume
+      ? null
+      : typeof resume.boostAt === 'number'
+        ? resume.boostAt
+        : resume.elapsedMs >= DAILY_BOOST_MS
+          ? resume.game.captures
+          : null,
+  )
+  const speedCaptures = (state: DailyState) => dailySpeedCaptures(state.captures, boostAt.current)
   // Devam: hız anlık hedefinden başlar (yumuşatma kısa), süre kaldığı yerden
-  const rps = useRef(resume ? 1000 / dailyIntervalMs(resume.game.captures) : 1000 / DAILY_START_MS)
+  const rps = useRef(resume ? 1000 / dailyIntervalMs(speedCaptures(resume.game)) : 1000 / DAILY_START_MS)
   const lastTs = useRef<number | null>(null)
   const finished = useRef(false)
   const runStart = useRef(performance.now() - (resume?.elapsedMs ?? 0))
@@ -261,7 +276,13 @@ export function DailyGame({
     if (game.distance === 0 && game.score === 0) return
     saveResume({
       config,
-      data: { kind: 'daily', game, elapsedMs: performance.now() - runStart.current, day },
+      data: {
+        kind: 'daily',
+        game,
+        elapsedMs: performance.now() - runStart.current,
+        day,
+        boostAt: boostAt.current ?? undefined,
+      },
     })
   }, [game, phase, config, day])
 
@@ -341,7 +362,7 @@ export function DailyGame({
       score: state.score,
       distance: state.distance,
       cols: DAILY_COLS,
-      level: dailyLevel(state.captures),
+      level: dailyLevel(speedCaptures(state)),
       daily: day || undefined,
       day: day || undefined,
       chain: state.chain,
@@ -363,7 +384,7 @@ export function DailyGame({
       score: state.score,
       distance: state.distance,
       cols: DAILY_COLS,
-      level: dailyLevel(state.captures),
+      level: dailyLevel(speedCaptures(state)),
       durationMs: performance.now() - runStart.current,
       endReason,
       speed: 'normal',
@@ -410,7 +431,10 @@ export function DailyGame({
       lastTs.current = ts
       const dt = Math.max(0, ts - last)
 
-      const target = 1000 / dailyIntervalMs(latest.current.captures)
+      if (boostAt.current === null && performance.now() - runStart.current >= DAILY_BOOST_MS) {
+        boostAt.current = latest.current.captures
+      }
+      const target = 1000 / dailyIntervalMs(speedCaptures(latest.current))
       rps.current += (target - rps.current) * (1 - Math.exp(-dt / SPEED_EASE_MS))
       progress.current += (dt / 1000) * rps.current
 
@@ -453,6 +477,7 @@ export function DailyGame({
     unlockSound()
     progress.current = 0
     rps.current = 1000 / DAILY_START_MS
+    boostAt.current = null
     lastTs.current = null
     finished.current = false
     runStart.current = performance.now()
@@ -487,7 +512,7 @@ export function DailyGame({
     bonus: dailyBonus(game.score),
   }
 
-  const speedNow = 1000 / dailyIntervalMs(game.captures)
+  const speedNow = 1000 / dailyIntervalMs(speedCaptures(game))
 
   const stateLine = (
     <span className="gv-tx gv-state">
@@ -521,7 +546,7 @@ export function DailyGame({
         <span>{t('game.daily')}</span>
         <span className="gv-sp" />
         <span>
-          {t('hud.level')} <b>{dailyLevel(game.captures)}</b>
+          {t('hud.level')} <b>{dailyLevel(speedCaptures(game))}</b>
         </span>
       </div>
 
@@ -560,7 +585,7 @@ export function DailyGame({
             <ul className="di-rules">
               <li>{t('daily.intro.r1')}</li>
               <li>{t('daily.intro.r2')}</li>
-              <li>{t('daily.intro.r3')}</li>
+              <li>{t('daily.intro.r3', { n: DAILY_QUEEN_CAPTURES })}</li>
             </ul>
             <div className="outro-actions">
               <button type="button" className="outro-btn primary" autoFocus disabled={arming} onClick={() => void onReady()}>
@@ -595,6 +620,7 @@ export function DailyGame({
             isRecord={result?.isBest ?? false}
             best={result?.best ?? hiScore}
             elapsedMs={result?.elapsedMs ?? performance.now() - runStart.current}
+            level={dailyLevel(speedCaptures(game))}
             streak={Math.max(currentStreak(readRuns()), lifetimeStreak())}
             share={shareInput}
             onExit={onExit}
@@ -645,7 +671,7 @@ export function DailyGame({
           </span>
           <span className="gv-cell">
             <span className="gv-lb">{t('hud.level')}</span>
-            <span className="gv-n md">{dailyLevel(game.captures)}</span>
+            <span className="gv-n md">{dailyLevel(speedCaptures(game))}</span>
           </span>
           <span className="gv-cell">
             <span className="gv-lb">{t('daily.speed')}</span>

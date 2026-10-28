@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { emptyRow, makePiece } from './board'
 import { PIECE_VALUE, ROWS } from './config'
 import {
+  DAILY_BOOST_FACTOR,
   DAILY_COLS,
   DAILY_FINAL_MS,
   DAILY_KING_GAP_ROWS,
@@ -16,6 +17,7 @@ import {
   dailyIntervalMs,
   dailyLevel,
   dailyMoves,
+  dailySpeedCaptures,
   dailyStriker,
   hasKing,
   hasSafeExit,
@@ -213,6 +215,15 @@ describe('günlük mücadele - hamle', () => {
     expect(r1).toBeCloseTo(r2, 9)
     expect(dailyLevel(0)).toBe(1)
     expect(dailyLevel(100)).toBe(21)
+  })
+
+  it('ilk 10 saniyeden sonra hızlanma iki kat: boostAt sonrası her yeme iki sayılır', () => {
+    expect(dailySpeedCaptures(12, null)).toBe(12)
+    expect(dailySpeedCaptures(4, 4)).toBe(4)
+    expect(dailySpeedCaptures(9, 4)).toBe(4 + 5 * DAILY_BOOST_FACTOR)
+    // boostAt sonrası tık 2,5 yemede bir: 5 yeme iki tık
+    expect(dailyLevel(dailySpeedCaptures(10, 0))).toBe(5)
+    expect(dailyIntervalMs(dailySpeedCaptures(50, 0))).toBeCloseTo(DAILY_FINAL_MS, 6)
   })
 })
 

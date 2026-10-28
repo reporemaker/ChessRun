@@ -31,6 +31,8 @@ interface DailyOutroProps {
   best: number
   /** Koşu süresi (ms) - özet satırı */
   elapsedMs: number
+  /** Oyun içindeki seviye (10 saniye sonrası hızlanma dahil; bkz. dailySpeedCaptures) */
+  level: number
   streak: number
   share: ShareInput
   onExit: () => void
@@ -57,6 +59,7 @@ export function DailyOutro({
   isRecord,
   best,
   elapsedMs,
+  level,
   streak,
   share,
   onExit,
@@ -163,7 +166,7 @@ export function DailyOutro({
               <b>{state.captures}</b> {t('daily.captures')}
             </span>
             <span>
-              {t('hud.level')} <b>{Math.min(21, Math.floor(state.captures / 5) + 1)}</b>
+              {t('hud.level')} <b>{level}</b>
             </span>
             <span>
               {t('daily.combo')} <b>×{Math.max(1, Math.min(3, state.bestCombo))}</b>
